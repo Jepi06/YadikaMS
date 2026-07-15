@@ -12,12 +12,9 @@ class TempatPklController extends Controller
         $query = TempatPkl::withCount('penempatanPkl');
 
         if ($request->filled('search')) {
-            // PERBAIKAN: orWhere sebelumnya tidak dibungkus closure, sehingga
-            // kalau nanti ditambah filter lain (mis. where('bidang_usaha', ...))
-            // orWhere ini akan "lepas" dari filter search dan membuat hasilnya salah.
             $query->where(function ($q) use ($request) {
                 $q->where('nama_tempat', 'like', "%{$request->search}%")
-                  ->orWhere('bidang_usaha', 'like', "%{$request->search}%");
+                    ->orWhere('bidang_usaha', 'like', "%{$request->search}%");
             });
         }
 
@@ -29,11 +26,12 @@ class TempatPklController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nama_tempat'  => 'required|string|max:255',
-            'alamat'       => 'required|string',
+            'nama_tempat' => 'required|string|max:255',
+            'alamat' => 'required|string',
             'bidang_usaha' => 'nullable|string|max:255',
-            'nama_kontak'  => 'nullable|string|max:255',
-            'no_telp'      => 'nullable|string|max:20',
+            'nama_kontak' => 'nullable|string|max:255',
+            'no_telp' => 'nullable|string|max:20',
+            'kuota_maksimal' => 'nullable|integer|min:1', // kosong = tidak dibatasi
         ]);
 
         TempatPkl::create($data);
@@ -44,12 +42,25 @@ class TempatPklController extends Controller
     public function update(Request $request, TempatPkl $tempat)
     {
         $data = $request->validate([
-            'nama_tempat'  => 'required|string|max:255',
-            'alamat'       => 'required|string',
+            'nama_tempat' => 'required|string|max:255',
+            'alamat' => 'required|string',
             'bidang_usaha' => 'nullable|string|max:255',
-            'nama_kontak'  => 'nullable|string|max:255',
-            'no_telp'      => 'nullable|string|max:20',
+            'nama_kontak' => 'nullable|string|max:255',
+            'no_telp' => 'nullable|string|max:20',
+            'kuota_maksimal' => 'nullable|integer|min:1',
         ]);
+
+        // Cegah admin set kuota lebih kecil dari jumlah yang sudah terisi
+        // (misal sudah 7 orang aktif, tidak boleh diset jadi 3).
+        if (
+            $data['kuota_maksimal'] !== null &&
+            $data['kuota_maksimal'] < $tempat->jumlahTerisi()
+        ) {
+            return back()->with(
+                'error',
+                "Kuota tidak bisa diset lebih kecil dari jumlah siswa yang sudah ditempatkan ({$tempat->jumlahTerisi()} orang)."
+            );
+        }
 
         $tempat->update($data);
 

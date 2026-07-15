@@ -10,7 +10,6 @@ class PenempatanPklSeeder extends Seeder
 {
     public function run(): void
     {
-        // Hanya siswa kelas XI/XII yang jadi kandidat PKL
         $siswaKandidat = DB::table('siswa')
             ->join('kelas', 'kelas.id', '=', 'siswa.kelas_id')
             ->whereIn('kelas.tingkat', ['XI', 'XII'])
@@ -28,7 +27,6 @@ class PenempatanPklSeeder extends Seeder
         $kesiswaanId = $this->userIdByRole('pkl', 'kesiswaan');
         $kajurId = $this->userIdByRole('pkl', 'kepala_jurusan');
 
-        // Ambil 60% dari kandidat sebagai contoh yang sudah diajukan PKL
         $jumlahDipilih = (int) ceil($siswaKandidat->count() * 0.6);
         $terpilih = $siswaKandidat->random($jumlahDipilih);
         $terpilih = $terpilih instanceof \Illuminate\Support\Collection ? $terpilih : collect([$terpilih]);
@@ -37,7 +35,17 @@ class PenempatanPklSeeder extends Seeder
             $mulai = Carbon::create(2024, 7, 15);
             $selesai = (clone $mulai)->addMonths(3);
 
-            $skenario = fake()->randomElement(['draft', 'sebagian_approve', 'full_approve', 'ada_reject']);
+            // PERBAIKAN: tambah 'baru_diajukan' & 'menunggu_kajur' supaya
+            // ada data yang benar-benar nyangkut di tahap Wali Kelas dan
+            // Kepala Jurusan — skenario lama cuma melompati kedua tahap ini.
+            $skenario = fake()->randomElement([
+                'draft',
+                'baru_diajukan',
+                'menunggu_kajur',
+                'sebagian_approve',
+                'full_approve',
+                'ada_reject',
+            ]);
 
             $row = [
                 'siswa_id' => $siswaId,
@@ -56,7 +64,13 @@ class PenempatanPklSeeder extends Seeder
                 'updated_at' => now(),
             ];
 
-            if ($skenario === 'sebagian_approve') {
+            if ($skenario === 'baru_diajukan') {
+                // Baru "Lengkapi" oleh admin -> nyangkut di tahap Wali Kelas
+                $row['status'] = 'diajukan';
+                // status_wali_kelas tetap 'pending' (default) -> muncul di approval walas
+
+            } elseif ($skenario === 'sebagian_approve') {
+                // Wali kelas & guru BK sudah approve -> nyangkut di tahap Kesiswaan
                 $row['status'] = 'diajukan';
                 $row['status_wali_kelas'] = 'approved';
                 $row['approved_by_wali_kelas'] = $waliKelasId;
@@ -64,6 +78,21 @@ class PenempatanPklSeeder extends Seeder
                 $row['status_guru_bk'] = 'approved';
                 $row['approved_by_guru_bk'] = $guruBkId;
                 $row['approved_at_guru_bk'] = now();
+
+            } elseif ($skenario === 'menunggu_kajur') {
+                // Wali kelas, guru BK, kesiswaan sudah approve -> nyangkut di tahap Kajur
+                $row['status'] = 'diajukan';
+                $row['status_wali_kelas'] = 'approved';
+                $row['approved_by_wali_kelas'] = $waliKelasId;
+                $row['approved_at_wali_kelas'] = now();
+                $row['status_guru_bk'] = 'approved';
+                $row['approved_by_guru_bk'] = $guruBkId;
+                $row['approved_at_guru_bk'] = now();
+                $row['status_kesiswaan'] = 'approved';
+                $row['approved_by_kesiswaan'] = $kesiswaanId;
+                $row['approved_at_kesiswaan'] = now();
+                // status_kepala_jurusan tetap 'pending' -> muncul di approval kajur
+
             } elseif ($skenario === 'full_approve') {
                 $row['status'] = 'approved';
                 $row['status_wali_kelas'] = 'approved';
@@ -78,6 +107,7 @@ class PenempatanPklSeeder extends Seeder
                 $row['status_kepala_jurusan'] = 'approved';
                 $row['approved_by_kepala_jurusan'] = $kajurId;
                 $row['approved_at_kepala_jurusan'] = now();
+
             } elseif ($skenario === 'ada_reject') {
                 $row['status'] = 'rejected';
                 $row['status_wali_kelas'] = 'approved';
@@ -88,6 +118,7 @@ class PenempatanPklSeeder extends Seeder
                 $row['approved_at_guru_bk'] = now();
                 $row['catatan_guru_bk'] = 'Perlu perbaikan surat pengantar dari orang tua.';
             }
+            // 'draft' -> tidak diubah, tetap default (draft, semua pending)
 
             DB::table('penempatan_pkl')->insert($row);
         }

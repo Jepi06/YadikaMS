@@ -9,17 +9,32 @@ class JurusanSeeder extends Seeder
 {
     public function run(): void
     {
-        $jurusan = [
-            ['nama' => 'Perhotelan', 'kode' => 'HTL'],
-            ['nama' => 'Pengembangan Perangkat Lunak Dan Gim', 'kode' => 'PPLG'],
-            ['nama' => 'Akuntansi', 'kode' => 'AK'],
-        ];
+        $kajurId = DB::table('users')
+            ->where('email', 'kajur@smk.sch.id')
+            ->value('id');
 
-        foreach ($jurusan as $j) {
-            DB::table('jurusan')->insert(array_merge($j, [
+        DB::table('jurusan')->insert([
+            [
+                'nama' => 'Perhotelan',
+                'kode' => 'HTL',
+                'kepala_jurusan_id' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]));
-        }
+            ],
+            [
+                'nama' => 'Pengembangan Perangkat Lunak Dan Gim',
+                'kode' => 'PPLG',
+                'kepala_jurusan_id' => $kajurId,   // ← di sini datanya
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nama' => 'Akuntansi',
+                'kode' => 'AK',
+                'kepala_jurusan_id' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 }

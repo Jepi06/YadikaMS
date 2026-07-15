@@ -88,6 +88,12 @@ class User extends Authenticatable
         return $this->hasPklRole('wali_kelas', 'guru_bk', 'kesiswaan', 'kepala_jurusan');
     }
 
+    /** BARU: dipakai middleware/route untuk membatasi menu CRUD ke admin & hubin saja */
+    public function isAdminAtauHubin(): bool
+    {
+        return $this->hasPklRole('admin');
+    }
+
     // ── Accessors ─────────────────────────────────────────────
 
     protected function labelForModule(string $moduleKode, array $labels): string

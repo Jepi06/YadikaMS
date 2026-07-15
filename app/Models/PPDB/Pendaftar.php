@@ -1,68 +1,24 @@
 <?php
+// app/Models/Pendaftar.php
 
-namespace App\Models\PPDB;
+namespace App\Models;
 
-use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
-/**
- * @property int $id
- * @property string $no_pendaftaran
- * @property string $nama_lengkap
- * @property string $jenis_kelamin
- * @property string $alamat
- * @property string $agama
- * @property string $nama_orang_tua
- * @property string $asal_sekolah
- * @property string $no_hp
- * @property int $jurusan_id
- * @property string $status
- * @property numeric $nominal_pembayaran
- * @property string|null $catatan_admin
- * @property int|null $processed_by
- * @property \Illuminate\Support\Carbon|null $processed_at
- * @property int|null $created_by
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read string $jenis_kelamin_label
- * @property-read string $no_hp_formatted
- * @property-read string $nominal_formatted
- * @property-read string $status_badge
- * @property-read string $status_label
- * @property-read string $whatsapp_url
- * @property-read \App\Models\PPDB\Jurusan $jurusan
- * @property-read User|null $processor
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar byJurusan($jurusanId)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar diterima()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar pending()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereAgama($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereAlamat($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereAsalSekolah($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereCatatanAdmin($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereCreatedBy($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereJenisKelamin($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereJurusanId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereNamaLengkap($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereNamaOrangTua($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereNoHp($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereNoPendaftaran($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereNominalPembayaran($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereProcessedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereProcessedBy($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Pendaftar whereUpdatedAt($value)
- * @mixin \Eloquent
- */
 class Pendaftar extends Model
 {
+    use HasFactory;
+
     protected $table = 'pendaftar';
+
+    // Batas nominal pembayaran administrasi agar otomatis "diterima"
+    const MINIMAL_DITERIMA = 2500000;
+
+    const STATUS_PENDING = 'pending';
+    const STATUS_DITERIMA = 'diterima';
+    const STATUS_DITOLAK = 'ditolak';
 
     protected $fillable = [
         'no_pendaftaran',
@@ -79,6 +35,7 @@ class Pendaftar extends Model
         'catatan_admin',
         'processed_by',
         'processed_at',
+        'created_by',
     ];
 
     protected $casts = [
@@ -86,87 +43,133 @@ class Pendaftar extends Model
         'processed_at' => 'datetime',
     ];
 
-    // ── Relasi ────────────────────────────────────────────────
-    public function jurusan(): BelongsTo
+    /**
+     * Relasi ke jurusan HANYA untuk kebutuhan tampilan (nama jurusan),
+     * tanpa constraint FK di database. Jika data jurusan dihapus,
+     * pendaftar tetap aman (nullOnDelete tidak dipasang di migration).
+     */
+    public function jurusan()
     {
         return $this->belongsTo(Jurusan::class, 'jurusan_id');
     }
 
-    public function processor(): BelongsTo
+    public function processedBy()
     {
         return $this->belongsTo(User::class, 'processed_by');
     }
 
-    // ── Accessors ─────────────────────────────────────────────
-    public function getJenisKelaminLabelAttribute(): string
+    public function createdBy()
     {
-        return $this->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan';
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /* ================= SCOPES ================= */
+
+    public function scopeDiterima($query)
+    {
+        return $query->where('status', self::STATUS_DITERIMA);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', self::STATUS_PENDING);
+    }
+
+    public function scopeDitolak($query)
+    {
+        return $query->where('status', self::STATUS_DITOLAK);
+    }
+
+    public function scopePerJurusan($query, $jurusanId)
+    {
+        return $query->where('jurusan_id', $jurusanId);
+    }
+
+    /* ================= HELPERS / BUSINESS LOGIC ================= */
+
+    /**
+     * Generate nomor pendaftaran otomatis: PPDB-2026-0001
+     */
+    public static function generateNoPendaftaran(): string
+    {
+        $tahun = now()->year;
+        $last = self::where('no_pendaftaran', 'like', "PPDB-{$tahun}-%")
+            ->orderByDesc('id')
+            ->first();
+
+        $urut = 1;
+        if ($last) {
+            $urut = (int) substr($last->no_pendaftaran, -4) + 1;
+        }
+
+        return sprintf('PPDB-%s-%04d', $tahun, $urut);
+    }
+
+    /**
+     * Cek apakah nominal memenuhi syarat otomatis diterima
+     */
+    public function isEligibleForAutoAccept(): bool
+    {
+        return (float) $this->nominal_pembayaran >= self::MINIMAL_DITERIMA;
+    }
+
+    /**
+     * Terapkan aturan: kalau nominal >= 2.5jt -> status otomatis diterima.
+     * Dipanggil setiap kali admin update nominal.
+     */
+    public function applyAutoAcceptRule(): void
+    {
+        if ($this->isEligibleForAutoAccept() && $this->status !== self::STATUS_DITOLAK) {
+            $this->status = self::STATUS_DITERIMA;
+            $this->processed_by = Auth::id();
+            $this->processed_at = now();
+        }
+    }
+
+    /**
+     * Nomor HP dirapikan ke format internasional (62xxxx) untuk link WhatsApp
+     */
+    public function getWhatsappNumberAttribute(): string
+    {
+        $number = preg_replace('/\D/', '', $this->no_hp ?? '');
+
+        if (str_starts_with($number, '0')) {
+            $number = '62' . substr($number, 1);
+        } elseif (!str_starts_with($number, '62')) {
+            $number = '62' . $number;
+        }
+
+        return $number;
+    }
+
+    public function getWhatsappLinkAttribute(): string
+    {
+        $pesan = "Halo {$this->nama_lengkap}, terkait pendaftaran Anda dengan nomor {$this->no_pendaftaran}...";
+
+        return "https://wa.me/{$this->whatsapp_number}?text=" . urlencode($pesan);
     }
 
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'diterima' => 'Diterima',
-            'ditolak'  => 'Ditolak',
-            default    => 'Menunggu',
+            self::STATUS_DITERIMA => 'Diterima',
+            self::STATUS_DITOLAK => 'Tidak Diterima',
+            default => 'Menunggu Verifikasi',
         };
     }
 
-    public function getStatusBadgeAttribute(): string
+    /**
+     * Auto-generate no_pendaftaran saat create
+     */
+    protected static function booted()
     {
-        return match ($this->status) {
-            'diterima' => 'badge-success',
-            'ditolak'  => 'badge-danger',
-            default    => 'badge-warning',
-        };
-    }
-
-    public function getNoHpFormattedAttribute(): string
-    {
-        $no = preg_replace('/[^0-9]/', '', $this->no_hp);
-        if (str_starts_with($no, '0')) {
-            $no = '62' . substr($no, 1);
-        }
-        return $no;
-    }
-
-    public function getWhatsappUrlAttribute(): string
-    {
-        return 'https://wa.me/' . $this->no_hp_formatted;
-    }
-
-    public function getNominalFormattedAttribute(): string
-    {
-        return 'Rp ' . number_format($this->nominal_pembayaran ?? 0, 0, ',', '.');
-    }
-
-    // ── Scopes ────────────────────────────────────────────────
-    public function scopeDiterima($query)
-    {
-        return $query->where('status', 'diterima');
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
-
-    public function scopeByJurusan($query, $jurusanId)
-    {
-        return $query->where('jurusan_id', $jurusanId);
-    }
-
-    // ── Static: Generate No Pendaftaran ───────────────────────
-    public static function generateNoPendaftaran(): string
-    {
-        $year  = date('Y');
-        $count = self::whereYear('created_at', $year)->count() + 1;
-        return 'PPDB-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
-    }
-
-    // ── Business Logic ────────────────────────────────────────
-    public function isLayakDiterima(): bool
-    {
-        return ($this->nominal_pembayaran ?? 0) >= 2500000;
+        static::creating(function (Pendaftar $pendaftar) {
+            if (empty($pendaftar->no_pendaftaran)) {
+                $pendaftar->no_pendaftaran = self::generateNoPendaftaran();
+            }
+            if (empty($pendaftar->status)) {
+                $pendaftar->status = self::STATUS_PENDING;
+            }
+        });
     }
 }

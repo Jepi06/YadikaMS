@@ -156,40 +156,39 @@ Route::prefix('pkl')->middleware('auth.pkl')->group(function () {
 | PPDB – PUBLIC (tanpa login)
 |==========================================================================
 */
-// Route::prefix('ppdb')->name('ppdb.')->group(function () {
+Route::prefix('ppdb')->name('ppdb.')->group(function () {
 
-//     // Halaman cek status untuk peserta didik (tidak perlu login)
-//     Route::get('/cek-status', [PpdbPendaftarController::class, 'cekStatus'])->name('cek-status');
+    // Halaman cek status untuk peserta didik (tidak perlu login)
+    Route::get('/cek-status', [PpdbPendaftarController::class, 'cekStatus'])->name('cek-status');
 
-//     // guest:ppdb → guard 'ppdb' di config/auth.php
-//     Route::middleware('guest:ppdb')->group(function () {
-//         Route::get('/login', [PpdbAuthController::class, 'showLogin'])->name('login');
-//         Route::post('/login', [PpdbAuthController::class, 'login'])->name('login.process');
-//     });
-// });
+    // guest:ppdb → guard 'ppdb' di config/auth.php
+    Route::middleware('guest:ppdb')->group(function () {
+        Route::get('/login', [PpdbAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [PpdbAuthController::class, 'login'])->name('login.process');
+    });
+});
 
-// // Logout PPDB – di luar prefix supaya middleware auth.ppdb berdiri sendiri
-// Route::post('/ppdb/logout', [PpdbAuthController::class, 'logout'])
-//     ->middleware('auth.ppdb')
-//     ->name('ppdb.logout');
+// Logout PPDB – di luar prefix supaya middleware auth.ppdb berdiri sendiri
+Route::post('/ppdb/logout', [PpdbAuthController::class, 'logout'])
+    ->middleware('auth.ppdb')
+    ->name('ppdb.logout');
 
-// /*
-// |==========================================================================
-// | PPDB – PROTECTED (admin PPDB)
-// |==========================================================================
-// */
-// Route::prefix('ppdb')->name('ppdb.')->middleware('auth.ppdb')->group(function () {
+/*
+|==========================================================================
+| PPDB – PROTECTED (admin PPDB)
+|==========================================================================
+*/
+Route::prefix('ppdb')->name('ppdb.')->middleware('auth.ppdb')->group(function () {
 
-//     Route::get('/dashboard', [PpdbPendaftarController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [PpdbPendaftarController::class, 'dashboard'])->name('dashboard');
 
-//     // Manajemen Pendaftar
-//     Route::get('/pendaftar', [PpdbPendaftarController::class, 'index'])->name('pendaftar.index');
-//     Route::get('/pendaftar/{pendaftar}', [PpdbPendaftarController::class, 'show'])->name('pendaftar.show');
-//     Route::patch('/pendaftar/{pendaftar}/status', [PpdbPendaftarController::class, 'updateStatus'])->name('pendaftar.updateStatus');
+    // Manajemen Pendaftar
+    Route::get('/pendaftar', [PpdbPendaftarController::class, 'index'])->name('pendaftar.index');
+    Route::get('/pendaftar/{pendaftar}', [PpdbPendaftarController::class, 'show'])->name('pendaftar.show');
+    Route::patch('/pendaftar/{pendaftar}/status', [PpdbPendaftarController::class, 'updateStatus'])->name('pendaftar.updateStatus');
 
-//     // Export
-//     Route::get('/export/excel', [PpdbPendaftarController::class, 'exportExcel'])->name('export.excel');
-//     Route::get('/export/pdf', [PpdbPendaftarController::class, 'exportPdf'])->name('export.pdf');
-// });
+    // Export
+    Route::get('/export/excel', [PpdbPendaftarController::class, 'exportExcel'])->name('export.excel');
+    Route::get('/export/pdf', [PpdbPendaftarController::class, 'exportPdf'])->name('export.pdf');
+});
 
-    

@@ -72,12 +72,6 @@
                                 <td>
                                     <div class="fw-semibold">{{ $p->siswa->nama }}</div>
                                     <small class="text-muted font-monospace">{{ $p->siswa->nis }}</small>
-                                    {{-- BARU: badge asal pengajuan --}}
-                                    @if (($p->sumber ?? 'admin') === 'siswa_publik')
-                                        <span class="badge bg-info-subtle text-info d-block mt-1" style="width:fit-content">
-                                            <i class="bi bi-person-check me-1"></i>Pengajuan Mandiri
-                                        </span>
-                                    @endif
                                 </td>
                                 <td>{{ $p->siswa->kelas->nama_kelas ?? '-' }}</td>
                                 <td>

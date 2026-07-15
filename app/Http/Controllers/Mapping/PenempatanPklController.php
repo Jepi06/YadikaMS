@@ -31,10 +31,26 @@ class PenempatanPklController extends Controller
 
         $penempatan = $query->latest()->paginate(15)->withQueryString();
         $kelas = Kelas::with('jurusan')->orderBy('nama_kelas')->get();
+
+        // Dipisah jadi dua:
+        // - $tempatPkl: SEMUA tempat, dipakai untuk dropdown FILTER tabel (tempat
+        //   yang sudah penuh tetap harus bisa difilter, karena datanya sudah ada
+        //   di tabel penempatan).
+        // - $tempatPklTersedia: hanya yang BELUM penuh, dipakai di form
+        //   "Tambah Penempatan" supaya admin tidak menempatkan siswa ke tempat
+        //   yang kuotanya sudah habis.
         $tempatPkl = TempatPkl::orderBy('nama_tempat')->get();
+        $tempatPklTersedia = TempatPkl::tersedia();
+
         $guruPembimbing = GuruPembimbing::orderBy('nama')->get();
 
-        return view('Mapping.penempatan.index', compact('penempatan', 'kelas', 'tempatPkl', 'guruPembimbing'));
+        return view('Mapping.penempatan.index', compact(
+            'penempatan',
+            'kelas',
+            'tempatPkl',
+            'tempatPklTersedia',
+            'guruPembimbing'
+        ));
     }
 
     /**
@@ -53,6 +69,16 @@ class PenempatanPklController extends Controller
             'tahun_ajaran' => 'required|string|max:20',
             'keterangan' => 'nullable|string',
         ]);
+
+        // BARU: validasi kuota sebelum insert bulk.
+        $tempat = TempatPkl::findOrFail($request->tempat_pkl_id);
+        $sisa = $tempat->sisaKuota(); // null = tanpa batas
+
+        if ($sisa !== null && count($request->siswa_ids) > $sisa) {
+            return back()->with('error', $sisa > 0
+                ? "Kuota tempat PKL ini tinggal {$sisa} slot, tidak cukup untuk " . count($request->siswa_ids) . " siswa yang dipilih."
+                : 'Kuota tempat PKL ini sudah penuh.');
+        }
 
         DB::transaction(function () use ($request) {
             foreach ($request->siswa_ids as $siswaId) {
@@ -133,7 +159,7 @@ class PenempatanPklController extends Controller
     }
 
     /**
-     * BARU: Lengkapi data penempatan yang berasal dari pengajuan PUBLIK siswa
+     * Lengkapi data penempatan yang berasal dari pengajuan PUBLIK siswa
      * (guru pembimbing & jadwal belum diisi saat siswa mengajukan mandiri
      * lewat PengajuanPklPublicController). Tempat PKL & siswa TIDAK diubah
      * di sini karena itu sudah ditentukan siswa sendiri saat mengajukan.
@@ -163,7 +189,7 @@ class PenempatanPklController extends Controller
     }
 
     /**
-     * BARU: Cetak/unduh Surat Rekomendasi PKL dalam bentuk PDF.
+     * Cetak/unduh Surat Rekomendasi PKL dalam bentuk PDF.
      * Hanya bisa dicetak jika seluruh 4 approver sudah menyetujui (status = approved),
      * supaya surat resmi tidak keluar sebelum proses approval selesai.
      *

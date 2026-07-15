@@ -202,7 +202,7 @@
             </a>
 
             @auth('pkl')
-                {{-- Menu khusus akun SISWA (role_pkl = 'siswa') --}}
+                {{-- Menu khusus akun SISWA --}}
                 @if ($pklUser->isSiswa())
                     <div class="nav-section">PKL Saya</div>
                     <a href="{{ route('siswa.pkl.status') }}"
@@ -215,9 +215,18 @@
                     </a>
                 @endif
 
-                {{-- Menu Data Master & Penempatan: disembunyikan dari akun siswa,
-             karena siswa hanya perlu menu "PKL Saya" di atas --}}
-                @if (!$pklUser->isSiswa())
+                {{--
+                    PERBAIKAN: sebelumnya dicek dengan "!$pklUser->isSiswa()", artinya
+                    menu Data Master & Penempatan PKL muncul untuk SIAPAPUN yang bukan
+                    siswa — termasuk Wali Kelas, Guru BK, Kesiswaan, Kepala Jurusan.
+                    Padahal route-nya (lihat routes/pkl.php) sudah dibatasi
+                    middleware role:admin,hubin. Akibatnya 4 role approver itu tetap
+                    melihat link ke halaman yang akan menghasilkan 403 kalau diklik —
+                    seharusnya link-nya memang disembunyikan, bukan cuma diblokir di
+                    route. Sekarang dicek isAdminAtauHubin(), match persis dengan
+                    middleware yang membatasi route-route ini.
+                --}}
+                @if ($pklUser->isAdminAtauHubin())
                     <div class="nav-section">Data Master</div>
                     <a href="{{ route('siswa.index') }}"
                         class="nav-link {{ request()->routeIs('siswa.index') ? 'active' : '' }}">
@@ -241,17 +250,28 @@
                         class="nav-link {{ request()->routeIs('penempatan.*') ? 'active' : '' }}">
                         <i class="bi bi-map me-2"></i>Penempatan PKL
                     </a>
+                    {{-- <a href="{{ route('pengajuan.index') }}"
+                        class="nav-link {{ request()->routeIs('pengajuan.*') ? 'active' : '' }}">
+                        <i class="bi bi-inbox me-2"></i>Pengajuan Masuk
+                    </a> --}}
+                @endif
 
-                    {{-- PERBAIKAN: sebelumnya ditampilkan untuk "role !== admin" (memakai
-             kolom role yang salah), sehingga siapapun yang bukan admin —
-             termasuk nantinya siswa — ikut melihat menu Approval. Sekarang
-             dibatasi eksplisit hanya untuk 4 role approver PKL. --}}
-                    @if ($pklUser->isApproverPkl())
-                        <a href="{{ route('approval.index') }}"
-                            class="nav-link {{ request()->routeIs('approval.*') ? 'active' : '' }}">
-                            <i class="bi bi-check2-circle me-2"></i>Approval
-                        </a>
-                    @endif
+                {{--
+                    Menu Approval: dipisah dari blok admin/hubin di atas (bukan
+                    "else"), karena seorang user BISA punya role admin/hubin
+                    SEKALIGUS salah satu role approver — keduanya independen,
+                    jadi dicek terpisah, bukan saling meniadakan.
+                --}}
+                @if ($pklUser->isApproverPkl())
+                    <div class="nav-section">Persetujuan</div>
+                    <a href="{{ route('approval.index') }}"
+                        class="nav-link {{ request()->routeIs('approval.*') ? 'active' : '' }}">
+                        <i class="bi bi-check2-circle me-2"></i>Approval
+                        {{-- Catatan: daftar yang tampil di halaman ini sudah otomatis
+                             disaring per user (wali kelas cuma lihat kelasnya sendiri,
+                             guru BK cuma kelas yang dia ampu, kepala jurusan cuma
+                             jurusannya) — lihat ApprovalController::index(). --}}
+                    </a>
                 @endif
             @endauth
         </div>
@@ -265,12 +285,9 @@
             </div>
             <div class="d-flex align-items-center gap-3">
                 @auth('pkl')
-                    {{-- PERBAIKAN: getRoleLabel() tidak ada -> role_pkl_label (accessor asli) --}}
                     <span class="badge bg-primary-subtle text-primary fw-normal px-3 py-2">
                         {{ $pklUser->role_pkl_label }} — {{ $pklUser->name }}
                     </span>
-                    {{-- PERBAIKAN: route('logout') tidak terdaftar, nama route yang benar
-                 adalah 'pkl.logout' (lihat web.php) --}}
                     <form action="{{ route('pkl.logout') }}" method="POST">
                         @csrf
                         <button class="btn btn-sm btn-outline-secondary">

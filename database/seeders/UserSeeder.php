@@ -22,6 +22,36 @@ class UserSeeder extends Seeder
 
         $daftarUser = [
             [
+                'name' => 'Hubin SMK',
+                'email' => 'hubin@smk.sch.id',
+                'roles' => [
+                    ['pkl', 'admin'],
+                ],
+            ],
+            [
+                'name' => 'Guru BK',
+                'email' => 'bk@smk.sch.id',
+                'roles' => [
+                    ['pkl', 'guru_bk'],
+                ],
+            ],
+            [
+                'name' => 'Kajur PPLG',
+                'email' => 'kajur@smk.sch.id',
+                'roles' => [
+                    ['pkl', 'kepala_jurusan'],
+                    ['lms', 'guru'],
+                ],
+            ],
+            [
+                'name' => 'Wali Kelas PPLG',
+                'email' => 'walas@smk.sch.id',
+                'roles' => [
+                    ['pkl', 'wali_kelas'],
+                    ['lms', 'guru'],
+                ],
+            ],
+            [
                 'name' => 'Budi Santoso, S.Kom',
                 'email' => 'budi.santoso@smk.sch.id',
                 'roles' => [
