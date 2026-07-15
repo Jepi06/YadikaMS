@@ -1,8 +1,8 @@
 <?php
-// app/Models/Pendaftar.php
 
-namespace App\Models;
+namespace App\Models\SPMB;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -13,8 +13,11 @@ class Pendaftar extends Model
 
     protected $table = 'pendaftar';
 
-    // Batas nominal pembayaran administrasi agar otomatis "diterima"
-    const MINIMAL_DITERIMA = 2500000;
+    /**
+     * Batas nominal pembayaran administrasi agar otomatis "diterima".
+     * Sesuai ketentuan sekolah: Rp 2.000.000
+     */
+    const MINIMAL_DITERIMA = 2000000;
 
     const STATUS_PENDING = 'pending';
     const STATUS_DITERIMA = 'diterima';
@@ -36,11 +39,16 @@ class Pendaftar extends Model
         'processed_by',
         'processed_at',
         'created_by',
+        'is_lunas',
+        'lunas_at',
+        'lunas_by',
     ];
 
     protected $casts = [
         'nominal_pembayaran' => 'decimal:2',
         'processed_at' => 'datetime',
+        'lunas_at' => 'datetime',
+        'is_lunas' => 'boolean',
     ];
 
     /**
@@ -61,6 +69,11 @@ class Pendaftar extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function lunasBy()
+    {
+        return $this->belongsTo(User::class, 'lunas_by');
     }
 
     /* ================= SCOPES ================= */
@@ -85,15 +98,20 @@ class Pendaftar extends Model
         return $query->where('jurusan_id', $jurusanId);
     }
 
+    public function scopeBelumBayar($query)
+    {
+        return $query->whereNull('nominal_pembayaran')->orWhere('nominal_pembayaran', 0);
+    }
+
     /* ================= HELPERS / BUSINESS LOGIC ================= */
 
     /**
-     * Generate nomor pendaftaran otomatis: PPDB-2026-0001
+     * Generate nomor pendaftaran otomatis: SPMB-2026-0001
      */
     public static function generateNoPendaftaran(): string
     {
         $tahun = now()->year;
-        $last = self::where('no_pendaftaran', 'like', "PPDB-{$tahun}-%")
+        $last = self::where('no_pendaftaran', 'like', "SPMB-{$tahun}-%")
             ->orderByDesc('id')
             ->first();
 
@@ -102,28 +120,51 @@ class Pendaftar extends Model
             $urut = (int) substr($last->no_pendaftaran, -4) + 1;
         }
 
-        return sprintf('PPDB-%s-%04d', $tahun, $urut);
+        return sprintf('SPMB-%s-%04d', $tahun, $urut);
     }
 
     /**
-     * Cek apakah nominal memenuhi syarat otomatis diterima
+     * Cek apakah nominal memenuhi syarat otomatis diterima (>= Rp 2.000.000)
      */
     public function isEligibleForAutoAccept(): bool
     {
         return (float) $this->nominal_pembayaran >= self::MINIMAL_DITERIMA;
     }
 
+    public function belumAdaNominal(): bool
+    {
+        return empty($this->nominal_pembayaran) || (float) $this->nominal_pembayaran <= 0;
+    }
+
     /**
-     * Terapkan aturan: kalau nominal >= 2.5jt -> status otomatis diterima.
-     * Dipanggil setiap kali admin update nominal.
+     * Terapkan aturan: kalau nominal >= Rp 2.000.000 -> status otomatis diterima.
+     * Dipanggil setiap kali admin menambah/mengubah nominal.
      */
     public function applyAutoAcceptRule(): void
     {
         if ($this->isEligibleForAutoAccept() && $this->status !== self::STATUS_DITOLAK) {
             $this->status = self::STATUS_DITERIMA;
-            $this->processed_by = Auth::id();
+            $this->processed_by = Auth::guard('spmb')->id();
             $this->processed_at = now();
         }
+    }
+
+    /**
+     * Tandai pembayaran lunas secara manual oleh admin (checklist hijau).
+     * Terpisah dari status penerimaan siswa baru — murni penanda administrasi.
+     */
+    public function tandaiLunas(): void
+    {
+        $this->is_lunas = true;
+        $this->lunas_at = now();
+        $this->lunas_by = Auth::guard('spmb')->id();
+    }
+
+    public function batalkanLunas(): void
+    {
+        $this->is_lunas = false;
+        $this->lunas_at = null;
+        $this->lunas_by = null;
     }
 
     /**
@@ -156,6 +197,11 @@ class Pendaftar extends Model
             self::STATUS_DITOLAK => 'Tidak Diterima',
             default => 'Menunggu Verifikasi',
         };
+    }
+
+    public function getSisaTagihanAttribute(): float
+    {
+        return max(0, self::MINIMAL_DITERIMA - (float) $this->nominal_pembayaran);
     }
 
     /**

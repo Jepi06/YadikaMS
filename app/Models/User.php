@@ -50,9 +50,10 @@ class User extends Authenticatable
         return $this->hasModuleAccess('pkl');
     }
 
-    public function hasPpdbAccess(): bool
+    /** Diganti dari hasPpdbAccess() -> hasSpmbAccess() */
+    public function hasSpmbAccess(): bool
     {
-        return $this->hasModuleAccess('ppdb');
+        return $this->hasModuleAccess('spmb');
     }
 
     public function hasLmsAccess(): bool
@@ -73,9 +74,10 @@ class User extends Authenticatable
         return $this->hasRoleInModule('pkl', ...$roles);
     }
 
-    public function hasPpdbRole(string ...$roles): bool
+    /** Diganti dari hasPpdbRole() -> hasSpmbRole() */
+    public function hasSpmbRole(string ...$roles): bool
     {
-        return $this->hasRoleInModule('ppdb', ...$roles);
+        return $this->hasRoleInModule('spmb', ...$roles);
     }
 
     public function isSiswa(): bool
@@ -88,10 +90,16 @@ class User extends Authenticatable
         return $this->hasPklRole('wali_kelas', 'guru_bk', 'kesiswaan', 'kepala_jurusan');
     }
 
-    /** BARU: dipakai middleware/route untuk membatasi menu CRUD ke admin & hubin saja */
+    /** dipakai middleware/route untuk membatasi menu CRUD ke admin & hubin saja */
     public function isAdminAtauHubin(): bool
     {
         return $this->hasPklRole('admin');
+    }
+
+    /** Admin SPMB — satu-satunya role yang boleh login ke panel SPMB */
+    public function isAdminSpmb(): bool
+    {
+        return $this->hasSpmbRole('admin');
     }
 
     // ── Accessors ─────────────────────────────────────────────
@@ -121,10 +129,11 @@ class User extends Authenticatable
         ]);
     }
 
-    public function getRolePpdbLabelAttribute(): string
+    /** Diganti dari getRolePpdbLabelAttribute() -> getRoleSpmbLabelAttribute() */
+    public function getRoleSpmbLabelAttribute(): string
     {
-        return $this->labelForModule('ppdb', [
-            'admin' => 'Admin PPDB',
+        return $this->labelForModule('spmb', [
+            'admin' => 'Admin SPMB',
         ]);
     }
 

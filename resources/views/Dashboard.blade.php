@@ -1458,7 +1458,7 @@
                 <li><a href="#kegiatan">Kegiatan</a></li>
                 <li><a href="#pengumuman">Pengumuman</a></li>
                 <li><a href="#sambutan">Tentang Kami</a></li>
-                <li><a href="/ppdb" class="nav-cta">🎓 Daftar SMBP</a></li>
+                <li><a href="/spmb" class="nav-cta">🎓 Daftar SMBP</a></li>
             </ul>
             <div class="hamburger" onclick="toggleMenu()">
                 <span></span><span></span><span></span>
@@ -1479,7 +1479,7 @@
                 <p class="hero-desc">Sekolah Menengah Kejuruan unggulan di Soreang, Kabupaten Bandung — membangun
                     generasi berkarakter, kompeten, dan siap menghadapi industri global.</p>
                 <div class="hero-actions">
-                    <a href="/ppdb" class="btn-primary">🎓 Daftar SMBP Sekarang</a>
+                    <a href="/spmb" class="btn-primary">🎓 Daftar SMBP Sekarang</a>
                     <a href="#layanan" class="btn-outline">Lihat Layanan →</a>
                 </div>
                 <div class="hero-stats">
@@ -1565,7 +1565,7 @@
                             <li>Pembayaran & verifikasi dokumen digital</li>
                             <li>Jalur reguler dan jalur prestasi tersedia</li>
                         </ul>
-                        <a class="btn-service" href="/ppdb">Daftar SMBP Sekarang →</a>
+                        <a class="btn-service" href="/spmb">Daftar SMBP Sekarang →</a>
                     </div>
                 </div>
 
@@ -1822,12 +1822,12 @@
     </section>
 
     <!-- CTA -->
-    <div class="cta-banner" id="ppdb">
+    <div class="cta-banner" id="spmb">
         <div class="cta-banner-inner reveal">
             <h2>Bergabung bersama SMK Yadika Soreang – Wujudkan Karier Impianmu!</h2>
             <p>Daftarkan diri lewat jalur SMBP sekarang. Kuota terbatas — jangan sampai kehabisan!</p>
             <div class="cta-actions">
-                <a href="/ppdb" class="btn-primary">🎓 Daftar SMBP Sekarang</a>
+                <a href="/spmb" class="btn-primary">🎓 Daftar SMBP Sekarang</a>
                 <a href="https://wa.me/6281234567890" class="btn-outline">💬 Hubungi via WhatsApp</a>
             </div>
         </div>
