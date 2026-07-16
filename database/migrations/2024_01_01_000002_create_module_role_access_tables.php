@@ -7,17 +7,16 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
-     * - modules   : daftar sistem/fitur yang ada (PKL, PPDB/SPMB, LMS).
+     * - modules   : daftar sistem/fitur yang ada (PKL, spmb/SPMB, LMS).
      * - roles     : daftar peran, DI-SCOPE per modul. Jadi role "admin"
      *               di modul pkl adalah baris berbeda dengan "admin"
-     *               di modul ppdb, meski nama kodenya sama.
+     *               di modul SPMB, meski nama kodenya sama.
      * - user_role : pivot many-to-many antara users dan roles.
      *               Satu user bisa punya banyak baris di sini
      *               -> bisa sekaligus jadi guru di LMS, wali_kelas
-     *               di PKL, dan admin di PPDB.
+     *               di PKL, dan admin di SPMB.
      *
      * Untuk mengatur "guru ini bisa akses apa saja", admin/super admin
      * tinggal tambah/hapus baris di tabel user_role lewat UI —
@@ -27,7 +26,7 @@ return new class extends Migration
     {
         Schema::create('modules', function (Blueprint $table) {
             $table->id();
-            $table->string('kode', 20)->unique(); // pkl, ppdb, lms
+            $table->string('kode', 20)->unique(); // pkl, SPMB, lms
             $table->string('nama');
             $table->timestamps();
         });
@@ -68,7 +67,7 @@ return new class extends Migration
         // ── Seed modul ──────────────────────────────────────────
         DB::table('modules')->insert([
             ['id' => 1, 'kode' => 'pkl', 'nama' => 'Praktik Kerja Lapangan', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 2, 'kode' => 'ppdb', 'nama' => 'Penerimaan Peserta Didik Baru (SPMB)', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 2, 'kode' => 'spmb', 'nama' => 'Penerimaan Peserta Didik Baru (SPMB)', 'created_at' => now(), 'updated_at' => now()],
             ['id' => 3, 'kode' => 'lms', 'nama' => 'Learning Management System', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
@@ -80,8 +79,8 @@ return new class extends Migration
             ['module_id' => 1, 'kode' => 'guru_bk', 'nama' => 'Guru BK', 'created_at' => now(), 'updated_at' => now()],
             ['module_id' => 1, 'kode' => 'kesiswaan', 'nama' => 'Kesiswaan', 'created_at' => now(), 'updated_at' => now()],
             ['module_id' => 1, 'kode' => 'kepala_jurusan', 'nama' => 'Kepala Jurusan', 'created_at' => now(), 'updated_at' => now()],
-            // PPDB / SPMB
-            ['module_id' => 2, 'kode' => 'admin', 'nama' => 'Admin PPDB', 'created_at' => now(), 'updated_at' => now()],
+            // SPMB / SPMB
+            ['module_id' => 2, 'kode' => 'admin', 'nama' => 'Admin SPMB', 'created_at' => now(), 'updated_at' => now()],
             // LMS
             ['module_id' => 3, 'kode' => 'admin', 'nama' => 'Admin LMS', 'created_at' => now(), 'updated_at' => now()],
             ['module_id' => 3, 'kode' => 'guru', 'nama' => 'Guru', 'created_at' => now(), 'updated_at' => now()],

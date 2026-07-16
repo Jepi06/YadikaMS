@@ -20,7 +20,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (! Auth::guard('spmb')->attempt($credentials, $request->boolean('remember'))) {
+        if (!Auth::guard('spmb')->attempt($credentials, $request->boolean('remember'))) {
             return back()
                 ->withErrors(['email' => 'Email atau password salah.'])
                 ->onlyInput('email');
@@ -29,7 +29,7 @@ class AuthController extends Controller
         $user = Auth::guard('spmb')->user();
 
         // Hanya admin SPMB yang boleh masuk ke panel ini
-        if (! $user->hasSpmbAccess()) {
+        if (!$user->hasSpmbAccess()) {
             Auth::guard('spmb')->logout();
             return back()->withErrors(['email' => 'Akun Anda tidak memiliki akses ke sistem SPMB.']);
         }

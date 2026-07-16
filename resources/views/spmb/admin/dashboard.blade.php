@@ -33,7 +33,7 @@
         <div class="col-md-3">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="text-muted small">Tidak Diterima</div>
+                    <div class="text-muted small">Belum Diterima</div>
                     <div class="fs-3 fw-bold text-danger">{{ $totalDitolak }}</div>
                 </div>
             </div>

@@ -2,22 +2,34 @@
 
 namespace App\Exports;
 
+use App\Models\SPMB\Jurusan;
 use App\Models\SPMB\Pendaftar;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class PendaftarExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
+class PendaftarExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles, WithTitle
 {
     /**
-     * Seluruh data peserta didik baru, lengkap dengan biodata dan nominal.
+     * @param int|null $jurusanId Jika diisi, hanya mengekspor pendaftar
+     *                            dari jurusan tersebut. Jika null, ekspor semua.
+     */
+    public function __construct(private ?int $jurusanId = null)
+    {
+    }
+
+    /**
+     * Seluruh data peserta didik baru (atau terfilter per jurusan),
+     * lengkap dengan biodata dan nominal.
      */
     public function collection()
     {
         return Pendaftar::with('jurusan:id,nama')
+            ->when($this->jurusanId, fn($q) => $q->where('jurusan_id', $this->jurusanId))
             ->orderBy('jurusan_id')
             ->orderBy('nama_lengkap')
             ->get();
@@ -68,5 +80,18 @@ class PendaftarExport implements FromCollection, WithHeadings, WithMapping, Shou
         return [
             1 => ['font' => ['bold' => true]],
         ];
+    }
+
+    /**
+     * Nama sheet menyesuaikan: nama jurusan jika difilter, atau "Semua Pendaftar".
+     */
+    public function title(): string
+    {
+        if ($this->jurusanId) {
+            $nama = Jurusan::find($this->jurusanId)?->nama ?? 'Jurusan';
+            return substr($nama, 0, 31); // batas Excel: max 31 karakter nama sheet
+        }
+
+        return 'Semua Pendaftar';
     }
 }

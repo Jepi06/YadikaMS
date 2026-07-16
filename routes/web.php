@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth; // pindah ke atas
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +30,7 @@ use App\Http\Controllers\Mapping\{
 use App\Http\Controllers\Spmb\Auth\AuthController as SpmbAuthController;
 use App\Http\Controllers\Spmb\Admin\PendaftarController as SpmbPendaftarController;
 use App\Http\Controllers\Spmb\DashboardPublicController as SpmbDashboardPublicController;
-
+use App\Http\Controllers\Spmb\PengajuanSpmbPublicController; // ← tambahan baru
 
 /*
 |--------------------------------------------------------------------------
@@ -135,6 +136,14 @@ Route::prefix('spmb')->name('spmb.')->group(function () {
 
     Route::get('/', [SpmbDashboardPublicController::class, 'index'])->name('public.index');
 
+    // Pengajuan mandiri oleh siswa/calon siswa — tanpa login
+    Route::get('/pengajuan', [PengajuanSpmbPublicController::class, 'create'])
+        ->name('pengajuan.create');
+    Route::post('/pengajuan', [PengajuanSpmbPublicController::class, 'store'])
+        ->name('pengajuan.store');
+    Route::get('/pengajuan/berhasil/{noPendaftaran}', [PengajuanSpmbPublicController::class, 'berhasil'])
+        ->name('pengajuan.berhasil');
+
     // guest:spmb → guard 'spmb' di config/auth.php
     Route::middleware('guest:spmb')->group(function () {
         Route::get('/login', [SpmbAuthController::class, 'showLogin'])->name('login');
@@ -185,6 +194,10 @@ Route::prefix('spmb/admin')->name('spmb.admin.')->middleware('auth.spmb')->group
         ->name('pendaftar.status');
 
     // Export
+    Route::get('/export/pdf', [SpmbPendaftarController::class, 'exportPdf'])->name('export.pdf');
+    // Export
     Route::get('/export/excel', [SpmbPendaftarController::class, 'exportExcel'])->name('export.excel');
+    Route::get('/export/excel/jurusan/{jurusan}', [SpmbPendaftarController::class, 'exportExcelPerJurusan'])
+        ->name('export.excel.per-jurusan'); // ← tambahan baru
     Route::get('/export/pdf', [SpmbPendaftarController::class, 'exportPdf'])->name('export.pdf');
 });

@@ -26,6 +26,8 @@ class UserSeeder extends Seeder
                 'email' => 'hubin@smk.sch.id',
                 'roles' => [
                     ['pkl', 'admin'],
+                    ['lms', 'admin'],
+                    ['spmb', 'admin'],
                 ],
             ],
             [
@@ -86,7 +88,7 @@ class UserSeeder extends Seeder
                 'name' => 'Rina Wulandari, S.E',
                 'email' => 'rina.wulandari@smk.sch.id',
                 'roles' => [
-                    ['ppdb', 'admin'],
+                    ['spmb', 'admin'],
                 ],
             ],
             [
@@ -116,7 +118,7 @@ class UserSeeder extends Seeder
                 'name' => 'Farah Nabila, S.Pd',
                 'email' => 'farah.nabila@smk.sch.id',
                 'roles' => [
-                    ['ppdb', 'admin'],
+                    ['spmb', 'admin'],
                     ['lms', 'admin'],
                 ],
             ],
@@ -126,7 +128,7 @@ class UserSeeder extends Seeder
                 'roles' => [
                     ['pkl', 'admin'],
                     ['lms', 'admin'],
-                    ['ppdb', 'admin'],
+                    ['spmb', 'admin'],
                 ],
             ],
         ];

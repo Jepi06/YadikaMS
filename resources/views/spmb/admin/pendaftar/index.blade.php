@@ -23,7 +23,7 @@
                         <option value="">Semua Status</option>
                         <option value="pending" @selected(request('status') === 'pending')>Menunggu</option>
                         <option value="diterima" @selected(request('status') === 'diterima')>Diterima</option>
-                        <option value="ditolak" @selected(request('status') === 'ditolak')>Tidak Diterima</option>
+                        <option value="ditolak" @selected(request('status') === 'ditolak')>Belum Diterima</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -48,7 +48,7 @@
                     <tr>
                         <th>No. Pendaftaran</th>
                         <th>Nama</th>
-                        @unless($jurusanAktif)
+                        @unless ($jurusanAktif)
                             <th>Jurusan</th>
                         @endunless
                         <th class="text-end">Nominal</th>
@@ -62,21 +62,21 @@
                         <tr>
                             <td>{{ $p->no_pendaftaran }}</td>
                             <td>{{ $p->nama_lengkap }}</td>
-                            @unless($jurusanAktif)
+                            @unless ($jurusanAktif)
                                 <td>{{ optional($p->jurusan)->nama ?? '-' }}</td>
                             @endunless
                             <td class="text-end">Rp {{ number_format($p->nominal_pembayaran ?? 0, 0, ',', '.') }}</td>
                             <td class="text-center">
-                                @if($p->status === 'diterima')
+                                @if ($p->status === 'diterima')
                                     <span class="badge bg-success">Diterima</span>
                                 @elseif($p->status === 'ditolak')
-                                    <span class="badge bg-danger">Tidak Diterima</span>
+                                    <span class="badge bg-danger">Belum Diterima</span>
                                 @else
                                     <span class="badge bg-warning text-dark">Menunggu</span>
                                 @endif
                             </td>
                             <td class="text-center">
-                                @if($p->is_lunas)
+                                @if ($p->is_lunas)
                                     <i class="bi bi-check-circle-fill text-success fs-5" title="Lunas"></i>
                                 @else
                                     <span class="text-muted small">-</span>
@@ -84,38 +84,47 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-1 flex-wrap">
-                                    <a href="{{ route('spmb.admin.pendaftar.show', $p) }}" class="btn btn-sm btn-outline-secondary" title="Detail">
+                                    <a href="{{ route('spmb.admin.pendaftar.show', $p) }}"
+                                        class="btn btn-sm btn-outline-secondary" title="Detail">
                                         <i class="bi bi-eye"></i>
                                     </a>
 
-                                    @if($p->belumAdaNominal())
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#nominalModal{{ $p->id }}">
+                                    @if ($p->belumAdaNominal())
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                            data-bs-target="#nominalModal{{ $p->id }}">
                                             Tambah Nominal
                                         </button>
                                     @elseif(!$p->is_lunas)
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#nominalModal{{ $p->id }}">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                            data-bs-target="#nominalModal{{ $p->id }}">
                                             Edit Nominal
                                         </button>
-                                        <form action="{{ route('spmb.admin.pendaftar.lunas', $p) }}" method="POST" onsubmit="return confirm('Tandai pembayaran pendaftar ini sebagai LUNAS? Nominal tidak dapat diedit lagi setelah ini.');">
+                                        <form action="{{ route('spmb.admin.pendaftar.lunas', $p) }}" method="POST"
+                                            onsubmit="return confirm('Tandai pembayaran pendaftar ini sebagai LUNAS? Nominal tidak dapat diedit lagi setelah ini.');">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="btn btn-sm btn-outline-success">Lunas</button>
                                         </form>
                                     @else
-                                        <form action="{{ route('spmb.admin.pendaftar.batal-lunas', $p) }}" method="POST" onsubmit="return confirm('Batalkan status LUNAS pendaftar ini?');">
+                                        <form action="{{ route('spmb.admin.pendaftar.batal-lunas', $p) }}" method="POST"
+                                            onsubmit="return confirm('Batalkan status LUNAS pendaftar ini?');">
                                             @csrf
                                             @method('PATCH')
-                                            <button type="submit" class="btn btn-sm btn-outline-warning">Batalkan Lunas</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-warning">Batalkan
+                                                Lunas</button>
                                         </form>
                                     @endif
 
-                                    <a href="{{ route('spmb.admin.pendaftar.edit', $p) }}" class="btn btn-sm btn-outline-secondary" title="Edit Data">
+                                    <a href="{{ route('spmb.admin.pendaftar.edit', $p) }}"
+                                        class="btn btn-sm btn-outline-secondary" title="Edit Data">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <form action="{{ route('spmb.admin.pendaftar.destroy', $p) }}" method="POST" onsubmit="return confirm('Hapus data pendaftar ini? Tindakan tidak dapat dibatalkan.');">
+                                    <form action="{{ route('spmb.admin.pendaftar.destroy', $p) }}" method="POST"
+                                        onsubmit="return confirm('Hapus data pendaftar ini? Tindakan tidak dapat dibatalkan.');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus"><i
+                                                class="bi bi-trash"></i></button>
                                     </form>
                                 </div>
                             </td>
@@ -134,7 +143,7 @@
     </div>
 
     {{-- Modal popup tambah/edit nominal, satu per baris --}}
-    @foreach($pendaftar as $p)
+    @foreach ($pendaftar as $p)
         <div class="modal fade" id="nominalModal{{ $p->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">
                 <form action="{{ route('spmb.admin.pendaftar.nominal', $p) }}" method="POST">
@@ -142,16 +151,20 @@
                     @method('PATCH')
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h6 class="modal-title">{{ $p->belumAdaNominal() ? 'Tambah' : 'Edit' }} Nominal - {{ $p->nama_lengkap }}</h6>
+                            <h6 class="modal-title">{{ $p->belumAdaNominal() ? 'Tambah' : 'Edit' }} Nominal -
+                                {{ $p->nama_lengkap }}</h6>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
                             <label class="form-label small">Nominal Pembayaran (Rp)</label>
-                            <input type="number" name="nominal_pembayaran" min="0" step="1000" class="form-control" value="{{ (int) $p->nominal_pembayaran }}" required>
-                            <div class="form-text">Status otomatis menjadi <strong>Diterima</strong> jika nominal mencapai Rp {{ number_format(\App\Models\SPMB\Pendaftar::MINIMAL_DITERIMA, 0, ',', '.') }}.</div>
+                            <input type="number" name="nominal_pembayaran" min="0" step="1000"
+                                class="form-control" value="{{ (int) $p->nominal_pembayaran }}" required>
+                            <div class="form-text">Status otomatis menjadi <strong>Diterima</strong> jika nominal mencapai
+                                Rp {{ number_format(\App\Models\SPMB\Pendaftar::MINIMAL_DITERIMA, 0, ',', '.') }}.</div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                data-bs-dismiss="modal">Batal</button>
                             <button type="submit" class="btn btn-primary btn-sm">Simpan</button>
                         </div>
                     </div>

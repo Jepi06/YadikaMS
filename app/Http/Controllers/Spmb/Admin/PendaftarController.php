@@ -80,8 +80,8 @@ class PendaftarController extends Controller
             $keyword = $request->query('cari');
             $query->where(function ($q) use ($keyword) {
                 $q->where('nama_lengkap', 'like', "%{$keyword}%")
-                  ->orWhere('no_pendaftaran', 'like', "%{$keyword}%")
-                  ->orWhere('no_hp', 'like', "%{$keyword}%");
+                    ->orWhere('no_pendaftaran', 'like', "%{$keyword}%")
+                    ->orWhere('no_hp', 'like', "%{$keyword}%");
             });
         }
 
@@ -272,4 +272,12 @@ class PendaftarController extends Controller
 
         return $pdf->download('rekap-penerimaan-spmb-' . now()->format('Y-m-d') . '.pdf');
     }
+    public function exportExcelPerJurusan(Jurusan $jurusan)
+    {
+        $slug = str($jurusan->nama)->slug();
+        $namaFile = "data-pendaftar-spmb-{$slug}-" . now()->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new PendaftarExport($jurusan->id), $namaFile);
+    }
+
 }

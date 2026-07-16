@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             TempatPklSeeder::class,      // perusahaan/instansi mitra PKL
             GuruPembimbingSeeder::class, // pembimbing lapangan (master data)
             PenempatanPklSeeder::class,  // penempatan PKL + alur approval
-                // PendaftarSeeder::class,      // pendaftar SPMB (mandiri & input admin)
+            PendaftarSeeder::class,      // pendaftar SPMB (mandiri & input admin)
             MataPelajaranSeeder::class,  // master mapel untuk LMS
             PengampuMapelSeeder::class,  // guru mengajar mapel di kelas
             MateriSeeder::class,

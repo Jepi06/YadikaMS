@@ -17,81 +17,189 @@
 
 <body class="bg-light">
 
-    <div class="hero text-center">
-        <h2 class="fw-bold">Penerimaan Peserta Didik Baru</h2>
-        <p class="mb-0">SMK Yadika Soreang &mdash; Tahun Ajaran {{ now()->year }}/{{ now()->year + 1 }}</p>
-    </div>
+    <!-- =========================
+        NAVBAR
+    ========================== -->
 
-    <div class="container my-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+
+        <div class="container">
+
+            <a class="navbar-brand fw-bold" href="#">
+                🎓 SPMB SMK Yadika Soreang
+            </a>
+
+            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar">
+
+                <span class="navbar-toggler-icon"></span>
+
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbar">
+
+                <ul class="navbar-nav ms-auto">
+
+                    <li class="nav-item">
+
+                        <a href="{{ route('spmb.pengajuan.create') }}" class="btn btn-warning me-2">
+
+                            Daftar
+
+                        </a>
+
+                    </li>
+
+                    <li class="nav-item">
+
+                        <a href="{{ route('spmb.login') }}" class="btn btn-outline-light">
+
+                            Login Admin
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+    <!-- =========================
+        CONTENT
+    ========================== -->
+
+    <div class="container py-5">
+
+        <div class="text-center mb-4">
+
+            <h2 class="fw-bold">
+
+                Cek Status Pendaftaran
+
+            </h2>
+
+            <p class="text-muted">
+
+                Tahun Ajaran {{ now()->year }}/{{ now()->year + 1 }}
+
+            </p>
+
+        </div>
+
         <div class="row justify-content-center">
-            <div class="col-md-7">
-                <div class="card shadow-sm border-0">
+
+            <div class="col-lg-8">
+
+                <!-- FORM -->
+
+                <div class="card shadow-sm border-0 mb-4">
+
                     <div class="card-body">
-                        <h5 class="fw-bold mb-3">Cek Status Pendaftaran</h5>
-                        <form method="GET" class="d-flex gap-2">
-                            <input type="text" name="cari" value="{{ $keyword }}" class="form-control"
-                                placeholder="Masukkan No. Pendaftaran atau Nama Lengkap">
-                            <button type="submit" class="btn btn-primary">Cari</button>
+
+                        <form method="GET">
+
+                            <div class="input-group">
+
+                                <input type="text" class="form-control" name="cari" value="{{ $keyword }}"
+                                    placeholder="Masukkan Nomor Pendaftaran atau Nama">
+
+                                <button class="btn btn-primary">
+
+                                    Cari
+
+                                </button>
+
+                            </div>
+
                         </form>
 
-                        @if ($keyword !== '')
-                            <hr>
+                    </div>
+
+                </div>
+
+                <!-- HASIL -->
+
+                @if ($keyword != '')
+
+                    <div class="card shadow-sm border-0 mb-4">
+
+                        <div class="card-body">
+
                             @forelse($hasil as $p)
-                                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+
                                     <div>
-                                        <div class="fw-semibold">{{ $p->nama_lengkap }}</div>
-                                        <div class="small text-muted">{{ $p->no_pendaftaran }} &middot;
-                                            {{ optional($p->jurusan)->nama ?? '-' }}</div>
+
+                                        <h6 class="mb-1">
+
+                                            {{ $p->nama_lengkap }}
+
+                                        </h6>
+
+                                        <small class="text-muted">
+
+                                            {{ $p->no_pendaftaran }}
+
+                                            •
+
+                                            {{ optional($p->jurusan)->nama }}
+
+                                        </small>
+
                                     </div>
+
                                     <div>
-                                        @if ($p->status === 'diterima')
-                                            <span class="badge bg-success">Diterima</span>
-                                        @elseif($p->status === 'ditolak')
-                                            <span class="badge bg-danger">Tidak Diterima</span>
+
+                                        @if ($p->status == 'diterima')
+                                            <span class="badge bg-success">
+
+                                                Diterima
+
+                                            </span>
+                                        @elseif($p->status == 'ditolak')
+                                            <span class="badge bg-danger">
+
+                                                Tidak Diterima
+
+                                            </span>
                                         @else
-                                            <span class="badge bg-warning text-dark">Menunggu</span>
+                                            <span class="badge bg-warning text-dark">
+
+                                                Menunggu
+
+                                            </span>
                                         @endif
+
                                     </div>
+
                                 </div>
+
                             @empty
-                                <div class="text-muted small py-3">Data tidak ditemukan. Periksa kembali nama atau nomor
-                                    pendaftaran Anda.</div>
+
+                                <div class="text-center py-4 text-muted">
+
+                                    Data tidak ditemukan.
+
+                                </div>
                             @endforelse
-                        @endif
-                    </div>
-                </div>
 
-                <div class="card shadow-sm border-0 mt-3">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3">Kuota Penerimaan per Jurusan</h6>
-                        <table class="table table-sm mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Jurusan</th>
-                                    <th class="text-center">Kuota</th>
-                                    <th class="text-center">Jumlah Pendaftar</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($rekapKuota as $j)
-                                    <tr>
-                                        <td>{{ $j->nama }}</td>
-                                        <td class="text-center">{{ $j->kuota }}</td>
-                                        <td class="text-center">{{ $j->pendaftar_count }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                        </div>
 
-                <div class="text-center mt-3">
-                    <a href="{{ route('spmb.login') }}" class="small text-decoration-none text-muted">Login Admin
-                        &rarr;</a>
-                </div>
+                    </div>
+
+                @endif
+
+
             </div>
+
         </div>
+
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

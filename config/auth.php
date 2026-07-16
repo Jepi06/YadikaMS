@@ -48,9 +48,9 @@ return [
             'provider' => 'pkl_users',
         ],
 
-        'ppdb' => [
+        'spmb' => [
             'driver' => 'session',
-            'provider' => 'ppdb_users',
+            'provider' => 'spmb_users',
         ],
 
     ],
@@ -83,7 +83,7 @@ return [
             'model' => App\Models\User::class,
         ],
 
-        'ppdb_users' => [
+        'spmb_users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
         ],

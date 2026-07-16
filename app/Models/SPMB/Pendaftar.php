@@ -183,18 +183,37 @@ class Pendaftar extends Model
         return $number;
     }
 
+    /**
+     * Pesan WhatsApp otomatis, disesuaikan dengan status pendaftar.
+     * - DITERIMA  -> ucapan selamat resmi diterima di SMK Yadika Soreang
+     * - lainnya   -> pesan umum terkait status pendaftaran
+     */
+    public function getWhatsappMessageAttribute(): string
+    {
+        if ($this->status === self::STATUS_DITERIMA) {
+            return "Assalamualaikum, {$this->nama_lengkap}.\n\n"
+                . "Selamat! Anda telah *DITERIMA* sebagai siswa baru di *SMK Yadika Soreang* "
+                . "untuk jurusan *{$this->jurusan?->nama}*.\n\n"
+                . "Nomor Pendaftaran: {$this->no_pendaftaran}\n\n"
+                . "Mohon segera menghubungi pihak sekolah untuk informasi daftar ulang. Terima kasih.";
+        }
+
+        return "Assalamualaikum, {$this->nama_lengkap}.\n\n"
+            . "Kami dari SMK Yadika Soreang ingin menginformasikan terkait pendaftaran Anda "
+            . "dengan nomor {$this->no_pendaftaran}.\n\n"
+            . "Status saat ini: {$this->status_label}.";
+    }
+
     public function getWhatsappLinkAttribute(): string
     {
-        $pesan = "Halo {$this->nama_lengkap}, terkait pendaftaran Anda dengan nomor {$this->no_pendaftaran}...";
-
-        return "https://wa.me/{$this->whatsapp_number}?text=" . urlencode($pesan);
+        return "https://wa.me/{$this->whatsapp_number}?text=" . urlencode($this->whatsapp_message);
     }
 
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
             self::STATUS_DITERIMA => 'Diterima',
-            self::STATUS_DITOLAK => 'Tidak Diterima',
+            self::STATUS_DITOLAK => 'Belum Diterima',
             default => 'Menunggu Verifikasi',
         };
     }
