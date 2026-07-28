@@ -1,9 +1,5 @@
 <?php
 
-// FILE: bootstrap/app.php
-// Tidak ada perubahan — sudah benar sesuai file yang dikirim.
-// Dicantumkan di sini sebagai referensi konfirmasi.
-
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.pkl' => \App\Http\Middleware\AuthenticatePkl::class,
             'auth.spmb' => \App\Http\Middleware\AuthenticateSpmb::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+
+            // ← BARU: modul LMS
+            'auth.lms' => \App\Http\Middleware\AuthenticateLms::class,
+            'role.lms' => \App\Http\Middleware\RoleLmsMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

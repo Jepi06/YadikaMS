@@ -1493,15 +1493,15 @@
                     <h3>Akses Layanan Digital</h3>
                     <p>Platform terintegrasi untuk siswa & orang tua</p>
                     <div class="service-pills">
-                        <a class="service-pill" href="#smbp">
-                            <div class="pill-icon smbp">🎓</div>
+                        <a class="service-pill" href="/spmb">
+                            <div class="pill-icon spmb">🎓</div>
                             <div class="pill-text">
-                                <strong>SMBP</strong>
+                                <strong>SPMB</strong>
                                 <span>Seleksi Masuk Berbasis Prestasi</span>
                             </div>
                             <span class="pill-arrow">›</span>
                         </a>
-                        <a class="service-pill" href="#pkl">
+                        <a class="service-pill" href="/pkl">
                             <div class="pill-icon pkl">🏭</div>
                             <div class="pill-text">
                                 <strong>PKL / Magang</strong>
@@ -1509,7 +1509,7 @@
                             </div>
                             <span class="pill-arrow">›</span>
                         </a>
-                        <a class="service-pill" href="#lms">
+                        <a class="service-pill" href="/lms">
                             <div class="pill-icon lms">💻</div>
                             <div class="pill-text">
                                 <strong>LMS</strong>
@@ -1857,9 +1857,9 @@
                 <div class="footer-col">
                     <h5>Layanan</h5>
                     <ul>
-                        <li><a href="#smbp">Portal SMBP</a></li>
-                        <li><a href="#pkl">Sistem PKL</a></li>
-                        <li><a href="#lms">LMS Online</a></li>
+                        <li><a href="/spmb">Portal SMBP</a></li>
+                        <li><a href="/pkl">Sistem PKL</a></li>
+                        <li><a href="/spmb">LMS Online</a></li>
                         <li><a href="#">E-Raport</a></li>
                         <li><a href="#">Pengaduan</a></li>
                     </ul>

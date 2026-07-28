@@ -36,6 +36,12 @@ class User extends Authenticatable
             ->withPivot(['assigned_by', 'assigned_at']);
     }
 
+    /** Kelas-kelas yang diampu (relevan untuk role guru di modul LMS) */
+    public function pengampuMapel()
+    {
+        return $this->hasMany(\App\Models\Lms\PengampuMapel::class, 'guru_id');
+    }
+
     // ── Helper: cek akses per sistem ──────────────────────────
 
     public function hasModuleAccess(string $moduleKode): bool
@@ -80,6 +86,12 @@ class User extends Authenticatable
         return $this->hasRoleInModule('spmb', ...$roles);
     }
 
+    /** ← BARU: role check untuk modul LMS (dipakai middleware role.lms) */
+    public function hasLmsRole(string ...$roles): bool
+    {
+        return $this->hasRoleInModule('lms', ...$roles);
+    }
+
     public function isSiswa(): bool
     {
         return $this->hasPklRole('siswa');
@@ -100,6 +112,23 @@ class User extends Authenticatable
     public function isAdminSpmb(): bool
     {
         return $this->hasSpmbRole('admin');
+    }
+
+    // ← BARU: helper role LMS
+
+    public function isAdminLms(): bool
+    {
+        return $this->hasLmsRole('admin');
+    }
+
+    public function isGuruLms(): bool
+    {
+        return $this->hasLmsRole('guru');
+    }
+
+    public function isSiswaLms(): bool
+    {
+        return $this->hasLmsRole('siswa');
     }
 
     // ── Accessors ─────────────────────────────────────────────

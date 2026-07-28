@@ -32,6 +32,14 @@ use App\Http\Controllers\Spmb\Admin\PendaftarController as SpmbPendaftarControll
 use App\Http\Controllers\Spmb\DashboardPublicController as SpmbDashboardPublicController;
 use App\Http\Controllers\Spmb\PengajuanSpmbPublicController; // ← tambahan baru
 
+use App\Http\Controllers\Lms\Auth\AuthController as LmsAuthController;
+use App\Http\Controllers\Lms\DashboardPublicController as LmsDashboardPublicController;
+use App\Http\Controllers\Lms\Admin\DashboardController as LmsAdminDashboardController;
+use App\Http\Controllers\Lms\Guru\DashboardController as LmsGuruDashboardController;
+use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
+use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
+use App\Http\Controllers\Lms\Siswa\PresensiController as LmsSiswaPresensiController;
+
 /*
 |--------------------------------------------------------------------------
 | LANDING PAGE
@@ -201,3 +209,63 @@ Route::prefix('spmb/admin')->name('spmb.admin.')->middleware('auth.spmb')->group
         ->name('export.excel.per-jurusan'); // ← tambahan baru
     Route::get('/export/pdf', [SpmbPendaftarController::class, 'exportPdf'])->name('export.pdf');
 });
+Route::prefix('lms')->group(function () {
+
+    Route::get('/', [LmsDashboardPublicController::class, 'index'])->name('lms');
+
+    Route::middleware('guest:lms')->group(function () {
+        Route::get('/login', [LmsAuthController::class, 'showLogin'])->name('lms.login');
+        Route::post('/login', [LmsAuthController::class, 'login'])->name('lms.login.process');
+    });
+});
+
+Route::post('/lms/logout', [LmsAuthController::class, 'logout'])
+    ->middleware('auth.lms')
+    ->name('lms.logout');
+
+/*
+|==========================================================================
+| LMS – ADMIN
+|==========================================================================
+*/
+Route::prefix('lms/admin')->name('lms.admin.')
+    ->middleware(['auth.lms', 'role.lms:admin'])
+    ->group(function () {
+        Route::get('/dashboard', [LmsAdminDashboardController::class, 'index'])->name('dashboard');
+    });
+
+/*
+|==========================================================================
+| LMS – GURU
+|==========================================================================
+*/
+Route::prefix('lms/guru')->name('lms.guru.')
+    ->middleware(['auth.lms', 'role.lms:guru'])
+    ->group(function () {
+        Route::get('/dashboard', [LmsGuruDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/kelas/{pengampuMapel}/presensi', [LmsGuruPresensiController::class, 'index'])
+            ->name('presensi.index');
+        Route::post('/kelas/{pengampuMapel}/presensi/buka', [LmsGuruPresensiController::class, 'buka'])
+            ->name('presensi.buka');
+        Route::post('/kelas/{pengampuMapel}/presensi/tutup', [LmsGuruPresensiController::class, 'tutup'])
+            ->name('presensi.tutup');
+        Route::post('/kelas/{pengampuMapel}/presensi/manual', [LmsGuruPresensiController::class, 'simpanManual'])
+            ->name('presensi.manual');
+    });
+
+/*
+|==========================================================================
+| LMS – SISWA
+|==========================================================================
+*/
+Route::prefix('lms/siswa')->name('lms.siswa.')
+    ->middleware(['auth.lms', 'role.lms:siswa'])
+    ->group(function () {
+        Route::get('/dashboard', [LmsSiswaDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/presensi/scan/{token}', [LmsSiswaPresensiController::class, 'scan'])
+            ->name('presensi.scan');
+        Route::get('/presensi', [LmsSiswaPresensiController::class, 'riwayat'])
+            ->name('presensi.riwayat');
+    });

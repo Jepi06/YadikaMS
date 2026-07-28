@@ -74,3 +74,6 @@ class PengajuanSpmbPublicController extends Controller
         return $prefix . str_pad((string) $urutan, 4, '0', STR_PAD_LEFT);
     }
 }
+
+
+
