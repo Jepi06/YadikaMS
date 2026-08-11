@@ -3,7 +3,12 @@
 @section('title', 'Riwayat Presensi')
 
 @section('content')
-    <h4 class="fw-bold mb-4">Riwayat Presensi</h4>
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <h4 class="fw-bold mb-0">Riwayat Presensi</h4>
+        <a href="{{ route('lms.siswa.presensi.kamera') }}" class="btn btn-primary">
+            <i class="bi bi-qr-code-scan me-1"></i> Presensi Sekarang
+        </a>
+    </div>
 
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">
@@ -24,7 +29,7 @@
                             <td>{{ $r->pengampuMapel->mataPelajaran->nama ?? '-' }}</td>
                             <td>
                                 @php
-                                    $badge = match($r->status) {
+                                    $badge = match ($r->status) {
                                         'Hadir' => 'success',
                                         'Izin' => 'info',
                                         'Sakit' => 'warning',
@@ -43,7 +48,9 @@
                             <td>{{ $r->keterangan ?? '-' }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="text-center text-muted py-4">Belum ada riwayat presensi.</td></tr>
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">Belum ada riwayat presensi.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

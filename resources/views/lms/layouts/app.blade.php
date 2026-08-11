@@ -84,10 +84,18 @@
                     href="{{ route('lms.guru.dashboard') }}">
                     <i class="bi bi-speedometer2 me-2"></i> Dashboard
                 </a>
+                <a class="nav-link {{ request()->routeIs('lms.guru.kelas.index') ? 'active' : '' }}"
+                    href="{{ route('lms.guru.kelas.index') }}">
+                    <i class="bi bi-door-open me-2"></i> Kelas Saya
+                </a>
             @elseif ($lmsUser?->isSiswaLms())
                 <a class="nav-link {{ request()->routeIs('lms.siswa.dashboard') ? 'active' : '' }}"
                     href="{{ route('lms.siswa.dashboard') }}">
                     <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                </a>
+                <a class="nav-link {{ request()->routeIs('lms.siswa.kelas.index') ? 'active' : '' }}"
+                    href="{{ route('lms.siswa.kelas.index') }}">
+                    <i class="bi bi-door-open me-2"></i> Kelas Saya
                 </a>
                 <a class="nav-link {{ request()->routeIs('lms.siswa.presensi.riwayat') ? 'active' : '' }}"
                     href="{{ route('lms.siswa.presensi.riwayat') }}">

@@ -273,6 +273,14 @@
                              jurusannya) — lihat ApprovalController::index(). --}}
                     </a>
                 @endif
+
+                {{-- Profil Saya: berlaku untuk SEMUA role, karena akun ini
+                     dipakai bersama di PKL/SPMB/LMS (satu tabel `users`). --}}
+                <div class="nav-section">Akun</div>
+                <a href="{{ route('pkl.profil.edit') }}"
+                    class="nav-link {{ request()->routeIs('pkl.profil.*') ? 'active' : '' }}">
+                    <i class="bi bi-person-circle me-2"></i>Profil Saya
+                </a>
             @endauth
         </div>
     </nav>
@@ -285,9 +293,11 @@
             </div>
             <div class="d-flex align-items-center gap-3">
                 @auth('pkl')
-                    <span class="badge bg-primary-subtle text-primary fw-normal px-3 py-2">
-                        {{ $pklUser->role_pkl_label }} — {{ $pklUser->name }}
-                    </span>
+                    <a href="{{ route('pkl.profil.edit') }}" class="text-decoration-none">
+                        <span class="badge bg-primary-subtle text-primary fw-normal px-3 py-2">
+                            {{ $pklUser->role_pkl_label }} — {{ $pklUser->name }}
+                        </span>
+                    </a>
                     <form action="{{ route('pkl.logout') }}" method="POST">
                         @csrf
                         <button class="btn btn-sm btn-outline-secondary">

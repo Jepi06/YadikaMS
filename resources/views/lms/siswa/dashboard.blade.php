@@ -4,7 +4,15 @@
 
 @section('content')
     <h4 class="fw-bold mb-1">Halo, {{ $lmsUser->name }} 👋</h4>
-    <p class="text-muted mb-4">Kelas: <strong>{{ $siswa->kelas->nama_kelas ?? '-' }}</strong></p>
+    <p class="text-muted mb-3">
+        Kelas: <strong>{{ $siswa->kelas->nama_kelas ?? '-' }}</strong>
+        &middot;
+        <a href="{{ route('lms.siswa.presensi.riwayat') }}"><i class="bi bi-calendar-check"></i> Lihat Riwayat Presensi</a>
+    </p>
+
+    <a href="{{ route('lms.siswa.presensi.kamera') }}" class="btn btn-primary btn-lg mb-4">
+        <i class="bi bi-qr-code-scan me-1"></i> Presensi Sekarang
+    </a>
 
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
@@ -46,7 +54,10 @@
                             <td>{{ $p->semester }} &middot; {{ $p->tahun_ajaran }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="3" class="text-center text-muted py-4">Belum ada mata pelajaran terdaftar untuk kelas Anda.</td></tr>
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">Belum ada mata pelajaran terdaftar untuk
+                                kelas Anda.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
@@ -55,7 +66,7 @@
 
     <div class="alert alert-info mt-4 mb-0">
         <i class="bi bi-info-circle me-1"></i>
-        Fitur <strong>lihat materi</strong>, <strong>kumpulkan tugas</strong>, dan
-        <strong>scan barcode presensi</strong> akan menyusul di tahap berikutnya.
+        Klik <strong>Presensi Sekarang</strong> untuk buka kamera dan scan QR dari guru.
+        Materi & tugas per mata pelajaran bisa dibuka lewat menu <strong>Kelas Saya</strong>.
     </div>
 @endsection

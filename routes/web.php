@@ -18,7 +18,8 @@ use App\Http\Controllers\Mapping\{
     AuthController,
     DashboardPublicController as PklDashboardPublicController,
     SIswaPklController,
-    PengajuanPklPublicController
+    PengajuanPklPublicController,
+    ProfileController as PklProfileController
 };
 
 /*
@@ -31,15 +32,24 @@ use App\Http\Controllers\Spmb\Auth\AuthController as SpmbAuthController;
 use App\Http\Controllers\Spmb\Admin\PendaftarController as SpmbPendaftarController;
 use App\Http\Controllers\Spmb\DashboardPublicController as SpmbDashboardPublicController;
 use App\Http\Controllers\Spmb\PengajuanSpmbPublicController; // ← tambahan baru
+use App\Http\Controllers\Spmb\ProfileController as SpmbProfileController;
+//LMS
 
 use App\Http\Controllers\Lms\Auth\AuthController as LmsAuthController;
 use App\Http\Controllers\Lms\DashboardPublicController as LmsDashboardPublicController;
+use App\Http\Controllers\Lms\FileController as LmsFileController;
+use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
 use App\Http\Controllers\Lms\Admin\DashboardController as LmsAdminDashboardController;
 use App\Http\Controllers\Lms\Guru\DashboardController as LmsGuruDashboardController;
+use App\Http\Controllers\Lms\Guru\KelasController as LmsGuruKelasController;
 use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
+use App\Http\Controllers\Lms\Guru\MateriController as LmsGuruMateriController;
+use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
 use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
+use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
 use App\Http\Controllers\Lms\Siswa\PresensiController as LmsSiswaPresensiController;
-
+use App\Http\Controllers\Lms\Siswa\MateriController as LmsSiswaMateriController;
+use App\Http\Controllers\Lms\Siswa\TugasController as LmsSiswaTugasController;
 /*
 |--------------------------------------------------------------------------
 | LANDING PAGE
@@ -132,6 +142,9 @@ Route::prefix('pkl')->middleware('auth.pkl')->group(function () {
         Route::get('/ajukan', [SIswaPklController::class, 'create'])->name('create');
         Route::post('/ajukan', [SIswaPklController::class, 'store'])->name('store');
     });
+    Route::get('/profil', [PklProfileController::class, 'edit'])->name('pkl.profil.edit');
+    Route::put('/profil', [PklProfileController::class, 'update'])->name('pkl.profil.update');
+    Route::put('/profil/password', [PklProfileController::class, 'updatePassword'])->name('pkl.profil.password');
 });
 
 /*
@@ -208,7 +221,17 @@ Route::prefix('spmb/admin')->name('spmb.admin.')->middleware('auth.spmb')->group
     Route::get('/export/excel/jurusan/{jurusan}', [SpmbPendaftarController::class, 'exportExcelPerJurusan'])
         ->name('export.excel.per-jurusan'); // ← tambahan baru
     Route::get('/export/pdf', [SpmbPendaftarController::class, 'exportPdf'])->name('export.pdf');
+    Route::get('/profil', [SpmbProfileController::class, 'edit'])->name('profil.edit');
+    Route::put('/profil', [SpmbProfileController::class, 'update'])->name('profil.update');
+    Route::put('/profil/password', [SpmbProfileController::class, 'updatePassword'])->name('profil.password');
 });
+
+
+/*
+|==========================================================================
+| LMS – PUBLIC (landing page + login)
+|==========================================================================
+*/
 Route::prefix('lms')->group(function () {
 
     Route::get('/', [LmsDashboardPublicController::class, 'index'])->name('lms');
@@ -222,6 +245,34 @@ Route::prefix('lms')->group(function () {
 Route::post('/lms/logout', [LmsAuthController::class, 'logout'])
     ->middleware('auth.lms')
     ->name('lms.logout');
+
+/*
+|==========================================================================
+| LMS – FILE (materi / tugas / jawaban) — serve lewat Laravel, bukan
+| symlink public/storage, supaya gak kena blokir web server + ada
+| pengecekan otorisasi per file.
+|==========================================================================
+*/
+Route::prefix('lms/file')->name('lms.file.')
+    ->middleware('auth.lms')
+    ->group(function () {
+        Route::get('/materi/{materi}', [LmsFileController::class, 'materi'])->name('materi');
+        Route::get('/tugas/{tugas}', [LmsFileController::class, 'tugasLampiran'])->name('tugas');
+        Route::get('/jawaban/{pengumpulan}', [LmsFileController::class, 'jawaban'])->name('jawaban');
+    });
+
+/*
+|==========================================================================
+| LMS – PROFIL (semua role: admin/guru/siswa ubah data diri sendiri)
+|==========================================================================
+*/
+Route::prefix('lms/profil')->name('lms.profil.')
+    ->middleware('auth.lms')
+    ->group(function () {
+        Route::get('/', [LmsProfileController::class, 'edit'])->name('edit');
+        Route::put('/', [LmsProfileController::class, 'update'])->name('update');
+        Route::put('/password', [LmsProfileController::class, 'updatePassword'])->name('password');
+    });
 
 /*
 |==========================================================================
@@ -243,6 +294,7 @@ Route::prefix('lms/guru')->name('lms.guru.')
     ->middleware(['auth.lms', 'role.lms:guru'])
     ->group(function () {
         Route::get('/dashboard', [LmsGuruDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/kelas', [LmsGuruKelasController::class, 'index'])->name('kelas.index');
 
         Route::get('/kelas/{pengampuMapel}/presensi', [LmsGuruPresensiController::class, 'index'])
             ->name('presensi.index');
@@ -252,6 +304,26 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('presensi.tutup');
         Route::post('/kelas/{pengampuMapel}/presensi/manual', [LmsGuruPresensiController::class, 'simpanManual'])
             ->name('presensi.manual');
+        Route::get('/kelas/{pengampuMapel}/presensi/rekap', [LmsGuruPresensiController::class, 'rekap'])
+            ->name('presensi.rekap');
+
+        Route::get('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'index'])
+            ->name('materi.index');
+        Route::post('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'store'])
+            ->name('materi.store');
+        Route::delete('/materi/{materi}', [LmsGuruMateriController::class, 'destroy'])
+            ->name('materi.destroy');
+
+        Route::get('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'index'])
+            ->name('tugas.index');
+        Route::post('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'store'])
+            ->name('tugas.store');
+        Route::delete('/tugas/{tugas}', [LmsGuruTugasController::class, 'destroy'])
+            ->name('tugas.destroy');
+        Route::get('/tugas/{tugas}/kumpulan', [LmsGuruTugasController::class, 'kumpulan'])
+            ->name('tugas.kumpulan');
+        Route::post('/pengumpulan/{pengumpulan}/nilai', [LmsGuruTugasController::class, 'simpanNilai'])
+            ->name('tugas.kumpulan.nilai');
     });
 
 /*
@@ -263,9 +335,22 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
     ->middleware(['auth.lms', 'role.lms:siswa'])
     ->group(function () {
         Route::get('/dashboard', [LmsSiswaDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/kelas', [LmsSiswaKelasController::class, 'index'])->name('kelas.index');
 
         Route::get('/presensi/scan/{token}', [LmsSiswaPresensiController::class, 'scan'])
             ->name('presensi.scan');
+        Route::get('/presensi/kamera', [LmsSiswaPresensiController::class, 'kamera'])
+            ->name('presensi.kamera');
         Route::get('/presensi', [LmsSiswaPresensiController::class, 'riwayat'])
             ->name('presensi.riwayat');
+
+        Route::get('/kelas/{pengampuMapel}/materi', [LmsSiswaMateriController::class, 'index'])
+            ->name('materi.index');
+
+        Route::get('/kelas/{pengampuMapel}/tugas', [LmsSiswaTugasController::class, 'index'])
+            ->name('tugas.index');
+        Route::get('/tugas/{tugas}', [LmsSiswaTugasController::class, 'show'])
+            ->name('tugas.show');
+        Route::post('/tugas/{tugas}/kumpul', [LmsSiswaTugasController::class, 'kumpul'])
+            ->name('tugas.kumpul');
     });

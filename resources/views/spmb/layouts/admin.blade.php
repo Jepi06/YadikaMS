@@ -87,6 +87,10 @@
             <a href="{{ route('spmb.admin.export.pdf') }}"><i class="bi bi-file-earmark-pdf me-2"></i> Rekap PDF</a>
 
             <div class="section-label">Akun</div>
+            <a href="{{ route('spmb.profil.edit') }}"
+                class="{{ request()->routeIs('spmb.profil.*') ? 'active' : '' }}">
+                <i class="bi bi-person-circle me-2"></i> Profil Saya
+            </a>
             <form action="{{ route('spmb.logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="btn btn-sm btn-outline-light w-100 mt-1">

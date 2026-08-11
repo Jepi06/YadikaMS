@@ -15,6 +15,10 @@ class UserSeeder extends Seeder
      * sekaligus lewat tabel pivot user_role.
      *
      * Semua password default: "password"
+     *
+     * PENTING: jalankan SiswaSeeder DULU sebelum seeder ini, supaya ada
+     * baris `siswa` (user_id masih null) yang bisa dihubungkan ke user
+     * yang punya role lms.siswa di bawah.
      */
     public function run(): void
     {
@@ -131,6 +135,76 @@ class UserSeeder extends Seeder
                     ['spmb', 'admin'],
                 ],
             ],
+            [
+                'name' => 'Asep Maulana',
+                'email' => 'asep.maulana@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Rina Febriani',
+                'email' => 'rina.febriani@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Dimas Saputra',
+                'email' => 'dimas.saputra@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Siti Nurhaliza',
+                'email' => 'siti.nurhaliza@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Muhammad Rizki',
+                'email' => 'muhammad.rizki@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Nabila Putri',
+                'email' => 'nabila.putri@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Fajar Hidayat',
+                'email' => 'fajar.hidayat@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Putri Ayu',
+                'email' => 'putri.ayu@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Yoga Pratama',
+                'email' => 'yoga.pratama@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
+            [
+                'name' => 'Intan Permata',
+                'email' => 'intan.permata@smk.sch.id',
+                'roles' => [
+                    ['lms', 'siswa'],
+                ],
+            ],
         ];
 
         foreach ($daftarUser as $data) {
@@ -142,6 +216,8 @@ class UserSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            $isSiswaLms = false;
 
             foreach ($data['roles'] as [$moduleKode, $roleKode]) {
                 $roleId = DB::table('roles')
@@ -162,6 +238,32 @@ class UserSeeder extends Seeder
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                if ($moduleKode === 'lms' && $roleKode === 'siswa') {
+                    $isSiswaLms = true;
+                }
+            }
+
+            // ── Hubungkan akun ke tabel `siswa` ───────────────────────
+            // SiswaSeeder membuat baris siswa TANPA user_id (data nama
+            // masih fiktif dari faker). Di sini kita "adopsi" satu baris
+            // siswa yang belum punya akun (user_id masih null) supaya
+            // user LMS ini punya data siswa untuk login & dashboard.
+            //
+            // CATATAN: nama di tabel `siswa` yang ke-attach TIDAK akan
+            // otomatis sama dengan $data['name'] di atas (karena datanya
+            // masih hasil faker dari SiswaSeeder). Kalau mau nama-nya
+            // konsisten, timpa juga kolom `nama` siswa dengan nama user.
+            if ($isSiswaLms) {
+                $siswaId = DB::table('siswa')->whereNull('user_id')->orderBy('id')->value('id');
+
+                if ($siswaId) {
+                    DB::table('siswa')->where('id', $siswaId)->update([
+                        'user_id' => $userId,
+                        'nama' => $data['name'], // samakan nama siswa dgn nama akun
+                        'updated_at' => now(),
+                    ]);
+                }
             }
         }
     }

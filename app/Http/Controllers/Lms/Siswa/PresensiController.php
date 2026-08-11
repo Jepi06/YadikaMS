@@ -18,20 +18,20 @@ class PresensiController extends Controller
     {
         $siswa = Auth::guard('lms')->user()->siswa;
 
-        abort_if(! $siswa, 403, 'Akun Anda belum terhubung ke data siswa. Hubungi admin.');
+        abort_if(!$siswa, 403, 'Akun Anda belum terhubung ke data siswa. Hubungi admin.');
 
         $sesi = SesiPresensi::where('token', $token)
             ->with('pengampuMapel.mataPelajaran')
             ->first();
 
-        if (! $sesi) {
+        if (!$sesi) {
             return view('lms.siswa.presensi-scan', [
                 'berhasil' => false,
                 'pesan' => 'QR tidak dikenali atau sudah tidak berlaku.',
             ]);
         }
 
-        if (! is_null($sesi->ditutup_at)) {
+        if (!is_null($sesi->ditutup_at)) {
             return view('lms.siswa.presensi-scan', [
                 'berhasil' => false,
                 'pesan' => 'Sesi presensi ini sudah ditutup oleh guru.',
@@ -66,10 +66,19 @@ class PresensiController extends Controller
         ]);
     }
 
+    /** Halaman "Presensi Sekarang" — buka kamera langsung di dalam LMS. */
+    public function kamera()
+    {
+        $siswa = Auth::guard('lms')->user()->siswa;
+        abort_if(!$siswa, 403, 'Akun Anda belum terhubung ke data siswa. Hubungi admin.');
+
+        return view('lms.siswa.presensi-kamera');
+    }
+
     public function riwayat()
     {
         $siswa = Auth::guard('lms')->user()->siswa;
-        abort_if(! $siswa, 403, 'Akun Anda belum terhubung ke data siswa.');
+        abort_if(!$siswa, 403, 'Akun Anda belum terhubung ke data siswa.');
 
         $riwayat = PresensiLms::with('pengampuMapel.mataPelajaran')
             ->where('siswa_id', $siswa->id)
