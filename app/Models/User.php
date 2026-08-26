@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Mapping\Siswa;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
 {
@@ -15,12 +16,14 @@ class User extends Authenticatable
         'email',
         'password',
         'is_active',
+        'is_super_admin',
     ];
 
     protected $hidden = ['password', 'remember_token'];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_super_admin' => 'boolean',
     ];
 
     // ── Relasi ─────────────────────────────────────────────────
@@ -46,7 +49,19 @@ class User extends Authenticatable
 
     public function hasModuleAccess(string $moduleKode): bool
     {
-        return $this->is_active && $this->roles()
+        if (!$this->is_active) {
+            return false;
+        }
+
+        // Super admin gak perlu role spesifik per modul buat bisa LOGIN
+        // ke sistem manapun (PKL/SPMB/LMS) — tapi menu/fitur di dalam
+        // tiap sistem tetap ngikutin role dia (kalau gak punya role di
+        // modul itu, sidebar/menu-nya ya kosong, cuma dashboard polos).
+        if ($this->is_super_admin) {
+            return true;
+        }
+
+        return $this->roles()
             ->whereHas('module', fn($q) => $q->where('kode', $moduleKode))
             ->exists();
     }
@@ -129,6 +144,28 @@ class User extends Authenticatable
     public function isSiswaLms(): bool
     {
         return $this->hasLmsRole('siswa');
+    }
+
+    // ← BARU: Super Admin — TERPISAH dari role per-modul di atas.
+    // Nggak nunjuk ke satu sistem tertentu; ini akses ke Panel Super
+    // Admin yang guard-agnostic (bisa dibuka dari login PKL/SPMB/LMS
+    // manapun selama akunnya ditandai is_super_admin = true).
+
+    public function isSuperAdmin(): bool
+    {
+        return (bool) $this->is_super_admin;
+    }
+
+    /**
+     * Ambil user yang sedang login, DI GUARD MANAPUN dia login
+     * (pkl/spmb/lms) — dipakai Panel Super Admin karena panel itu
+     * gak terikat ke satu guard tertentu.
+     */
+    public static function resolveAnyGuardUser(): ?self
+    {
+        return Auth::guard('pkl')->user()
+            ?? Auth::guard('spmb')->user()
+            ?? Auth::guard('lms')->user();
     }
 
     // ── Accessors ─────────────────────────────────────────────

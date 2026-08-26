@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // ← BARU: modul LMS
             'auth.lms' => \App\Http\Middleware\AuthenticateLms::class,
             'role.lms' => \App\Http\Middleware\RoleLmsMiddleware::class,
+            'super.admin' => \App\Http\Middleware\EnsureSuperAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

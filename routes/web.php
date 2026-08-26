@@ -50,6 +50,11 @@ use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
 use App\Http\Controllers\Lms\Siswa\PresensiController as LmsSiswaPresensiController;
 use App\Http\Controllers\Lms\Siswa\MateriController as LmsSiswaMateriController;
 use App\Http\Controllers\Lms\Siswa\TugasController as LmsSiswaTugasController;
+
+// super admin
+
+use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\PenggunaController as SuperAdminPenggunaController;
 /*
 |--------------------------------------------------------------------------
 | LANDING PAGE
@@ -354,3 +359,19 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
         Route::post('/tugas/{tugas}/kumpul', [LmsSiswaTugasController::class, 'kumpul'])
             ->name('tugas.kumpul');
     });
+
+
+/*
+|==========================================================================
+| PANEL SUPER ADMIN — guard-agnostic (bisa dibuka dari login PKL, SPMB,
+| atau LMS manapun, selama akunnya is_super_admin = true). Lihat
+| middleware EnsureSuperAdmin (alias 'super.admin').
+|==========================================================================
+*/
+Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(function () {
+    Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/pengguna', [SuperAdminPenggunaController::class, 'index'])->name('pengguna.index');
+    Route::get('/pengguna/{user}/akses', [SuperAdminPenggunaController::class, 'akses'])->name('pengguna.akses');
+    Route::put('/pengguna/{user}/akses', [SuperAdminPenggunaController::class, 'updateAkses'])->name('pengguna.akses.update');
+});

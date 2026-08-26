@@ -36,6 +36,15 @@ class DashboardPublicController extends Controller
             return redirect()->route('lms.siswa.dashboard');
         }
 
+        // PERBAIKAN: super admin bisa login ke LMS (lewat hasLmsAccess()
+        // yang sekarang bypass di User::hasModuleAccess()) walau gak
+        // punya role spesifik (admin/guru/siswa) di modul lms. Tanpa
+        // fallback ini, dia bakal ke-lempar balik ke landing page
+        // dengan pesan error padahal login-nya sendiri berhasil.
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         // Punya akses modul tapi tidak punya role dikenali → kembali ke landing
         return redirect()->route('lms')
             ->withErrors(['email' => 'Role akun Anda belum dikonfigurasi untuk LMS.']);
