@@ -29,13 +29,15 @@ class DatabaseSeeder extends Seeder
             jurusanSeeder::class,
             KelasSeeder::class,          // rombel per jurusan & tingkat
             SiswaSeeder::class,          // siswa per kelas — harus SEBELUM UserSeeder
-            UserSeeder::class,           // guru/staff + kombinasi role lintas modul + link ke siswa
+            UserSeeder::class,  
+            SinkronWaliKelasSeeder::class,          // guru/staff + kombinasi role lintas modul + link ke siswa
             TempatPklSeeder::class,      // perusahaan/instansi mitra PKL
             GuruPembimbingSeeder::class, // pembimbing lapangan (master data)
             PenempatanPklSeeder::class,  // penempatan PKL + alur approval
             PendaftarSeeder::class,      // pendaftar SPMB (mandiri & input admin)
             MataPelajaranSeeder::class,  // master mapel untuk LMS
-            PengampuMapelSeeder::class,  // guru mengajar mapel di kelas — butuh UserSeeder
+            PengampuMapelSeeder::class,
+            SinkronKelasSiswaLmsSeeder::class,  // guru mengajar mapel di kelas — butuh UserSeeder
             MateriSeeder::class,
             TugasSeeder::class,
             PengumpulanTugasSeeder::class,

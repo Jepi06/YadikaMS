@@ -45,11 +45,26 @@ class User extends Authenticatable
         return $this->hasMany(\App\Models\Lms\PengampuMapel::class, 'guru_id');
     }
 
+    /**
+     * Kelas yang diwali-i (status wali kelas, dari kolom kelas.wali_kelas_id
+     * — INDEPENDEN dari role LMS/PKL. Biasanya cuma 1 kelas, tapi
+     * relasinya dibuat hasMany buat jaga-jaga kalau ada yang wali 2 kelas.
+     */
+    public function kelasWali()
+    {
+        return $this->hasMany(\App\Models\Kelas::class, 'wali_kelas_id');
+    }
+
+    public function isWaliKelas(): bool
+    {
+        return $this->kelasWali()->exists();
+    }
+
     // ── Helper: cek akses per sistem ──────────────────────────
 
     public function hasModuleAccess(string $moduleKode): bool
     {
-        if (!$this->is_active) {
+        if (! $this->is_active) {
             return false;
         }
 

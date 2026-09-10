@@ -40,5 +40,8 @@ class AppServiceProvider extends ServiceProvider
         View::composer('lms.*', function ($view) {
             $view->with('lmsUser', Auth::guard('lms')->user());
         });
+         if (config('app.env') !== 'local') {
+        \URL::forceScheme('https');
+    }
     }
 }

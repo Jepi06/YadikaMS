@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Http\Controllers\Mapping;
+
+namespace App\Http\Controllers\Spmb;
 
 use App\Http\Controllers\Concerns\UpdatesSharedProfile;
 use App\Http\Controllers\Controller;

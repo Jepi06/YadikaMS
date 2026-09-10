@@ -88,6 +88,16 @@
                     href="{{ route('lms.guru.kelas.index') }}">
                     <i class="bi bi-door-open me-2"></i> Kelas Saya
                 </a>
+                <a class="nav-link {{ request()->routeIs(['admin.modul-ajar.*', 'lms.guru.kelas.index']) ? 'active' : '' }}"
+                    href="{{ $lmsUser->isSuperAdmin() ? route('admin.modul-ajar.index') : route('lms.guru.kelas.index') }}">
+                    <i class="bi bi-archive-fill me-2"></i> Modul Ajar
+                </a>
+                    @if ($lmsUser->isWaliKelas())
+                <a class="nav-link {{ request()->routeIs('lms.guru.wali-kelas.index') ? 'active' : '' }}"
+                    href="{{ route('lms.guru.wali-kelas.index') }}">
+                    <i class="bi bi-clipboard-data me-2"></i> Wali Kelas
+                </a>
+            @endif
             @elseif ($lmsUser?->isSiswaLms())
                 <a class="nav-link {{ request()->routeIs('lms.siswa.dashboard') ? 'active' : '' }}"
                     href="{{ route('lms.siswa.dashboard') }}">
@@ -102,6 +112,7 @@
                     <i class="bi bi-calendar-check me-2"></i> Riwayat Presensi
                 </a>
             @endif
+        
         </nav>
     </aside>
 

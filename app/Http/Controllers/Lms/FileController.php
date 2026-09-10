@@ -4,19 +4,15 @@ namespace App\Http\Controllers\Lms;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lms\Materi;
+use App\Models\Lms\ModulAjar;
 use App\Models\Lms\PengumpulanTugas;
 use App\Models\Lms\Tugas;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Serve file materi/tugas/jawaban LEWAT LARAVEL (bukan symlink public/storage).
- *
- * Alasan: di sebagian environment (mis. Laragon/Apache di Windows),
- * symlink `public/storage` diblok Apache (Options -FollowSymLinks)
- * sehingga akses langsung ke /storage/... berujung 403 dari web server,
- * bukan dari Laravel. Serve lewat route begini lebih portable, dan
- * sekalian bisa ditambah pengecekan otorisasi (bukan sekadar tebak URL).
+ * Serve file materi/tugas/jawaban/modul-ajar LEWAT LARAVEL (bukan
+ * symlink public/storage) — lebih portable + ada pengecekan otorisasi.
  */
 class FileController extends Controller
 {
@@ -53,6 +49,25 @@ class FileController extends Controller
         abort_unless($pengumpulan->file_jawaban, 404);
 
         return Storage::disk('public')->response($pengumpulan->file_jawaban);
+    }
+
+    /**
+     * Modul Ajar TIDAK BOLEH diakses siswa sama sekali — cuma guru
+     * pemiliknya. (Super Admin punya jalur file terpisah, lihat
+     * SuperAdmin\ModulAjarController::file(), karena panel itu
+     * guard-agnostic dan gak lewat middleware auth.lms.)
+     */
+    public function modulAjar(ModulAjar $modulAjar)
+    {
+        $user = Auth::guard('lms')->user();
+
+        abort_unless(
+            $user && $user->id === $modulAjar->pengampuMapel->guru_id,
+            403,
+            'Modul ajar ini bukan milik Anda.'
+        );
+
+        return Storage::disk('public')->response($modulAjar->file_path);
     }
 
     /** Guru pengampu ATAU siswa di kelas yang sama boleh akses. */

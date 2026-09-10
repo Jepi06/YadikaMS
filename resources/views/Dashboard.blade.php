@@ -1292,7 +1292,7 @@
 
         .footer-col a {
             color: rgba(255, 255, 255, 0.55);
-            text-decoration: none;
+            text-decoration: none; 
             font-size: 13.5px;
             transition: color .2s;
         }
@@ -1603,7 +1603,7 @@
                             <li>Rekap nilai & progres belajar real-time</li>
                             <li>Integrasi modul dari BMTI & mitra industri</li>
                         </ul>
-                        <a class="btn-service" href="#">Masuk LMS →</a>
+                        <a class="btn-service" href="/lms">Masuk LMS →</a>
                     </div>
                 </div>
             </div>

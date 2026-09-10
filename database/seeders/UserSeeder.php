@@ -62,6 +62,7 @@ class UserSeeder extends Seeder
                 'email' => 'budi.santoso@smk.sch.id',
                 'roles' => [
                     ['pkl', 'wali_kelas'],
+                    ['lms', 'wali_kelas'],
                     ['lms', 'guru'],
                 ],
             ],
@@ -144,7 +145,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name' => 'Rina Febriani',
-                'email' => 'rina.febriani@smk.sch.id',
+                'email' => ' ',
                 'roles' => [
                     ['lms', 'siswa'],
                 ],

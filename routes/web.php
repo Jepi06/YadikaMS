@@ -1,26 +1,26 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth; // pindah ke atas
+use App\Http\Controllers\Lms\Admin\DashboardController as LmsAdminDashboardController;
+use App\Http\Controllers\Lms\Auth\AuthController as LmsAuthController; // pindah ke atas
 
-/*
-|--------------------------------------------------------------------------
-| PKL – Controllers
-|--------------------------------------------------------------------------
-*/
-use App\Http\Controllers\Mapping\{
-    DashboardController,
-    SiswaController,
-    GuruPembimbingController,
-    TempatPklController,
-    PenempatanPklController,
-    ApprovalController,
-    AuthController,
-    DashboardPublicController as PklDashboardPublicController,
-    SIswaPklController,
-    PengajuanPklPublicController,
-    ProfileController as PklProfileController
-};
+use App\Http\Controllers\Lms\DashboardPublicController as LmsDashboardPublicController;
+use App\Http\Controllers\Lms\FileController as LmsFileController;
+use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
+// LMS Guru
+use App\Http\Controllers\Lms\Guru\DashboardController as LmsGuruDashboardController;
+use App\Http\Controllers\Lms\Guru\KelasController as LmsGuruKelasController;
+use App\Http\Controllers\Lms\Guru\MateriController as LmsGuruMateriController;
+use App\Http\Controllers\Lms\Guru\ModulAjarController as LmsGuruModulAjarController;
+use App\Http\Controllers\Lms\Guru\NilaiController as LmsGuruNilaiController;
+use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
+use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
+use App\Http\Controllers\Lms\Guru\WaliKelasController as LmsGuruWaliKelasController;
+// LMS Siswa
+use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
+use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
+use App\Http\Controllers\Lms\Siswa\MateriController as LmsSiswaMateriController;
+use App\Http\Controllers\Lms\Siswa\PresensiController as LmsSiswaPresensiController;
+use App\Http\Controllers\Lms\Siswa\TugasController as LmsSiswaTugasController; // ← tambahan baru
 
 /*
 |--------------------------------------------------------------------------
@@ -28,33 +28,36 @@ use App\Http\Controllers\Mapping\{
 | (sebelumnya bernama PPDB; namespace & guard sudah diganti ke "spmb")
 |--------------------------------------------------------------------------
 */
-use App\Http\Controllers\Spmb\Auth\AuthController as SpmbAuthController;
-use App\Http\Controllers\Spmb\Admin\PendaftarController as SpmbPendaftarController;
-use App\Http\Controllers\Spmb\DashboardPublicController as SpmbDashboardPublicController;
-use App\Http\Controllers\Spmb\PengajuanSpmbPublicController; // ← tambahan baru
-use App\Http\Controllers\Spmb\ProfileController as SpmbProfileController;
-//LMS
+// LMS
 
-use App\Http\Controllers\Lms\Auth\AuthController as LmsAuthController;
-use App\Http\Controllers\Lms\DashboardPublicController as LmsDashboardPublicController;
-use App\Http\Controllers\Lms\FileController as LmsFileController;
-use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
-use App\Http\Controllers\Lms\Admin\DashboardController as LmsAdminDashboardController;
-use App\Http\Controllers\Lms\Guru\DashboardController as LmsGuruDashboardController;
-use App\Http\Controllers\Lms\Guru\KelasController as LmsGuruKelasController;
-use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
-use App\Http\Controllers\Lms\Guru\MateriController as LmsGuruMateriController;
-use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
-use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
-use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
-use App\Http\Controllers\Lms\Siswa\PresensiController as LmsSiswaPresensiController;
-use App\Http\Controllers\Lms\Siswa\MateriController as LmsSiswaMateriController;
-use App\Http\Controllers\Lms\Siswa\TugasController as LmsSiswaTugasController;
+use App\Http\Controllers\Mapping\AuthController;
+use App\Http\Controllers\Mapping\DashboardController;
+use App\Http\Controllers\Mapping\DashboardPublicController as PklDashboardPublicController;
+use App\Http\Controllers\Mapping\GuruPembimbingController;
+use App\Http\Controllers\Mapping\PenempatanPklController;
+use App\Http\Controllers\Mapping\PengajuanPklPublicController;
+use App\Http\Controllers\Mapping\ProfileController as PklProfileController;
+use App\Http\Controllers\Mapping\SiswaController;
+use App\Http\Controllers\Mapping\SIswaPklController;
+use App\Http\Controllers\Mapping\TempatPklController;
+use App\Http\Controllers\Mapping\ApprovalController;
+
+// SPMB
+use App\Http\Controllers\Spmb\Admin\PendaftarController as SpmbPendaftarController;
+use App\Http\Controllers\Spmb\Auth\AuthController as SpmbAuthController;
+use App\Http\Controllers\Spmb\DashboardPublicController as SpmbDashboardPublicController;
+use App\Http\Controllers\Spmb\PengajuanSpmbPublicController;
+use App\Http\Controllers\Spmb\ProfileController as SpmbProfileController;
 
 // super admin
-
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\PenggunaController as SuperAdminPenggunaController;
+use App\Http\Controllers\SuperAdmin\ModulAjarController as SuperAdminModulAjarController;
+
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
 /*
 |--------------------------------------------------------------------------
 | LANDING PAGE
@@ -231,7 +234,6 @@ Route::prefix('spmb/admin')->name('spmb.admin.')->middleware('auth.spmb')->group
     Route::put('/profil/password', [SpmbProfileController::class, 'updatePassword'])->name('profil.password');
 });
 
-
 /*
 |==========================================================================
 | LMS – PUBLIC (landing page + login)
@@ -264,6 +266,7 @@ Route::prefix('lms/file')->name('lms.file.')
         Route::get('/materi/{materi}', [LmsFileController::class, 'materi'])->name('materi');
         Route::get('/tugas/{tugas}', [LmsFileController::class, 'tugasLampiran'])->name('tugas');
         Route::get('/jawaban/{pengumpulan}', [LmsFileController::class, 'jawaban'])->name('jawaban');
+        Route::get('/modul-ajar/{modulAjar}', [LmsFileController::class, 'modulAjar'])->name('modul-ajar');
     });
 
 /*
@@ -329,6 +332,23 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('tugas.kumpulan');
         Route::post('/pengumpulan/{pengumpulan}/nilai', [LmsGuruTugasController::class, 'simpanNilai'])
             ->name('tugas.kumpulan.nilai');
+        Route::get('/kelas/{pengampuMapel}/nilai', [LmsGuruNilaiController::class, 'index'])
+            ->name('nilai.index');
+        Route::post('/kelas/{pengampuMapel}/nilai/sikap', [LmsGuruNilaiController::class, 'simpanSikap'])
+            ->name('nilai.sikap');
+
+        Route::get('/kelas/{pengampuMapel}/modul-ajar', [LmsGuruModulAjarController::class, 'index'])
+            ->name('modul-ajar.index');
+        Route::post('/kelas/{pengampuMapel}/modul-ajar', [LmsGuruModulAjarController::class, 'store'])
+            ->name('modul-ajar.store');
+        Route::delete('/modul-ajar/{modulAjar}', [LmsGuruModulAjarController::class, 'destroy'])
+            ->name('modul-ajar.destroy');
+            Route::get('/kelas/{pengampuMapel}/nilai/export', [LmsGuruNilaiController::class, 'exportExcel'])
+    ->name('nilai.export');
+    Route::post('/kelas/{pengampuMapel}/nilai/bobot', [LmsGuruNilaiController::class, 'simpanBobot'])
+    ->name('nilai.bobot');
+Route::get('/wali-kelas', [LmsGuruWaliKelasController::class, 'index'])
+    ->name('wali-kelas.index');
     });
 
 /*
@@ -360,7 +380,6 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
             ->name('tugas.kumpul');
     });
 
-
 /*
 |==========================================================================
 | PANEL SUPER ADMIN — guard-agnostic (bisa dibuka dari login PKL, SPMB,
@@ -374,4 +393,6 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
     Route::get('/pengguna', [SuperAdminPenggunaController::class, 'index'])->name('pengguna.index');
     Route::get('/pengguna/{user}/akses', [SuperAdminPenggunaController::class, 'akses'])->name('pengguna.akses');
     Route::put('/pengguna/{user}/akses', [SuperAdminPenggunaController::class, 'updateAkses'])->name('pengguna.akses.update');
-});
+    Route::get('/modul-ajar', [SuperAdminModulAjarController::class, 'index'])->name('modul-ajar.index');
+    Route::get('/modul-ajar/{modulAjar}/file', [SuperAdminModulAjarController::class, 'file'])->name('modul-ajar.file');
+    });

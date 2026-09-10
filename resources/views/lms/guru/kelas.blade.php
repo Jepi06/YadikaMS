@@ -26,6 +26,12 @@
                             <a href="{{ route('lms.guru.presensi.index', $p) }}" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-qr-code-scan"></i> Presensi
                             </a>
+                            <a href="{{ route('lms.guru.nilai.index', $p) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-clipboard-data"></i> Rekap Nilai
+                            </a>
+                            <a href="{{ route('lms.guru.modul-ajar.index', $p) }}" class="btn btn-sm btn-outline-dark">
+                                <i class="bi bi-archive"></i> Modul Ajar
+                            </a>
                         </div>
                     </div>
                 </div>

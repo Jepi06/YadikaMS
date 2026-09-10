@@ -19,7 +19,7 @@
                         <div class="alert alert-danger py-2 small">{{ $errors->first('name') }}</div>
                     @endif
 
-                    <form method="POST" action="{{ route('spmb.profil.update') }}">
+                    <form method="POST" action="{{ route('spmb.admin.profil.update') }}">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
@@ -53,7 +53,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('spmb.profil.password') }}">
+                    <form method="POST" action="{{ route('spmb.admin.profil.password') }}">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
