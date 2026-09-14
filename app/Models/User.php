@@ -46,18 +46,38 @@ class User extends Authenticatable
     }
 
     /**
-     * Kelas yang diwali-i (status wali kelas, dari kolom kelas.wali_kelas_id
-     * — INDEPENDEN dari role LMS/PKL. Biasanya cuma 1 kelas, tapi
-     * relasinya dibuat hasMany buat jaga-jaga kalau ada yang wali 2 kelas.
+     * Kelas yang diwali-i user ini PADA PERIODE TERTENTU (default:
+     * periode/tahun ajaran yang sedang berjalan sekarang). Ganti dari
+     * versi lama yang cuma ngecek kelas.wali_kelas_id global (gak ada
+     * dimensi tahun) — sekarang lewat tabel wali_kelas_periode_lms
+     * yang emang dibikin buat nyimpen ini per tahun_ajaran+semester.
      */
-    public function kelasWali()
+    public function kelasWaliPeriode(?string $tahunAjaran = null, ?string $semester = null)
     {
-        return $this->hasMany(\App\Models\Kelas::class, 'wali_kelas_id');
+        $tahunAjaran ??= \App\Support\TahunAjaran::sekarang();
+        $semester ??= \App\Support\TahunAjaran::semesterSekarang();
+
+        return \App\Models\Lms\WaliKelasPeriode::where('user_id', $this->id)
+            ->where('tahun_ajaran', $tahunAjaran)
+            ->where('semester', $semester)
+            ->with('kelas')
+            ->get()
+            ->pluck('kelas');
     }
 
-    public function isWaliKelas(): bool
+    /** Semua penugasan wali kelas user ini, lintas SEMUA periode (buat dropdown pilihan). */
+    public function semuaPenugasanWaliKelas()
     {
-        return $this->kelasWali()->exists();
+        return \App\Models\Lms\WaliKelasPeriode::where('user_id', $this->id)
+            ->with('kelas')
+            ->orderByDesc('tahun_ajaran')
+            ->orderByDesc('semester')
+            ->get();
+    }
+
+    public function isWaliKelas(?string $tahunAjaran = null, ?string $semester = null): bool
+    {
+        return $this->kelasWaliPeriode($tahunAjaran, $semester)->isNotEmpty();
     }
 
     // ── Helper: cek akses per sistem ──────────────────────────

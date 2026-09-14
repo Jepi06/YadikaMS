@@ -1,7 +1,7 @@
 <?php
 
 namespace Database\Seeders;
-
+use App\Support\TahunAjaran;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -46,8 +46,8 @@ class PengampuMapelSeeder extends Seeder
                     'guru_id' => $guruId,
                     'mata_pelajaran_id' => $mapelId,
                     'kelas_id' => $kelas->id,
-                    'tahun_ajaran' => '2024/2025',
-                    'semester' => 'Ganjil',
+                    'tahun_ajaran' => TahunAjaran::sekarang(),
+                    'semester' => TahunAjaran::semesterSekarang(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

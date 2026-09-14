@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use App\Support\TahunAjaran;
 
 class PenempatanPklSeeder extends Seeder
 {
@@ -53,7 +54,7 @@ class PenempatanPklSeeder extends Seeder
                 'guru_pembimbing_id' => $guruPembimbingIds->random(),
                 'tanggal_mulai' => $mulai,
                 'tanggal_selesai' => $selesai,
-                'tahun_ajaran' => '2024/2025',
+                'tahun_ajaran' => TahunAjaran::sekarang(),
                 'keterangan' => null,
                 'status' => 'draft',
                 'status_wali_kelas' => 'pending',

@@ -239,7 +239,7 @@
                                                             <label class="form-label fw-semibold small">Tahun Ajaran <span
                                                                     class="text-danger">*</span></label>
                                                             <input type="text" name="tahun_ajaran"
-                                                                class="form-control" placeholder="2024/2025" required>
+                                                                class="form-control" placeholder="2026/2027" required>
                                                         </div>
                                                         <div class="col-6">
                                                             <label class="form-label fw-semibold small">Tanggal Mulai <span
@@ -390,7 +390,7 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold small">Tahun Ajaran <span
                                         class="text-danger">*</span></label>
-                                <input type="text" name="tahun_ajaran" class="form-control" placeholder="2024/2025"
+                                <input type="text" name="tahun_ajaran" class="form-control" placeholder="2026/2027"
                                     required>
                             </div>
                             <div class="col-md-4">

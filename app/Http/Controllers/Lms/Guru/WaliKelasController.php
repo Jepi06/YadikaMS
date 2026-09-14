@@ -32,13 +32,26 @@ class WaliKelasController extends Controller
 
         $kelas->load('siswa');
 
-        $daftarPengampu = PengampuMapel::with('mataPelajaran', 'guru')
-            ->where('kelas_id', $kelas->id)
+        // Semua kombinasi tahun ajaran + semester yang PERNAH ada di
+        // kelas ini (dari seluruh pengampu_mapel yang pernah dibuat).
+        $periodeList = PengampuMapel::where('kelas_id', $kelas->id)
+            ->select('tahun_ajaran', 'semester')
+            ->distinct()
+            ->orderByDesc('tahun_ajaran')
+            ->orderByDesc('semester')
             ->get();
 
-        // Hitung nilai akhir per mapel. $pengampu->kelas di-set manual
-        // ke $kelas yang sudah eager-load siswa, biar NilaiAkhirService
-        // gak query ulang siswa per mapel.
+        // Default: periode PALING BARU, biar pas dibuka gak nyampur
+        // data semester lama.
+        $tahunAjaran = $request->query('tahun_ajaran', $periodeList->first()->tahun_ajaran ?? null);
+        $semester = $request->query('semester', $periodeList->first()->semester ?? null);
+
+        $daftarPengampu = PengampuMapel::with('mataPelajaran', 'guru')
+            ->where('kelas_id', $kelas->id)
+            ->when($tahunAjaran, fn($q) => $q->where('tahun_ajaran', $tahunAjaran))
+            ->when($semester, fn($q) => $q->where('semester', $semester))
+            ->get();
+
         $rekapPerMapel = [];
         foreach ($daftarPengampu as $pengampu) {
             $pengampu->setRelation('kelas', $kelas);
@@ -47,7 +60,8 @@ class WaliKelasController extends Controller
         }
 
         return view('lms.guru.wali-kelas', compact(
-            'kelasDiwalikan', 'kelas', 'daftarPengampu', 'rekapPerMapel'
+            'kelasDiwalikan', 'kelas', 'daftarPengampu', 'rekapPerMapel',
+            'periodeList', 'tahunAjaran', 'semester'
         ));
     }
 }
