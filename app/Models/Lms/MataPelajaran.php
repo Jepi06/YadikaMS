@@ -2,7 +2,7 @@
 
 namespace App\Models\Lms;
 
-use App\Models\SPMB\Jurusan;
+use App\Models\Jurusan;
 use Illuminate\Database\Eloquent\Model;
 
 class MataPelajaran extends Model

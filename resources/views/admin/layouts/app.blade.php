@@ -78,6 +78,10 @@
                 href="{{ route('admin.pengguna.index') }}">
                 <i class="bi bi-people-fill me-2"></i> Kelola Pengguna
             </a>
+            <a class="nav-link {{ request()->routeIs('admin.siswa.*') ? 'active' : '' }}"
+                href="{{ route('admin.siswa.index') }}">
+                <i class="bi bi-person-lines-fill me-2"></i> Kelola Siswa
+            </a>
             <a class="nav-link {{ request()->routeIs('admin.modul-ajar.*') ? 'active' : '' }}"
                 href="{{ route('admin.modul-ajar.index') }}">
                 <i class="bi bi-archive-fill me-2"></i> Arsip Modul Ajar

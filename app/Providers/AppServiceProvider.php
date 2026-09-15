@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
-use App\Models\SPMB\Jurusan;
+use App\Models\Jurusan;
 
 class AppServiceProvider extends ServiceProvider
 {

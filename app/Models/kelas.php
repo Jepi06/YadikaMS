@@ -2,21 +2,16 @@
 
 namespace App\Models;
 
-use App\Models\Mapping\Siswa;
-use App\Models\SPMB\Jurusan;
 use App\Models\Lms\PengampuMapel;
+use App\Models\Mapping\Siswa;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * CATATAN: buat file ini HANYA kalau model Kelas belum ada di project.
- * Berdasarkan migration create_kelas_table, tabel ini dipakai bersama
- * oleh PKL (siswa.kelas_id), SPMB, dan LMS — jadi taruh di App\Models
- * (bukan di namespace modul tertentu) supaya bisa dipakai lintas modul.
- * Kalau kamu sudah punya model Kelas di namespace lain, sesuaikan
- * `use App\Models\Kelas;` di model-model LMS lain menjadi namespace itu.
- */
 class Kelas extends Model
 {
+    protected $table = 'kelas';
+
     protected $fillable = [
         'nama_kelas',
         'tingkat',
@@ -24,23 +19,32 @@ class Kelas extends Model
         'wali_kelas_id',
     ];
 
-    public function jurusan()
+    // ── Relasi ────────────────────────────────────────────────────────────────
+
+    public function jurusan(): BelongsTo
     {
         return $this->belongsTo(Jurusan::class);
     }
 
-    public function waliKelas()
+    public function waliKelas(): BelongsTo
     {
         return $this->belongsTo(User::class, 'wali_kelas_id');
     }
 
-    public function siswa()
+    public function siswa(): HasMany
     {
         return $this->hasMany(Siswa::class, 'kelas_id');
     }
 
-    public function pengampuMapel()
+    public function pengampuMapel(): HasMany
     {
         return $this->hasMany(PengampuMapel::class, 'kelas_id');
+    }
+
+    // ── Accessor ──────────────────────────────────────────────────────────────
+
+    public function getLabelAttribute(): string
+    {
+        return "{$this->nama_kelas} (" . ($this->jurusan->kode ?? '-') . ")";
     }
 }

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Spmb;
 
 use App\Http\Controllers\Controller;
-use App\Models\SPMB\Jurusan;
+use App\Models\Jurusan;
 use App\Models\SPMB\Pendaftar;
 use Illuminate\Http\Request;
 

@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $kelas_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Mapping\Kelas $kelas
+ * @property-read \App\Models\Kelas $kelas
  * @property-read \App\Models\Mapping\PenempatanPkl|null $penempatanAktif
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Mapping\PenempatanPkl> $penempatanPkl
  * @property-read int|null $penempatan_pkl_count

@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Lms\Admin\DashboardController as LmsAdminDashboardController;
-use App\Http\Controllers\Lms\Auth\AuthController as LmsAuthController; // pindah ke atas
+use App\Http\Controllers\Lms\AuthController as LmsAuthController; // pindah ke atas
 
 use App\Http\Controllers\Lms\DashboardPublicController as LmsDashboardPublicController;
 use App\Http\Controllers\Lms\FileController as LmsFileController;
@@ -53,7 +53,7 @@ use App\Http\Controllers\Spmb\ProfileController as SpmbProfileController;
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\PenggunaController as SuperAdminPenggunaController;
 use App\Http\Controllers\SuperAdmin\ModulAjarController as SuperAdminModulAjarController;
-
+use App\Http\Controllers\SuperAdmin\SiswaController as SuperAdminSiswaController;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -395,4 +395,18 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
     Route::put('/pengguna/{user}/akses', [SuperAdminPenggunaController::class, 'updateAkses'])->name('pengguna.akses.update');
     Route::get('/modul-ajar', [SuperAdminModulAjarController::class, 'index'])->name('modul-ajar.index');
     Route::get('/modul-ajar/{modulAjar}/file', [SuperAdminModulAjarController::class, 'file'])->name('modul-ajar.file');
+     Route::prefix('siswa')->name('siswa.')->group(function () {
+        Route::get('/import/form',       [SuperAdminSiswaController::class, 'importForm'])->name('import.form');
+        Route::get('/',                  [SuperAdminSiswaController::class, 'index'])->name('index');
+        Route::get('/tambah',            [SuperAdminSiswaController::class, 'create'])->name('create');
+        Route::post('/',                 [SuperAdminSiswaController::class, 'store'])->name('store');
+        Route::get('/{siswa}',           [SuperAdminSiswaController::class, 'show'])->name('show');
+        Route::get('/{siswa}/edit',      [SuperAdminSiswaController::class, 'edit'])->name('edit');
+        Route::put('/{siswa}',           [SuperAdminSiswaController::class, 'update'])->name('update');
+        Route::delete('/{siswa}',        [SuperAdminSiswaController::class, 'destroy'])->name('destroy');
+
+        // Import Excel
+        Route::post('/import/proses',    [SuperAdminSiswaController::class, 'import'])->name('import.proses');
+        Route::get('/import/template',   [SuperAdminSiswaController::class, 'downloadTemplate'])->name('import.template');
+    });
     });

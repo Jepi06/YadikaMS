@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\SPMB\Jurusan;
+use App\Models\Jurusan;
 use App\Models\SPMB\Pendaftar;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;

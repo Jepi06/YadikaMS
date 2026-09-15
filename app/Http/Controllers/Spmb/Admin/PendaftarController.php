@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Spmb\Admin;
 
 use App\Exports\PendaftarExport;
 use App\Http\Controllers\Controller;
-use App\Models\SPMB\Jurusan;
+use App\Models\Jurusan;
 use App\Models\SPMB\Pendaftar;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;

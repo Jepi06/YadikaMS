@@ -24,11 +24,16 @@ class DashboardPublicController extends Controller
 
     public static function redirectToDashboard($user)
     {
+        // PERBAIKAN: isSuperAdmin() dicek PALING PERTAMA — konsisten
+        // sama PKL & SPMB (super admin login dari sistem manapun selalu
+        // ke Panel Super Admin, gak peduli role apa lagi yang dia
+        // punya di modul itu).
         if ($user->isSuperAdmin()) {
             return redirect()->route('admin.dashboard');
         }
+
         if ($user->isAdminLms()) {
-            return redirect()->route('lms.admin.dashboard');
+            return redirect()->route('admin.dashboard');
         }
 
         if ($user->isGuruLms()) {
@@ -38,12 +43,6 @@ class DashboardPublicController extends Controller
         if ($user->isSiswaLms()) {
             return redirect()->route('lms.siswa.dashboard');
         }
-
-        // PERBAIKAN: super admin bisa login ke LMS (lewat hasLmsAccess()
-        // yang sekarang bypass di User::hasModuleAccess()) walau gak
-        // punya role spesifik (admin/guru/siswa) di modul lms. Tanpa
-        // fallback ini, dia bakal ke-lempar balik ke landing page
-        // dengan pesan error padahal login-nya sendiri berhasil.
 
         // Punya akses modul tapi tidak punya role dikenali → kembali ke landing
         return redirect()->route('lms')
