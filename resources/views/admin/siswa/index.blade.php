@@ -153,7 +153,7 @@
                         </td>
                         <td class="small text-muted">{{ $s->kelas?->waliKelas?->name ?? '-' }}</td>
                         <td>
-                            <span class="badge {{ $s->jenis_kelamin === 'L' ? 'bg-info' : 'bg-pink' }} bg-opacity-15 
+                            <span class="badge {{ $s->jenis_kelamin === 'L' ? 'bg-info text-white' : 'bg-warning' }} bg-opacity-15 
                                             {{ $s->jenis_kelamin === 'L' ? 'text-info' : 'text-danger' }}">
                                 {{ $s->jenis_kelamin === 'L' ? '♂ L' : '♀ P' }}
                             </span>

@@ -82,9 +82,21 @@
                 href="{{ route('admin.siswa.index') }}">
                 <i class="bi bi-person-lines-fill me-2"></i> Kelola Siswa
             </a>
+            <a class="nav-link {{ request()->routeIs('admin.kenaikan-kelas.*') ? 'active' : '' }}"
+                href="{{ route('admin.kenaikan-kelas.index') }}">
+                <i class="bi bi-arrow-up-circle me-2"></i> Kenaikan Kelas
+            </a>
             <a class="nav-link {{ request()->routeIs('admin.modul-ajar.*') ? 'active' : '' }}"
                 href="{{ route('admin.modul-ajar.index') }}">
                 <i class="bi bi-archive-fill me-2"></i> Arsip Modul Ajar
+            </a>
+            <a class="nav-link {{ request()->routeIs('admin.guru.*') ? 'active' : '' }}"
+                href="{{ route('admin.guru.index') }}">
+                <i class="bi bi-person-video3 me-2"></i> Kelola Guru
+            </a>
+            <a class="nav-link {{ request()->routeIs('admin.mata-pelajaran.*') ? 'active' : '' }}"
+                href="{{ route('admin.mata-pelajaran.index') }}">
+                <i class="bi bi-journal-bookmark-fill me-2"></i> Mata Pelajaran
             </a>
         </nav>
     </aside>
@@ -105,7 +117,9 @@
             @yield('content')
         </main>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @stack('scripts') {{-- ← tambahkan ini --}}
+</body>
 </body>
 
 </html>

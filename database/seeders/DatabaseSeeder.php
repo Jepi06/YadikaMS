@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             jurusanSeeder::class,
             KelasSeeder::class,          // rombel per jurusan & tingkat
-            SiswaSeeder::class,          // siswa per kelas — harus SEBELUM UserSeeder
+                  // siswa per kelas — harus SEBELUM UserSeeder
             UserSeeder::class,  
             SinkronWaliKelasSeeder::class,          // guru/staff + kombinasi role lintas modul + link ke siswa
             TempatPklSeeder::class,      // perusahaan/instansi mitra PKL

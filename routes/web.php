@@ -1,13 +1,11 @@
 <?php
 
 use App\Http\Controllers\Lms\Admin\DashboardController as LmsAdminDashboardController;
-use App\Http\Controllers\Lms\AuthController as LmsAuthController; // pindah ke atas
-
+use App\Http\Controllers\Lms\Auth\AuthController as LmsAuthController; // pindah ke atas
 use App\Http\Controllers\Lms\DashboardPublicController as LmsDashboardPublicController;
 use App\Http\Controllers\Lms\FileController as LmsFileController;
-use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
-// LMS Guru
 use App\Http\Controllers\Lms\Guru\DashboardController as LmsGuruDashboardController;
+// LMS Guru
 use App\Http\Controllers\Lms\Guru\KelasController as LmsGuruKelasController;
 use App\Http\Controllers\Lms\Guru\MateriController as LmsGuruMateriController;
 use App\Http\Controllers\Lms\Guru\ModulAjarController as LmsGuruModulAjarController;
@@ -15,13 +13,13 @@ use App\Http\Controllers\Lms\Guru\NilaiController as LmsGuruNilaiController;
 use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
 use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
 use App\Http\Controllers\Lms\Guru\WaliKelasController as LmsGuruWaliKelasController;
+use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
 // LMS Siswa
 use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
 use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
 use App\Http\Controllers\Lms\Siswa\MateriController as LmsSiswaMateriController;
 use App\Http\Controllers\Lms\Siswa\PresensiController as LmsSiswaPresensiController;
 use App\Http\Controllers\Lms\Siswa\TugasController as LmsSiswaTugasController; // ← tambahan baru
-
 /*
 |--------------------------------------------------------------------------
 | SPMB – Controllers
@@ -30,6 +28,7 @@ use App\Http\Controllers\Lms\Siswa\TugasController as LmsSiswaTugasController; /
 */
 // LMS
 
+use App\Http\Controllers\Mapping\ApprovalController;
 use App\Http\Controllers\Mapping\AuthController;
 use App\Http\Controllers\Mapping\DashboardController;
 use App\Http\Controllers\Mapping\DashboardPublicController as PklDashboardPublicController;
@@ -40,20 +39,20 @@ use App\Http\Controllers\Mapping\ProfileController as PklProfileController;
 use App\Http\Controllers\Mapping\SiswaController;
 use App\Http\Controllers\Mapping\SIswaPklController;
 use App\Http\Controllers\Mapping\TempatPklController;
-use App\Http\Controllers\Mapping\ApprovalController;
-
 // SPMB
 use App\Http\Controllers\Spmb\Admin\PendaftarController as SpmbPendaftarController;
 use App\Http\Controllers\Spmb\Auth\AuthController as SpmbAuthController;
 use App\Http\Controllers\Spmb\DashboardPublicController as SpmbDashboardPublicController;
 use App\Http\Controllers\Spmb\PengajuanSpmbPublicController;
 use App\Http\Controllers\Spmb\ProfileController as SpmbProfileController;
-
 // super admin
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
-use App\Http\Controllers\SuperAdmin\PenggunaController as SuperAdminPenggunaController;
+use App\Http\Controllers\SuperAdmin\GuruController as SuperAdminGuruController;
+use App\Http\Controllers\SuperAdmin\KenaikanKelasController;
 use App\Http\Controllers\SuperAdmin\ModulAjarController as SuperAdminModulAjarController;
+use App\Http\Controllers\SuperAdmin\PenggunaController as SuperAdminPenggunaController;
 use App\Http\Controllers\SuperAdmin\SiswaController as SuperAdminSiswaController;
+use App\Http\Controllers\SuperAdmin\MataPelajaranController;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -343,12 +342,12 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('modul-ajar.store');
         Route::delete('/modul-ajar/{modulAjar}', [LmsGuruModulAjarController::class, 'destroy'])
             ->name('modul-ajar.destroy');
-            Route::get('/kelas/{pengampuMapel}/nilai/export', [LmsGuruNilaiController::class, 'exportExcel'])
-    ->name('nilai.export');
-    Route::post('/kelas/{pengampuMapel}/nilai/bobot', [LmsGuruNilaiController::class, 'simpanBobot'])
-    ->name('nilai.bobot');
-Route::get('/wali-kelas', [LmsGuruWaliKelasController::class, 'index'])
-    ->name('wali-kelas.index');
+        Route::get('/kelas/{pengampuMapel}/nilai/export', [LmsGuruNilaiController::class, 'exportExcel'])
+            ->name('nilai.export');
+        Route::post('/kelas/{pengampuMapel}/nilai/bobot', [LmsGuruNilaiController::class, 'simpanBobot'])
+            ->name('nilai.bobot');
+        Route::get('/wali-kelas', [LmsGuruWaliKelasController::class, 'index'])
+            ->name('wali-kelas.index');
     });
 
 /*
@@ -395,18 +394,35 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
     Route::put('/pengguna/{user}/akses', [SuperAdminPenggunaController::class, 'updateAkses'])->name('pengguna.akses.update');
     Route::get('/modul-ajar', [SuperAdminModulAjarController::class, 'index'])->name('modul-ajar.index');
     Route::get('/modul-ajar/{modulAjar}/file', [SuperAdminModulAjarController::class, 'file'])->name('modul-ajar.file');
-     Route::prefix('siswa')->name('siswa.')->group(function () {
-        Route::get('/import/form',       [SuperAdminSiswaController::class, 'importForm'])->name('import.form');
-        Route::get('/',                  [SuperAdminSiswaController::class, 'index'])->name('index');
-        Route::get('/tambah',            [SuperAdminSiswaController::class, 'create'])->name('create');
-        Route::post('/',                 [SuperAdminSiswaController::class, 'store'])->name('store');
-        Route::get('/{siswa}',           [SuperAdminSiswaController::class, 'show'])->name('show');
-        Route::get('/{siswa}/edit',      [SuperAdminSiswaController::class, 'edit'])->name('edit');
-        Route::put('/{siswa}',           [SuperAdminSiswaController::class, 'update'])->name('update');
-        Route::delete('/{siswa}',        [SuperAdminSiswaController::class, 'destroy'])->name('destroy');
+    Route::prefix('siswa')->name('siswa.')->group(function () {
+        Route::get('/import/form', [SuperAdminSiswaController::class, 'importForm'])->name('import.form');
+        Route::get('/', [SuperAdminSiswaController::class, 'index'])->name('index');
+        Route::get('/tambah', [SuperAdminSiswaController::class, 'create'])->name('create');
+        Route::post('/', [SuperAdminSiswaController::class, 'store'])->name('store');
+        Route::get('/{siswa}', [SuperAdminSiswaController::class, 'show'])->name('show');
+        Route::get('/{siswa}/edit', [SuperAdminSiswaController::class, 'edit'])->name('edit');
+        Route::put('/{siswa}', [SuperAdminSiswaController::class, 'update'])->name('update');
+        Route::delete('/{siswa}', [SuperAdminSiswaController::class, 'destroy'])->name('destroy');
 
         // Import Excel
-        Route::post('/import/proses',    [SuperAdminSiswaController::class, 'import'])->name('import.proses');
-        Route::get('/import/template',   [SuperAdminSiswaController::class, 'downloadTemplate'])->name('import.template');
+        Route::post('/import/proses', [SuperAdminSiswaController::class, 'import'])->name('import.proses');
+        Route::get('/import/template', [SuperAdminSiswaController::class, 'downloadTemplate'])->name('import.template');
     });
+    Route::get('/guru', [SuperAdminGuruController::class, 'index'])->name('guru.index');
+    Route::get('/guru/{guru}/kelola', [SuperAdminGuruController::class, 'kelola'])->name('guru.kelola');
+    Route::post('/guru/{guru}/mengajar', [SuperAdminGuruController::class, 'storeMengajar'])->name('guru.mengajar.store');
+    Route::delete('/guru/mengajar/{pengampuMapel}', [SuperAdminGuruController::class, 'destroyMengajar'])->name('guru.mengajar.destroy');
+    Route::post('/guru/{guru}/wali-kelas', [SuperAdminGuruController::class, 'storeWaliKelas'])->name('guru.wali-kelas.store');
+    Route::delete('/guru/wali-kelas/{waliKelasPeriode}', [SuperAdminGuruController::class, 'destroyWaliKelas'])->name('guru.wali-kelas.destroy');
+    Route::get('/guru/import', [SuperAdminGuruController::class, 'importForm'])->name('guru.import.form');
+    Route::post('/guru/import', [SuperAdminGuruController::class, 'importProcess'])->name('guru.import.process');
+    Route::get('/guru/import/template', [SuperAdminGuruController::class, 'downloadTemplate'])->name('guru.import.template');
+    Route::prefix('kenaikan-kelas')->name('kenaikan-kelas.')->group(function () {
+        Route::get('/', [KenaikanKelasController::class, 'index'])->name('index');
+        Route::get('/template', [KenaikanKelasController::class, 'downloadTemplate'])->name('template');
+        Route::post('/preview', [KenaikanKelasController::class, 'preview'])->name('preview');
+        Route::post('/eksekusi', [KenaikanKelasController::class, 'eksekusi'])->name('eksekusi');
     });
+       Route::resource('mata-pelajaran', MataPelajaranController::class)
+        ->except(['show']);
+});
