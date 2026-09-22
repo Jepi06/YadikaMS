@@ -1,3 +1,4 @@
+{{-- resources/views/admin/mata-pelajaran/index.blade.php --}}
 @extends('admin.layouts.app')
 
 @section('title', 'Mata Pelajaran')
@@ -9,11 +10,18 @@
         <h4 class="fw-bold mb-1">Mata Pelajaran</h4>
         <p class="text-muted small mb-0">Total {{ $mapel->total() }} mata pelajaran</p>
     </div>
-    <a href="{{ route('admin.mata-pelajaran.create') }}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i>Tambah Mata Pelajaran
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('admin.mata-pelajaran.import.form') }}"
+            class="btn btn-outline-success btn-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i>Import Excel
+        </a>
+        <a href="{{ route('admin.mata-pelajaran.create') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Tambah Mata Pelajaran
+        </a>
+    </div>
 </div>
 
+{{-- Alert sukses --}}
 @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show">
         <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
@@ -21,9 +29,35 @@
     </div>
 @endif
 
+{{-- Alert error --}}
 @if ($errors->any())
     <div class="alert alert-danger alert-dismissible fade show">
         {{ $errors->first() }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+{{-- Import errors --}}
+@if (session('import_mapel_errors') && count(session('import_mapel_errors')) > 0)
+    <div class="alert alert-warning alert-dismissible fade show">
+        <strong><i class="bi bi-exclamation-triangle-fill me-1"></i>Beberapa baris gagal diimport:</strong>
+        <ul class="mb-0 mt-2 small">
+            @foreach (session('import_mapel_errors') as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+@if (session('import_mapel_skipped') && count(session('import_mapel_skipped')) > 0)
+    <div class="alert alert-info alert-dismissible fade show">
+        <strong><i class="bi bi-info-circle-fill me-1"></i>Baris dilewati (kode duplikat):</strong>
+        <div class="mt-2 small">
+            @foreach (session('import_mapel_skipped') as $row)
+                <span class="badge bg-secondary me-1">{{ $row['kode'] }} – {{ $row['nama'] }}</span>
+            @endforeach
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
@@ -41,7 +75,9 @@
             <div class="col-md-4">
                 <select name="jurusan_id" class="form-select form-select-sm">
                     <option value="">Semua Jurusan</option>
-                    <option value="umum" @selected($jurusanId === 'umum')>Umum (semua jurusan)</option>
+                    <option value="umum" @selected($jurusanId === 'umum')>
+                        Umum (semua jurusan)
+                    </option>
                     @foreach ($jurusan as $j)
                         <option value="{{ $j->id }}" @selected($jurusanId == $j->id)>
                             {{ $j->nama }} ({{ $j->kode }})
@@ -90,14 +126,9 @@
                         <td class="fw-semibold">{{ $m->nama }}</td>
                         <td>
                             @if ($m->jurusan_id === null)
-                                <span class="badge bg-blue-100 bg-primary bg-opacity-10 text-primary">
-                                    Umum
-                                </span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary">Umum</span>
                             @else
-                                <span class="badge bg-indigo-100 bg-indigo bg-opacity-10 text-indigo"
-                                    style="background-color:#e0e7ff;color:#4338ca">
-                                    Produktif
-                                </span>
+                                <span class="badge" style="background-color:#e0e7ff;color:#4338ca">Produktif</span>
                             @endif
                         </td>
                         <td class="text-muted small">
@@ -113,8 +144,7 @@
                                     action="{{ route('admin.mata-pelajaran.destroy', $m) }}"
                                     onsubmit="return confirm('Hapus mata pelajaran {{ addslashes($m->nama) }}?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                        title="Hapus">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>

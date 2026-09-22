@@ -435,8 +435,20 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
         Route::post('/preview', [KenaikanKelasController::class, 'preview'])->name('preview');
         Route::post('/eksekusi', [KenaikanKelasController::class, 'eksekusi'])->name('eksekusi');
     });
-    Route::resource('mata-pelajaran', MataPelajaranController::class)
-        ->except(['show']);
+    Route::prefix('mata-pelajaran')->name('mata-pelajaran.')->group(function () {
+        // Import — HARUS di atas /{mataPelajaran} agar tidak konflik
+        Route::get('/import/form', [MataPelajaranController::class, 'importForm'])->name('import.form');
+        Route::post('/import/proses', [MataPelajaranController::class, 'import'])->name('import.proses');
+        Route::get('/import/template', [MataPelajaranController::class, 'downloadTemplate'])->name('import.template');
+
+        // CRUD
+        Route::get('/', [MataPelajaranController::class, 'index'])->name('index');
+        Route::get('/tambah', [MataPelajaranController::class, 'create'])->name('create');
+        Route::post('/', [MataPelajaranController::class, 'store'])->name('store');
+        Route::get('/{mataPelajaran}/edit', [MataPelajaranController::class, 'edit'])->name('edit');
+        Route::put('/{mataPelajaran}', [MataPelajaranController::class, 'update'])->name('update');
+        Route::delete('/{mataPelajaran}', [MataPelajaranController::class, 'destroy'])->name('destroy');
+    });
     Route::resource('kelas', SuperAdminKelasController::class);
     Route::prefix('profil')->name('profil.')->group(function () {
         Route::get('/', [ProfilController::class, 'edit'])->name('edit');

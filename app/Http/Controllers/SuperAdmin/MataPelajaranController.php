@@ -1,11 +1,15 @@
 <?php
 
+// app/Http/Controllers/SuperAdmin/MataPelajaranController.php
+
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Imports\MataPelajaranImport;
 use App\Models\Jurusan;
 use App\Models\Lms\MataPelajaran;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MataPelajaranController extends Controller
 {
@@ -74,14 +78,53 @@ class MataPelajaranController extends Controller
 
     public function destroy(MataPelajaran $mataPelajaran)
     {
-        // Cek apakah masih dipakai di pengampu_mapel
         if ($mataPelajaran->pengampuMapel()->exists()) {
-            return back()->withErrors(['error' => 'Mata pelajaran ini masih digunakan di penugasan mengajar dan tidak bisa dihapus.']);
+            return back()->withErrors(['error' => 'Mata pelajaran ini masih digunakan di penugasan mengajar.']);
         }
 
         $mataPelajaran->delete();
 
         return redirect()->route('admin.mata-pelajaran.index')
             ->with('success', 'Mata pelajaran berhasil dihapus.');
+    }
+
+    // ── Import ────────────────────────────────────────────────────────────────
+
+    public function importForm()
+    {
+        return view('admin.mata-pelajaran.import');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:5120'],
+        ], [
+            'file.required' => 'File Excel wajib diunggah.',
+            'file.mimes'    => 'Format file harus .xlsx atau .xls.',
+            'file.max'      => 'Ukuran file maksimal 5 MB.',
+        ]);
+
+        $import = new MataPelajaranImport();
+        Excel::import($import, $request->file('file'));
+
+        $imported = $import->getImportedCount();
+        $skipped  = $import->getSkippedRows();
+        $errors   = $import->getErrors();
+
+        $msg = "Import selesai: {$imported} mata pelajaran berhasil ditambahkan.";
+        if (count($skipped) > 0) {
+            $msg .= ' ' . count($skipped) . ' baris dilewati (kode duplikat).';
+        }
+
+        $request->session()->put('import_mapel_skipped', $skipped);
+        $request->session()->put('import_mapel_errors',  $errors);
+
+        return redirect()->route('admin.mata-pelajaran.index')->with('success', $msg);
+    }
+
+    public function downloadTemplate()
+    {
+        return (new MataPelajaranImport())->downloadTemplate();
     }
 }
