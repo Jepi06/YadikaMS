@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\Mapping\Siswa;
+use App\Models\Siswa;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;

@@ -2,7 +2,7 @@
 
 namespace App\Models\Lms;
 
-use App\Models\Mapping\Siswa;
+use App\Models\Siswa;
 use Illuminate\Database\Eloquent\Model;
 
 class PengumpulanTugas extends Model

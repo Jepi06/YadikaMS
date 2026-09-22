@@ -7,7 +7,7 @@ use App\Models\Kelas;
 use App\Models\Lms\MataPelajaran;
 use App\Models\Lms\PengampuMapel;
 use App\Models\Lms\Tugas;
-use App\Models\Mapping\Siswa;
+use App\Models\Siswa;
 use App\Models\User;
 
 class DashboardController extends Controller

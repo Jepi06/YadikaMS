@@ -18,13 +18,21 @@
                     @if ($errors->hasAny(['name']))
                         <div class="alert alert-danger py-2 small">{{ $errors->first('name') }}</div>
                     @endif
-
+                    <div class="row g-4">
+                        <div class="col-lg-3">
+                            <x-profil-avatar :user="$pklUser" :uploadRoute="route('pkl.profil.avatar')" :deleteRoute="route('pkl.profil.avatar.delete')" />
+                        </div>
+                        <div class="col-lg-9">
+                            {{-- ... --}}
+                        </div>
+                    </div>
                     <form method="POST" action="{{ route('spmb.admin.profil.update') }}">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
                             <label class="form-label small">Nama</label>
-                            <input type="text" name="name" class="form-control" value="{{ old('name', $spmbUser->name) }}" required>
+                            <input type="text" name="name" class="form-control"
+                                value="{{ old('name', $spmbUser->name) }}" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small">Email</label>
@@ -67,7 +75,8 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label small">Konfirmasi Password Baru</label>
-                            <input type="password" name="password_confirmation" class="form-control" required minlength="8">
+                            <input type="password" name="password_confirmation" class="form-control" required
+                                minlength="8">
                         </div>
                         <button type="submit" class="btn btn-outline-danger">
                             <i class="bi bi-key me-1"></i> Ubah Password

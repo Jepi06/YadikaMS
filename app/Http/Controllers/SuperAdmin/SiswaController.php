@@ -13,7 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
-
+use Illuminate\Support\Facades\Hash;
 class SiswaController extends Controller
 {
     // ── Index ─────────────────────────────────────────────────────────────────
@@ -98,7 +98,24 @@ class SiswaController extends Controller
             ->route('admin.siswa.index')
             ->with('success', 'Siswa berhasil dihapus.');
     }
+    // ── Reset Password ───────────────────────────────────────────────────────
 
+    public function resetPassword(Siswa $siswa): RedirectResponse
+    {
+        $user = $siswa->user;
+
+        if (! $user) {
+            return back()->withErrors([
+                'siswa' => "Siswa {$siswa->nama} belum punya akun login, tidak ada password untuk direset.",
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make('password'),
+        ]);
+
+        return back()->with('success', "Password akun {$siswa->nama} berhasil direset ke default: \"password\".");
+    }
     // ── Import Excel ──────────────────────────────────────────────────────────
 
    public function importForm()

@@ -1,18 +1,30 @@
 <?php
 
-namespace App\Http\Controllers\Concerns;
+namespace App\Http\Controllers\SuperAdmin;
 
+use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
-trait UpdatesSharedProfile
+class ProfilController extends Controller
 {
-    protected function doUpdateProfile(Request $request, string $guard)
+    private function getUser(): User
     {
-        $user = Auth::guard($guard)->user();
+        return request()->attributes->get('superAdminUser');
+    }
+
+    public function edit()
+    {
+        $user = $this->getUser();
+        return view('admin.profil.edit', compact('user'));
+    }
+
+    public function update(Request $request)
+    {
+        $user = $this->getUser();
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -23,9 +35,9 @@ trait UpdatesSharedProfile
         return back()->with('status', 'Profil berhasil diperbarui.');
     }
 
-    protected function doUpdatePassword(Request $request, string $guard)
+    public function updatePassword(Request $request)
     {
-        $user = Auth::guard($guard)->user();
+        $user = $this->getUser();
 
         $request->validate([
             'current_password' => ['required'],
@@ -33,40 +45,40 @@ trait UpdatesSharedProfile
         ]);
 
         if (!Hash::check($request->current_password, $user->password)) {
-            return back()
-                ->withErrors(['current_password' => 'Password lama tidak sesuai.'])
-                ->withInput();
+            return back()->withErrors(['current_password' => 'Password lama tidak sesuai.']);
         }
 
         $user->update([
             'password'             => Hash::make($request->password),
-            'must_change_password' => false,
+            'must_change_password' => false, // ← hapus flag setelah ganti password
         ]);
 
         return back()->with('status', 'Password berhasil diubah.');
     }
 
-    protected function doUpdateAvatar(Request $request, string $guard)
+    public function updateAvatar(Request $request)
     {
-        $user = Auth::guard($guard)->user();
+        $user = $this->getUser();
 
         $request->validate([
             'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
+        // Hapus avatar lama
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
         }
 
         $path = $request->file('avatar')->store('avatars', 'public');
+
         $user->update(['avatar' => $path]);
 
         return back()->with('status', 'Foto profil berhasil diperbarui.');
     }
 
-    protected function doDeleteAvatar(string $guard)
+    public function deleteAvatar()
     {
-        $user = Auth::guard($guard)->user();
+        $user = $this->getUser();
 
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);

@@ -1,12 +1,13 @@
 <?php
+
 // FILE: database/migrations/2024_01_01_000001_create_users_table.php
 // Tabel ini harus dijalankan PERTAMA karena semua tabel lain FK ke sini.
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -31,6 +32,8 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->boolean('is_active')->default(true);
+            $table->string('avatar')->nullable();              // ← tambah
+            $table->boolean('must_change_password')->default(false); // ← tambah
             $table->rememberToken();
             $table->timestamps();
         });

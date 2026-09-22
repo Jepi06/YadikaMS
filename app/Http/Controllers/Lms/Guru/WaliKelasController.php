@@ -5,35 +5,36 @@ namespace App\Http\Controllers\Lms\Guru;
 use App\Http\Controllers\Controller;
 use App\Models\Kelas;
 use App\Models\Lms\PengampuMapel;
+use App\Models\Lms\WaliKelasPeriode;
 use App\Services\Lms\NilaiAkhirService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WaliKelasController extends Controller
 {
-    /**
-     * Rekap nilai akhir SEMUA mata pelajaran untuk kelas yang diwali-i
-     * user ini (dicek lewat kolom kelas.wali_kelas_id — status wali
-     * kelas itu independen dari role LMS, jadi siapa pun guru yang
-     * ke-set sebagai wali_kelas_id boleh buka halaman ini).
-     */
     public function index(Request $request)
     {
         $user = Auth::guard('lms')->user();
 
-        $kelasDiwalikan = Kelas::where('wali_kelas_id', $user->id)
-            ->orderBy('nama_kelas')
+        // PERBAIKAN: sebelumnya baca dari kolom LAMA kelas.wali_kelas_id
+        // (global, gak ada dimensi tahun). Assignment wali kelas sekarang
+        // disimpan di tabel wali_kelas_periode_lms (per tahun_ajaran +
+        // semester) — jadi harus dibaca dari situ.
+        $penugasanWali = WaliKelasPeriode::where('user_id', $user->id)
+            ->with('kelas')
+            ->orderByDesc('tahun_ajaran')
+            ->orderByDesc('semester')
             ->get();
 
-        abort_if($kelasDiwalikan->isEmpty(), 403, 'Anda bukan wali kelas manapun.');
+        abort_if($penugasanWali->isEmpty(), 403, 'Anda bukan wali kelas manapun.');
+
+        $kelasDiwalikan = $penugasanWali->pluck('kelas')->unique('id')->values();
 
         $kelasId = (int) $request->query('kelas_id', $kelasDiwalikan->first()->id);
         $kelas = $kelasDiwalikan->firstWhere('id', $kelasId) ?? $kelasDiwalikan->first();
 
         $kelas->load('siswa');
 
-        // Semua kombinasi tahun ajaran + semester yang PERNAH ada di
-        // kelas ini (dari seluruh pengampu_mapel yang pernah dibuat).
         $periodeList = PengampuMapel::where('kelas_id', $kelas->id)
             ->select('tahun_ajaran', 'semester')
             ->distinct()
@@ -41,8 +42,6 @@ class WaliKelasController extends Controller
             ->orderByDesc('semester')
             ->get();
 
-        // Default: periode PALING BARU, biar pas dibuka gak nyampur
-        // data semester lama.
         $tahunAjaran = $request->query('tahun_ajaran', $periodeList->first()->tahun_ajaran ?? null);
         $semester = $request->query('semester', $periodeList->first()->semester ?? null);
 

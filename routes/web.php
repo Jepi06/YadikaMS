@@ -48,14 +48,16 @@ use App\Http\Controllers\Spmb\ProfileController as SpmbProfileController;
 // super admin
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\GuruController as SuperAdminGuruController;
+use App\Http\Controllers\SuperAdmin\KelasController as SuperAdminKelasController;
 use App\Http\Controllers\SuperAdmin\KenaikanKelasController;
+use App\Http\Controllers\SuperAdmin\MataPelajaranController;
 use App\Http\Controllers\SuperAdmin\ModulAjarController as SuperAdminModulAjarController;
 use App\Http\Controllers\SuperAdmin\PenggunaController as SuperAdminPenggunaController;
+use App\Http\Controllers\SuperAdmin\ProfilController;
 use App\Http\Controllers\SuperAdmin\SiswaController as SuperAdminSiswaController;
-use App\Http\Controllers\SuperAdmin\MataPelajaranController;
-
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Mapping\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -152,6 +154,8 @@ Route::prefix('pkl')->middleware('auth.pkl')->group(function () {
     Route::get('/profil', [PklProfileController::class, 'edit'])->name('pkl.profil.edit');
     Route::put('/profil', [PklProfileController::class, 'update'])->name('pkl.profil.update');
     Route::put('/profil/password', [PklProfileController::class, 'updatePassword'])->name('pkl.profil.password');
+    Route::post('/pkl/profil/avatar', [ProfileController::class, 'updateAvatar'])->name('pkl.profil.avatar');
+    Route::delete('/pkl/profil/avatar', [ProfileController::class, 'deleteAvatar'])->name('pkl.profil.avatar.delete');
 });
 
 /*
@@ -231,6 +235,8 @@ Route::prefix('spmb/admin')->name('spmb.admin.')->middleware('auth.spmb')->group
     Route::get('/profil', [SpmbProfileController::class, 'edit'])->name('profil.edit');
     Route::put('/profil', [SpmbProfileController::class, 'update'])->name('profil.update');
     Route::put('/profil/password', [SpmbProfileController::class, 'updatePassword'])->name('profil.password');
+    Route::post('/spmb/profil/avatar', [Spmb\ProfileController::class, 'updateAvatar'])->name('spmb.profil.avatar');
+    Route::delete('/spmb/profil/avatar', [Spmb\ProfileController::class, 'deleteAvatar'])->name('spmb.profil.avatar.delete');
 });
 
 /*
@@ -279,8 +285,9 @@ Route::prefix('lms/profil')->name('lms.profil.')
         Route::get('/', [LmsProfileController::class, 'edit'])->name('edit');
         Route::put('/', [LmsProfileController::class, 'update'])->name('update');
         Route::put('/password', [LmsProfileController::class, 'updatePassword'])->name('password');
+        Route::post('/avatar', [LmsProfileController::class, 'updateAvatar'])->name('avatar');
+        Route::delete('/avatar', [LmsProfileController::class, 'deleteAvatar'])->name('avatar.delete');
     });
-
 /*
 |==========================================================================
 | LMS – ADMIN
@@ -403,12 +410,17 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
         Route::get('/{siswa}/edit', [SuperAdminSiswaController::class, 'edit'])->name('edit');
         Route::put('/{siswa}', [SuperAdminSiswaController::class, 'update'])->name('update');
         Route::delete('/{siswa}', [SuperAdminSiswaController::class, 'destroy'])->name('destroy');
-
+        Route::patch('/{siswa}/reset-password', [SuperAdminSiswaController::class, 'resetPassword'])->name('reset-password');
         // Import Excel
         Route::post('/import/proses', [SuperAdminSiswaController::class, 'import'])->name('import.proses');
         Route::get('/import/template', [SuperAdminSiswaController::class, 'downloadTemplate'])->name('import.template');
     });
     Route::get('/guru', [SuperAdminGuruController::class, 'index'])->name('guru.index');
+    Route::get('/guru/tambah', [SuperAdminGuruController::class, 'create'])->name('guru.create');
+    Route::post('/guru', [SuperAdminGuruController::class, 'store'])->name('guru.store');
+    Route::get('/guru/{guru}/edit', [SuperAdminGuruController::class, 'editAccount'])->name('guru.edit');
+    Route::put('/guru/{guru}', [SuperAdminGuruController::class, 'updateAccount'])->name('guru.update');
+    Route::delete('/guru/{guru}', [SuperAdminGuruController::class, 'destroy'])->name('guru.destroy');
     Route::get('/guru/{guru}/kelola', [SuperAdminGuruController::class, 'kelola'])->name('guru.kelola');
     Route::post('/guru/{guru}/mengajar', [SuperAdminGuruController::class, 'storeMengajar'])->name('guru.mengajar.store');
     Route::delete('/guru/mengajar/{pengampuMapel}', [SuperAdminGuruController::class, 'destroyMengajar'])->name('guru.mengajar.destroy');
@@ -423,6 +435,25 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
         Route::post('/preview', [KenaikanKelasController::class, 'preview'])->name('preview');
         Route::post('/eksekusi', [KenaikanKelasController::class, 'eksekusi'])->name('eksekusi');
     });
-       Route::resource('mata-pelajaran', MataPelajaranController::class)
+    Route::resource('mata-pelajaran', MataPelajaranController::class)
         ->except(['show']);
+    Route::resource('kelas', SuperAdminKelasController::class);
+    Route::prefix('profil')->name('profil.')->group(function () {
+        Route::get('/', [ProfilController::class, 'edit'])->name('edit');
+        Route::put('/', [ProfilController::class, 'update'])->name('update');
+        Route::put('/password', [ProfilController::class, 'updatePassword'])->name('password');
+        Route::post('/avatar', [ProfilController::class, 'updateAvatar'])->name('avatar');
+        Route::delete('/avatar', [ProfilController::class, 'deleteAvatar'])->name('avatar.delete');
+    });
+    Route::patch('/guru/{guru}/reset-password', [SuperAdminGuruController::class, 'resetPassword'])->name('guru.reset-password');
 });
+Route::post('/admin/logout', function () {
+    // Logout dari semua guard yang mungkin aktif
+    foreach (['web', 'pkl', 'lms', 'spmb'] as $guard) {
+        Auth::guard($guard)->logout();
+    }
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/');
+})->name('admin.logout')->middleware('super.admin');

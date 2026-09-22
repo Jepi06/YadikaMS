@@ -1,18 +1,12 @@
-@extends('lms.layouts.app')
+@extends('admin.layouts.app')
 
 @section('title', 'Profil Saya')
 
 @section('content')
+
 <h4 class="fw-bold mb-4">Profil Saya</h4>
 
-@if (session('status'))
-    <div class="alert alert-success alert-dismissible fade show">
-        {{ session('status') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
-
-@if ($errors->has('password') && $errors->first('password') === 'Harap ganti password default sebelum melanjutkan.')
+@if ($errors->has('password'))
     <div class="alert alert-warning">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         {{ $errors->first('password') }}
@@ -21,44 +15,47 @@
 
 <div class="row g-4">
 
-    {{-- Kolom kiri: Avatar + Info Akun --}}
-    <div class="col-lg-4">
-
-        {{-- Avatar --}}
-        <div class="card border-0 shadow-sm text-center p-4 mb-4">
+    {{-- Foto Profil --}}
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-sm text-center p-4">
+            {{-- Avatar --}}
             <div class="mx-auto mb-3">
-                @if ($lmsUser->avatar)
-                    <img src="{{ Storage::url($lmsUser->avatar) }}"
+                @if ($user->avatar)
+                    <img src="{{ Storage::url($user->avatar) }}"
                         alt="Avatar"
                         class="rounded-circle object-fit-cover"
-                        style="width:90px;height:90px">
+                        style="width:100px;height:100px">
                 @else
-                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto fw-bold"
-                        style="width:90px;height:90px;font-size:2rem">
-                        {{ strtoupper(substr($lmsUser->name, 0, 1)) }}
+                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto text-white fw-black fs-2"
+                        style="width:100px;height:100px">
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
                     </div>
                 @endif
             </div>
 
-            <div class="fw-bold">{{ $lmsUser->name }}</div>
-            <div class="text-muted small mb-3">{{ $lmsUser->email }}</div>
+            <div class="fw-bold">{{ $user->name }}</div>
+            <div class="text-muted small mb-4">Super Admin</div>
 
-            <form method="POST" action="{{ route('lms.profil.avatar') }}"
+            {{-- Upload avatar --}}
+            <form method="POST" action="{{ route('admin.profil.avatar') }}"
                 enctype="multipart/form-data">
                 @csrf
-                <label for="avatarInput" class="btn btn-outline-primary btn-sm w-100 mb-2">
-                    <i class="bi bi-camera me-1"></i>Ganti Foto
-                </label>
-                <input type="file" id="avatarInput" name="avatar"
-                    accept="image/*" class="d-none"
-                    onchange="this.form.submit()">
+                <div class="mb-2">
+                    <label for="avatarInput" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-camera me-1"></i>Ganti Foto
+                    </label>
+                    <input type="file" id="avatarInput" name="avatar"
+                        accept="image/*" class="d-none"
+                        onchange="this.form.submit()">
+                </div>
                 @error('avatar')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
+                    <div class="text-danger small">{{ $message }}</div>
                 @enderror
             </form>
 
-            @if ($lmsUser->avatar)
-                <form method="POST" action="{{ route('lms.profil.avatar.delete') }}">
+            {{-- Hapus avatar --}}
+            @if ($user->avatar)
+                <form method="POST" action="{{ route('admin.profil.avatar.delete') }}">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-outline-danger btn-sm w-100"
                         onclick="return confirm('Hapus foto profil?')">
@@ -67,47 +64,52 @@
                 </form>
             @endif
         </div>
+    </div>
 
-        {{-- Info Akun --}}
+    {{-- Informasi Akun --}}
+    <div class="col-lg-4">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-semibold">
                 <i class="bi bi-person-circle me-1"></i> Informasi Akun
             </div>
-            <div class="card-body">
-                @if ($errors->hasAny(['name']))
-                    <div class="alert alert-danger py-2 small">{{ $errors->first('name') }}</div>
+            <div class="card-body p-4">
+                @if (session('status'))
+                    <div class="alert alert-success py-2 small">{{ session('status') }}</div>
                 @endif
+                @error('name')
+                    <div class="alert alert-danger py-2 small">{{ $message }}</div>
+                @enderror
 
-                <form method="POST" action="{{ route('lms.profil.update') }}">
+                <form method="POST" action="{{ route('admin.profil.update') }}">
                     @csrf @method('PUT')
 
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Nama</label>
                         <input type="text" name="name" class="form-control"
-                            value="{{ old('name', $lmsUser->name) }}" required>
+                            value="{{ old('name', $user->name) }}" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label small fw-semibold">Email</label>
                         <input type="email" class="form-control"
-                            value="{{ $lmsUser->email }}" disabled>
-                        <div class="form-text">Hubungi admin untuk mengubah email.</div>
+                            value="{{ $user->email }}" disabled>
+                        <div class="form-text">Hubungi developer untuk ubah email.</div>
                     </div>
                     <div class="mb-4">
                         <label class="form-label small fw-semibold">Role</label>
                         <input type="text" class="form-control"
-                            value="{{ $lmsUser->role_lms_label }}" disabled>
+                            value="Super Admin" disabled>
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-save me-1"></i> Simpan Perubahan
+                        <i class="bi bi-save me-1"></i>Simpan Perubahan
                     </button>
                 </form>
             </div>
         </div>
     </div>
 
-    {{-- Kolom kanan: Ganti Password --}}
-    <div class="col-lg-8">
+    {{-- Ganti Password --}}
+    <div class="col-lg-4">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white fw-semibold">
                 <i class="bi bi-shield-lock me-1"></i> Ganti Password
@@ -119,7 +121,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('lms.profil.password') }}">
+                <form method="POST" action="{{ route('admin.profil.password') }}">
                     @csrf @method('PUT')
 
                     <div class="mb-3">
@@ -139,17 +141,17 @@
                             class="form-control" required minlength="8">
                     </div>
 
-                    <button type="submit" class="btn btn-outline-danger">
-                        <i class="bi bi-key me-1"></i> Ubah Password
+                    <button type="submit" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-key me-1"></i>Ubah Password
                     </button>
                 </form>
             </div>
         </div>
 
-        <div class="alert alert-info mt-4 small">
+        <div class="alert alert-info mt-3 small">
             <i class="bi bi-info-circle me-1"></i>
-            Akun ini dipakai bersama di sistem PKL, SPMB, dan LMS —
-            perubahan nama/password di sini otomatis berlaku juga saat login ke modul lain.
+            Akun ini dipakai bersama di PKL, SPMB, dan LMS — perubahan nama/password
+            berlaku di semua modul.
         </div>
     </div>
 </div>

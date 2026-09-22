@@ -9,6 +9,9 @@
             <p class="text-muted mb-0 small">Periode aktif: {{ $tahunAjaran }} — {{ $semester }}</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('admin.guru.create') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i> Tambah Guru
+            </a>
             <a href="{{ route('admin.guru.import.form') }}" class="btn btn-success">
                 <i class="bi bi-file-earmark-excel me-1"></i> Import Excel
             </a>
@@ -21,6 +24,9 @@
 
     @if (session('status'))
         <div class="alert alert-success">{{ session('status') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-danger">{{ $errors->first() }}</div>
     @endif
 
     <div class="card border-0 shadow-sm">
@@ -55,6 +61,25 @@
                                 <a href="{{ route('admin.guru.kelola', $g) }}" class="btn btn-sm btn-outline-dark">
                                     <i class="bi bi-sliders"></i> Kelola
                                 </a>
+                                                               <a href="{{ route('admin.guru.edit', $g) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ route('admin.guru.reset-password', $g) }}" class="d-inline"
+                                      onsubmit="return confirm('Reset password {{ $g->name }} ke default \'password\'?')">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-sm btn-outline-warning" title="Reset Password">
+                                        <i class="bi bi-key"></i>
+                                    </button>
+                                </form> 
+                                <form method="POST" action="{{ route('admin.guru.destroy', $g) }}" class="d-inline"
+                                      onsubmit="return confirm('Hapus akun {{ $g->name }}? Ini gak bisa dibatalin.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @empty

@@ -22,8 +22,13 @@ class AuthenticatePkl
 
         if (! $user->hasPklAccess()) {
             Auth::guard('pkl')->logout();
+
             return redirect()->route('pkl.login')
                 ->with('error', 'Akun Anda tidak memiliki akses ke sistem PKL.');
+        }
+        if ($user->must_change_password && ! $request->routeIs('pkl.profil.*')) {
+            return redirect()->route('pkl.profil.edit')
+                ->withErrors(['password' => 'Harap ganti password default sebelum melanjutkan.']);
         }
 
         return $next($request);

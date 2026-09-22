@@ -37,8 +37,10 @@
                         <form method="POST" action="{{ route('lms.login.process') }}">
                             @csrf
                             <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control" value="{{ old('email') }}" required autofocus>
+                                <label class="form-label">Email / NIS</label>
+                                <input type="text" name="login" class="form-control" value="{{ old('login') }}" required autofocus
+                                       placeholder="nama@smk.sch.id atau NIS">
+                                <div class="form-text">Siswa bisa login pakai NIS, gak wajib email.</div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Password</label>

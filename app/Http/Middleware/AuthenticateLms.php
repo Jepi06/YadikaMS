@@ -7,11 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-/**
- * Guard 'lms'. Kalau belum login, lempar ke halaman login LMS.
- * Kalau akun tidak punya akses modul LMS (is_active = false / tidak
- * punya role di modul lms), paksa logout + tolak akses.
- */
 class AuthenticateLms
 {
     public function handle(Request $request, Closure $next): Response
@@ -29,6 +24,11 @@ class AuthenticateLms
 
             return redirect()->route('lms.login')
                 ->withErrors(['email' => 'Akun Anda tidak memiliki akses ke modul LMS.']);
+        }
+
+        if ($user->must_change_password && !$request->routeIs('lms.profil.*')) {
+            return redirect()->route('lms.profil.edit')
+                ->withErrors(['password' => 'Harap ganti password default sebelum melanjutkan.']);
         }
 
         return $next($request);

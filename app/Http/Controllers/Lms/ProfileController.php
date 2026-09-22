@@ -24,4 +24,14 @@ class ProfileController extends Controller
     {
         return $this->doUpdatePassword($request, 'lms');
     }
+
+    public function updateAvatar(Request $request)
+    {
+        return $this->doUpdateAvatar($request, 'lms');
+    }
+
+    public function deleteAvatar()
+    {
+        return $this->doDeleteAvatar('lms');
+    }
 }

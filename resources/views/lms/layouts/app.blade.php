@@ -8,9 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
-        body {
-            background: #f4f7fb;
-        }
+        body { background: #f4f7fb; }
 
         .sidebar {
             width: 250px;
@@ -29,7 +27,7 @@
         }
 
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, .8);
+            color: rgba(255,255,255,.8);
             padding: .65rem 1.25rem;
             font-size: .92rem;
             border-radius: 0;
@@ -37,13 +35,11 @@
 
         .sidebar .nav-link.active,
         .sidebar .nav-link:hover {
-            background: rgba(255, 255, 255, .12);
+            background: rgba(255,255,255,.12);
             color: #fff;
         }
 
-        .main-content {
-            margin-left: 250px;
-        }
+        .main-content { margin-left: 250px; }
 
         .topbar {
             background: #fff;
@@ -56,23 +52,18 @@
                 transition: left .2s;
                 z-index: 1040;
             }
-
-            .sidebar.show {
-                left: 0;
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
+            .sidebar.show { left: 0; }
+            .main-content { margin-left: 0; }
         }
     </style>
     @stack('styles')
 </head>
 
 <body>
-
     <aside class="sidebar" id="lmsSidebar">
-        <a href="{{ route('lms') }}" class="brand"><i class="bi bi-mortarboard-fill me-1"></i> LMS Yadika</a>
+        <a href="{{ route('lms') }}" class="brand">
+            <i class="bi bi-mortarboard-fill me-1"></i> LMS Yadika
+        </a>
         <nav class="nav flex-column mt-2">
             @if ($lmsUser?->isAdminLms())
                 <a class="nav-link {{ request()->routeIs('lms.admin.dashboard') ? 'active' : '' }}"
@@ -88,16 +79,16 @@
                     href="{{ route('lms.guru.kelas.index') }}">
                     <i class="bi bi-door-open me-2"></i> Kelas Saya
                 </a>
-                <a class="nav-link {{ request()->routeIs(['admin.modul-ajar.*', 'lms.guru.kelas.index']) ? 'active' : '' }}"
+                <a class="nav-link"
                     href="{{ $lmsUser->isSuperAdmin() ? route('admin.modul-ajar.index') : route('lms.guru.kelas.index') }}">
                     <i class="bi bi-archive-fill me-2"></i> Modul Ajar
                 </a>
-                    @if ($lmsUser->isWaliKelas())
-                <a class="nav-link {{ request()->routeIs('lms.guru.wali-kelas.index') ? 'active' : '' }}"
-                    href="{{ route('lms.guru.wali-kelas.index') }}">
-                    <i class="bi bi-clipboard-data me-2"></i> Wali Kelas
-                </a>
-            @endif
+                @if ($lmsUser->isWaliKelas())
+                    <a class="nav-link {{ request()->routeIs('lms.guru.wali-kelas.index') ? 'active' : '' }}"
+                        href="{{ route('lms.guru.wali-kelas.index') }}">
+                        <i class="bi bi-clipboard-data me-2"></i> Wali Kelas
+                    </a>
+                @endif
             @elseif ($lmsUser?->isSiswaLms())
                 <a class="nav-link {{ request()->routeIs('lms.siswa.dashboard') ? 'active' : '' }}"
                     href="{{ route('lms.siswa.dashboard') }}">
@@ -112,18 +103,42 @@
                     <i class="bi bi-calendar-check me-2"></i> Riwayat Presensi
                 </a>
             @endif
-        
+
+            {{-- Akun --}}
+            <div class="px-3 pt-3 mt-2" style="border-top:1px solid rgba(255,255,255,.15)">
+                <a href="{{ route('lms.profil.edit') }}"
+                    class="nav-link {{ request()->routeIs('lms.profil.*') ? 'active' : '' }}">
+                    <i class="bi bi-person-circle me-2"></i> Profil Saya
+                </a>
+            </div>
         </nav>
     </aside>
 
     <div class="main-content">
+        {{-- Topbar --}}
         <div class="topbar d-flex align-items-center justify-content-between px-3 py-2">
             <button class="btn btn-sm btn-outline-secondary d-lg-none"
                 onclick="document.getElementById('lmsSidebar').classList.toggle('show')">
                 <i class="bi bi-list"></i>
             </button>
+
             <div class="ms-auto d-flex align-items-center gap-3">
-                <span class="small text-muted">{{ $lmsUser?->name }} &middot; {{ $lmsUser?->role_lms_label }}</span>
+                <a href="{{ route('lms.profil.edit') }}"
+                    class="d-flex align-items-center text-decoration-none">
+                    @if ($lmsUser?->avatar)
+                        <img src="{{ Storage::url($lmsUser->avatar) }}"
+                            class="rounded-circle me-2"
+                            style="width:28px;height:28px;object-fit:cover">
+                    @else
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center me-2 fw-bold"
+                            style="width:28px;height:28px;font-size:.75rem">
+                            {{ strtoupper(substr($lmsUser?->name ?? '?', 0, 1)) }}
+                        </div>
+                    @endif
+                    <span class="small text-muted">
+                        {{ $lmsUser?->name }} &middot; {{ $lmsUser?->role_lms_label }}
+                    </span>
+                </a>
                 <form method="POST" action="{{ route('lms.logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -135,12 +150,23 @@
 
         <main class="p-4">
             @if (session('status'))
-                <div class="alert alert-success">{{ session('status') }}</div>
+                <div class="alert alert-success alert-dismissible fade show">
+                    {{ session('status') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
             @endif
 
             @yield('content')
         </main>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 </body>
 

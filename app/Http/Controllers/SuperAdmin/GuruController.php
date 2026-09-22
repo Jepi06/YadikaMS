@@ -10,6 +10,7 @@ use App\Models\Lms\WaliKelasPeriode;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\TahunAjaran;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -49,6 +50,81 @@ class GuruController extends Controller
         return view('admin.guru.index', compact('guru', 'q', 'waliKelasMap', 'tahunAjaran', 'semester'));
     }
 
+    /** Form tambah 1 guru baru (di luar Import Excel — buat kasus bikin 1 akun aja). */
+    public function create()
+    {
+        return view('admin.guru.create');
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'unique:users,email'],
+        ]);
+
+        $email = $data['email'] ?: $this->generateEmailUnik($data['name']);
+
+        $guru = User::create([
+            'name' => $data['name'],
+            'email' => $email,
+            'password' => Hash::make('password'),
+            'is_active' => true,
+            'is_super_admin' => false,
+        ]);
+
+        $roleGuruLmsId = Role::whereHas('module', fn($m) => $m->where('kode', 'lms'))
+            ->where('kode', 'guru')
+            ->value('id');
+
+        if ($roleGuruLmsId) {
+            $guru->roles()->attach($roleGuruLmsId, ['assigned_at' => now()]);
+        }
+
+        return redirect()->route('admin.guru.kelola', $guru)
+            ->with('status', "Guru {$guru->name} dibuat. Email login: {$guru->email}, password default: password. Lanjutkan atur penugasan mengajar di bawah.");
+    }
+
+    /** Form edit nama/email 1 guru. */
+    public function editAccount(User $guru)
+    {
+        return view('admin.guru.edit', compact('guru'));
+    }
+
+    public function updateAccount(Request $request, User $guru)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email,' . $guru->id],
+        ]);
+
+        $guru->update($data);
+
+        return redirect()->route('admin.guru.index')->with('status', 'Data guru diperbarui.');
+    }
+
+    /** Hapus akun guru. Ditolak kalau masih punya penugasan mengajar aktif (FK restrict). */
+    public function destroy(User $guru)
+    {
+        try {
+            $guru->delete();
+        } catch (QueryException $e) {
+            return back()->withErrors([
+                'guru' => "Gagal menghapus {$guru->name} — masih punya penugasan mengajar. Hapus dulu semua penugasannya lewat halaman \"Kelola\".",
+            ]);
+        }
+
+        return redirect()->route('admin.guru.index')->with('status', "Guru {$guru->name} dihapus.");
+    }
+    /** Reset password guru ke default: "password". */
+    public function resetPassword(User $guru)
+    {
+        $guru->update([
+            'password' => Hash::make('password'),
+        ]);
+
+        return back()->with('status', "Password {$guru->name} berhasil direset ke default: \"password\".");
+    }
     /** Halaman kelola 1 guru: penugasan mengajar + wali kelas. */
     public function kelola(User $guru)
     {
@@ -113,9 +189,6 @@ class GuruController extends Controller
             'semester' => ['required', 'in:Ganjil,Genap'],
         ]);
 
-        // updateOrCreate keyed by kelas+periode: kalau kelas itu udah ada
-        // wali kelas LAIN di periode yang sama, otomatis DIGANTIKAN
-        // sama guru ini (1 kelas cuma boleh 1 wali kelas per periode).
         WaliKelasPeriode::updateOrCreate(
             ['kelas_id' => $data['kelas_id'], 'tahun_ajaran' => $data['tahun_ajaran'], 'semester' => $data['semester']],
             ['user_id' => $guru->id]

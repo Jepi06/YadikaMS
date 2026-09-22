@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers\Spmb;
 
 use App\Http\Controllers\Concerns\UpdatesSharedProfile;
@@ -24,5 +23,15 @@ class ProfileController extends Controller
     public function updatePassword(Request $request)
     {
         return $this->doUpdatePassword($request, 'pkl');
+    }
+
+    public function updateAvatar(Request $request)
+    {
+        return $this->doUpdateAvatar($request, 'spmb');
+    }
+
+    public function deleteAvatar()
+    {
+        return $this->doDeleteAvatar('spmb');
     }
 }

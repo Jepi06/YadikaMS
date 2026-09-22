@@ -169,16 +169,19 @@
 @endsection
 
 @if ($isHariIni && $sesi && $sesi->masih_aktif)
-    @push('styles')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    @endpush
     @push('scripts')
+        <script src="{{ asset('js/qrcode.min.js') }}"></script>
         <script>
-            new QRCode(document.getElementById("qrcode"), {
-                text: @json($scanUrl),
-                width: 200,
-                height: 200,
-            });
+            if (typeof QRCode === 'undefined') {
+                document.getElementById('qrcode').innerHTML =
+                    '<p class="text-danger small">Gagal memuat QR code. Coba refresh halaman.</p>';
+            } else {
+                new QRCode(document.getElementById("qrcode"), {
+                    text: @json($scanUrl),
+                    width: 200,
+                    height: 200,
+                });
+            }
         </script>
     @endpush
 @endif

@@ -13,17 +13,22 @@ class AuthenticateSpmb
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::guard('spmb')->check()) {
+        if (! Auth::guard('spmb')->check()) {
             return redirect()->route('spmb.login')
                 ->with('error', 'Silakan login terlebih dahulu.');
         }
 
         $user = Auth::guard('spmb')->user();
 
-        if (!$user->hasSpmbAccess()) {
+        if (! $user->hasSpmbAccess()) {
             Auth::guard('spmb')->logout();
+
             return redirect()->route('spmb.login')
                 ->with('error', 'Akun Anda tidak memiliki akses ke sistem SPMB.');
+        }
+        if ($user->must_change_password && ! $request->routeIs('spmb.profil.*')) {
+            return redirect()->route('spmb.admin.profil.edit')
+                ->withErrors(['password' => 'Harap ganti password default sebelum melanjutkan.']);
         }
 
         return $next($request);

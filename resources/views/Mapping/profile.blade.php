@@ -17,7 +17,14 @@
                     @if ($errors->hasAny(['name']))
                         <div class="alert alert-danger py-2 small">{{ $errors->first('name') }}</div>
                     @endif
-
+                    <div class="row g-4">
+                        <div class="col-lg-3">
+                            <x-profil-avatar :user="$pklUser" :uploadRoute="route('pkl.profil.avatar')" :deleteRoute="route('pkl.profil.avatar.delete')" />
+                        </div>
+                        <div class="col-lg-9">
+                            {{-- ... --}}
+                        </div>
+                    </div>
                     <form method="POST" action="{{ route('pkl.profil.update') }}">
                         @csrf
                         @method('PUT')

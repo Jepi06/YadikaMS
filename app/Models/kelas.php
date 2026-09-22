@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Models\Lms\PengampuMapel;
-use App\Models\Mapping\Siswa;
+use App\Models\Siswa;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;

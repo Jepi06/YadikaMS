@@ -66,7 +66,7 @@ class SiswaImport implements ToCollection, WithChunkReading, SkipsEmptyRows
                 continue;
             }
 
-            if (\App\Models\Mapping\Siswa::where('nis', $nis)->exists()) {
+            if (\App\Models\Siswa::where('nis', $nis)->exists()) {
                 $this->skippedRows[] = ['nis' => $nis, 'nama' => $nama, 'alasan' => 'NIS duplikat'];
                 continue;
             }
@@ -79,7 +79,7 @@ class SiswaImport implements ToCollection, WithChunkReading, SkipsEmptyRows
             \DB::transaction(function () use ($nis, $nama, $jkNorm, $alamat, $noHp, $kelas, $roleSiswaId) {
                 $userId = \DB::table('users')->insertGetId([
                     'name'       => $nama,
-                    'email'      => $nis . '@siswa.smk.sch.id',
+                    'email'      => $nis,
                     'password'   => \Hash::make('password'),
                     'is_active'  => true,
                     'created_at' => now(),
@@ -96,7 +96,7 @@ class SiswaImport implements ToCollection, WithChunkReading, SkipsEmptyRows
                     ]);
                 }
 
-                \App\Models\Mapping\Siswa::create([
+                \App\Models\Siswa::create([
                     'user_id'       => $userId,
                     'nis'           => $nis,
                     'nama'          => $nama,

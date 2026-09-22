@@ -9,40 +9,32 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body {
-            background: #f8f9fa;
-        }
+        body { background: #f8f9fa; }
 
         .sidebar {
             min-height: 100vh;
             background: linear-gradient(180deg, #1a3c6e 0%, #2563eb 100%);
             width: 260px;
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             z-index: 100;
-            padding-top: 0;
         }
 
         .sidebar .brand {
             padding: 1.5rem 1.25rem;
-            border-bottom: 1px solid rgba(255, 255, 255, .15);
+            border-bottom: 1px solid rgba(255,255,255,.15);
         }
 
         .sidebar .brand h5 {
-            color: #fff;
-            font-weight: 700;
-            margin: 0;
-            font-size: .95rem;
+            color: #fff; font-weight: 700; margin: 0; font-size: .95rem;
         }
 
         .sidebar .brand small {
-            color: rgba(255, 255, 255, .6);
-            font-size: .78rem;
+            color: rgba(255,255,255,.6); font-size: .78rem;
         }
 
         .sidebar .nav-link {
-            color: rgba(255, 255, 255, .75);
+            color: rgba(255,255,255,.75);
             padding: .55rem 1.25rem;
             border-radius: 8px;
             margin: 2px 10px;
@@ -52,27 +44,19 @@
 
         .sidebar .nav-link:hover,
         .sidebar .nav-link.active {
-            background: rgba(255, 255, 255, .18);
-            color: #fff;
+            background: rgba(255,255,255,.18); color: #fff;
         }
 
-        .sidebar .nav-link i {
-            width: 22px;
-        }
+        .sidebar .nav-link i { width: 22px; }
 
         .sidebar .nav-section {
-            color: rgba(255, 255, 255, .4);
-            font-size: .7rem;
-            font-weight: 600;
-            letter-spacing: .08em;
-            text-transform: uppercase;
+            color: rgba(255,255,255,.4);
+            font-size: .7rem; font-weight: 600;
+            letter-spacing: .08em; text-transform: uppercase;
             padding: .75rem 1.25rem .25rem;
         }
 
-        .main-content {
-            margin-left: 260px;
-            min-height: 100vh;
-        }
+        .main-content { margin-left: 260px; min-height: 100vh; }
 
         .topbar {
             background: #fff;
@@ -83,13 +67,11 @@
             justify-content: space-between;
         }
 
-        .page-content {
-            padding: 1.5rem;
-        }
+        .page-content { padding: 1.5rem; }
 
         .card {
             border: 0;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, .08);
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
             border-radius: 12px;
         }
 
@@ -100,35 +82,12 @@
             border-radius: 12px 12px 0 0 !important;
         }
 
-        .stat-card {
-            border-radius: 12px;
-        }
-
-        .badge-step {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: .8rem;
-            font-weight: 600;
-        }
-
         .table th {
             font-size: .8rem;
             text-transform: uppercase;
             letter-spacing: .05em;
             color: #6c757d;
             font-weight: 600;
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #f0f0f0;
         }
 
         .siswa-checkbox-item {
@@ -140,55 +99,26 @@
             transition: all .15s;
         }
 
-        .siswa-checkbox-item:hover {
-            background: #f8f9ff;
-            border-color: #2563eb;
-        }
+        .siswa-checkbox-item:hover { background: #f8f9ff; border-color: #2563eb; }
+        .siswa-checkbox-item.selected { background: #eff6ff; border-color: #2563eb; }
+        .siswa-checkbox-item.disabled { opacity: .5; cursor: not-allowed; }
 
-        .siswa-checkbox-item.selected {
-            background: #eff6ff;
-            border-color: #2563eb;
-        }
-
-        .siswa-checkbox-item.disabled {
-            opacity: .5;
-            cursor: not-allowed;
-        }
-
-        .approval-step {
-            position: relative;
-        }
-
+        .approval-step { position: relative; }
         .approval-step::after {
             content: '';
             position: absolute;
-            top: 50%;
-            right: -20px;
-            width: 40px;
-            height: 2px;
-            background: #dee2e6;
-            z-index: 0;
+            top: 50%; right: -20px;
+            width: 40px; height: 2px;
+            background: #dee2e6; z-index: 0;
         }
-
-        .approval-step:last-child::after {
-            display: none;
-        }
+        .approval-step:last-child::after { display: none; }
     </style>
 </head>
 
 <body>
-
-    {{--
-    PERBAIKAN PENTING: seluruh sistem PKL pakai guard 'pkl' (lihat AuthenticatePkl,
-    RoleMiddleware, AuthController — semua Auth::guard('pkl')). Direktif @auth /
-    auth()->user() tanpa parameter memeriksa guard DEFAULT ('web'), bukan guard
-    'pkl'. Kalau dibiarkan, sidebar/topbar bisa salah anggap "belum login"
-    walau user sudah login di sistem PKL. Maka di bawah ini semua dipaksa
-    pakai guard('pkl') secara eksplisit.
---}}
     @php($pklUser = auth('pkl')->user())
 
-    <!-- Sidebar -->
+    {{-- Sidebar --}}
     <nav class="sidebar">
         <div class="brand">
             <h5><i class="bi bi-mortarboard-fill me-2"></i>Mapping PKL</h5>
@@ -202,7 +132,6 @@
             </a>
 
             @auth('pkl')
-                {{-- Menu khusus akun SISWA --}}
                 @if ($pklUser->isSiswa())
                     <div class="nav-section">PKL Saya</div>
                     <a href="{{ route('siswa.pkl.status') }}"
@@ -215,17 +144,6 @@
                     </a>
                 @endif
 
-                {{--
-                    PERBAIKAN: sebelumnya dicek dengan "!$pklUser->isSiswa()", artinya
-                    menu Data Master & Penempatan PKL muncul untuk SIAPAPUN yang bukan
-                    siswa — termasuk Wali Kelas, Guru BK, Kesiswaan, Kepala Jurusan.
-                    Padahal route-nya (lihat routes/pkl.php) sudah dibatasi
-                    middleware role:admin,hubin. Akibatnya 4 role approver itu tetap
-                    melihat link ke halaman yang akan menghasilkan 403 kalau diklik —
-                    seharusnya link-nya memang disembunyikan, bukan cuma diblokir di
-                    route. Sekarang dicek isAdminAtauHubin(), match persis dengan
-                    middleware yang membatasi route-route ini.
-                --}}
                 @if ($pklUser->isAdminAtauHubin())
                     <div class="nav-section">Data Master</div>
                     <a href="{{ route('siswa.index') }}"
@@ -250,32 +168,16 @@
                         class="nav-link {{ request()->routeIs('penempatan.*') ? 'active' : '' }}">
                         <i class="bi bi-map me-2"></i>Penempatan PKL
                     </a>
-                    {{-- <a href="{{ route('pengajuan.index') }}"
-                        class="nav-link {{ request()->routeIs('pengajuan.*') ? 'active' : '' }}">
-                        <i class="bi bi-inbox me-2"></i>Pengajuan Masuk
-                    </a> --}}
                 @endif
 
-                {{--
-                    Menu Approval: dipisah dari blok admin/hubin di atas (bukan
-                    "else"), karena seorang user BISA punya role admin/hubin
-                    SEKALIGUS salah satu role approver — keduanya independen,
-                    jadi dicek terpisah, bukan saling meniadakan.
-                --}}
                 @if ($pklUser->isApproverPkl())
                     <div class="nav-section">Persetujuan</div>
                     <a href="{{ route('approval.index') }}"
                         class="nav-link {{ request()->routeIs('approval.*') ? 'active' : '' }}">
                         <i class="bi bi-check2-circle me-2"></i>Approval
-                        {{-- Catatan: daftar yang tampil di halaman ini sudah otomatis
-                             disaring per user (wali kelas cuma lihat kelasnya sendiri,
-                             guru BK cuma kelas yang dia ampu, kepala jurusan cuma
-                             jurusannya) — lihat ApprovalController::index(). --}}
                     </a>
                 @endif
 
-                {{-- Profil Saya: berlaku untuk SEMUA role, karena akun ini
-                     dipakai bersama di PKL/SPMB/LMS (satu tabel `users`). --}}
                 <div class="nav-section">Akun</div>
                 <a href="{{ route('pkl.profil.edit') }}"
                     class="nav-link {{ request()->routeIs('pkl.profil.*') ? 'active' : '' }}">
@@ -285,17 +187,30 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+    {{-- Main Content --}}
     <div class="main-content">
         <div class="topbar">
             <div>
                 <h6 class="mb-0 fw-semibold">@yield('page-title', 'Dashboard')</h6>
             </div>
-            <div class="d-flex align-items-center gap-3">
-                @auth('pkl')
-                    <a href="{{ route('pkl.profil.edit') }}" class="text-decoration-none">
+
+            {{-- Topbar kanan: avatar + nama + logout --}}
+            @auth('pkl')
+                <div class="d-flex align-items-center gap-3">
+                    <a href="{{ route('pkl.profil.edit') }}"
+                        class="d-flex align-items-center text-decoration-none">
+                        @if ($pklUser?->avatar)
+                            <img src="{{ Storage::url($pklUser->avatar) }}"
+                                class="rounded-circle me-2"
+                                style="width:28px;height:28px;object-fit:cover">
+                        @else
+                            <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center me-2 fw-bold"
+                                style="width:28px;height:28px;font-size:.75rem">
+                                {{ strtoupper(substr($pklUser?->name ?? '?', 0, 1)) }}
+                            </div>
+                        @endif
                         <span class="badge bg-primary-subtle text-primary fw-normal px-3 py-2">
-                            {{ $pklUser->role_pkl_label }} — {{ $pklUser->name }}
+                            {{ $pklUser?->role_pkl_label }} — {{ $pklUser?->name }}
                         </span>
                     </a>
                     <form action="{{ route('pkl.logout') }}" method="POST">
@@ -304,8 +219,8 @@
                             <i class="bi bi-box-arrow-right me-1"></i>Logout
                         </button>
                     </form>
-                @endauth
-            </div>
+                </div>
+            @endauth
         </div>
 
         <div class="page-content">
