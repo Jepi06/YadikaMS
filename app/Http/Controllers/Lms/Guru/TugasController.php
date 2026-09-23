@@ -53,6 +53,7 @@ class TugasController extends Controller
             'deskripsi' => ['nullable', 'string'],
             'file' => ['nullable', 'file', 'max:10240'],
             'batas_waktu' => ['required', 'date'],
+            'is_kelompok' => ['nullable', 'boolean'],
         ]);
 
         Tugas::create([
@@ -63,6 +64,7 @@ class TugasController extends Controller
                 ? $request->file('file')->store('tugas', 'public')
                 : null,
             'batas_waktu' => $data['batas_waktu'],
+            'is_kelompok' => $request->boolean('is_kelompok'),
         ]);
 
         return back()->with('status', 'Tugas berhasil dibuat.');
@@ -108,6 +110,17 @@ class TugasController extends Controller
             'dinilai_at' => now(),
         ]);
 
-        return back()->with('status', 'Nilai tersimpan untuk ' . $pengumpulan->siswa->nama . '.');
+        // Kalau ini tugas kelompok, samain nilai ke SEMUA anggota kelompoknya.
+        if ($pengumpulan->tugas_kelompok_id) {
+            PengumpulanTugas::where('tugas_kelompok_id', $pengumpulan->tugas_kelompok_id)
+                ->where('id', '!=', $pengumpulan->id)
+                ->update([
+                    'nilai' => $data['nilai'],
+                    'catatan_guru' => $data['catatan_guru'] ?? null,
+                    'dinilai_at' => now(),
+                ]);
+        }
+
+        return back()->with('status', 'Nilai tersimpan untuk '.$pengumpulan->siswa->nama.($pengumpulan->tugas_kelompok_id ? ' (dan sekelompoknya).' : '.'));
     }
 }

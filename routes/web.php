@@ -384,6 +384,8 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
             ->name('tugas.show');
         Route::post('/tugas/{tugas}/kumpul', [LmsSiswaTugasController::class, 'kumpul'])
             ->name('tugas.kumpul');
+        Route::post('/tugas/{tugas}/kelompok', [LmsSiswaTugasController::class, 'buatKelompok'])
+            ->name('tugas.kelompok.buat');
     });
 
 /*

@@ -42,6 +42,16 @@
                         <label class="form-label small">Deskripsi (opsional)</label>
                         <textarea name="deskripsi" class="form-control" rows="2"></textarea>
                     </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_kelompok" value="1" class="form-check-input"
+                                id="isKelompok">
+                            <label for="isKelompok" class="form-check-label">
+                                Tugas Kelompok <span class="text-muted small">(siswa bikin kelompok sendiri, ketua yang
+                                    kumpulkan)</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary mt-3">
                     <i class="bi bi-save me-1"></i> Simpan Tugas
@@ -80,7 +90,7 @@
                                     <i class="bi bi-inbox"></i> Lihat & Nilai
                                 </a>
                                 <form method="POST" action="{{ route('lms.guru.tugas.destroy', $t) }}" class="d-inline"
-                                      onsubmit="return confirm('Hapus tugas ini beserta semua jawaban siswa?')">
+                                    onsubmit="return confirm('Hapus tugas ini beserta semua jawaban siswa?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -90,7 +100,9 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="text-center text-muted py-4">Belum ada tugas.</td></tr>
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">Belum ada tugas.</td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>

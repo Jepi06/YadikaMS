@@ -9,11 +9,8 @@ class Tugas extends Model
     protected $table = 'tugas';
 
     protected $fillable = [
-        'pengampu_mapel_id',
-        'judul',
-        'deskripsi',
-        'file_lampiran',
-        'batas_waktu',
+        'pengampu_mapel_id', 'judul', 'deskripsi', 'file_lampiran', 'batas_waktu',
+        'is_kelompok',   // ← TAMBAH
     ];
 
     protected $casts = [
@@ -33,5 +30,10 @@ class Tugas extends Model
     public function getSudahLewatBatasWaktuAttribute(): bool
     {
         return $this->batas_waktu?->isPast() ?? false;
+    }
+
+    public function kelompok()
+    {
+        return $this->hasMany(TugasKelompok::class);
     }
 }

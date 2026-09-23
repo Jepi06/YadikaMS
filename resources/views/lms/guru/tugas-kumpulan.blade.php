@@ -52,8 +52,14 @@
                                 @if ($p?->file_jawaban)
                                     <a href="{{ route('lms.file.jawaban', $p) }}" target="_blank">
                                         <i class="bi bi-file-earmark-arrow-down"></i> Lihat File
+                                    </a><br>
+                                @endif
+                                @if ($p?->link_jawaban)
+                                    <a href="{{ $p->link_jawaban }}" target="_blank">
+                                        <i class="bi bi-link-45deg"></i> Buka Link
                                     </a>
-                                @else
+                                @endif
+                                @if (!$p?->file_jawaban && !$p?->link_jawaban)
                                     <span class="text-muted">-</span>
                                 @endif
                                 @if ($p?->catatan_siswa)

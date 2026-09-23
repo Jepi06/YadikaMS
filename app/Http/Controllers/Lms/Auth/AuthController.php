@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Lms\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Lms\DashboardPublicController;
-use App\Models\Mapping\Siswa;
+use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
