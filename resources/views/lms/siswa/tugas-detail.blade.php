@@ -62,8 +62,6 @@
                 </p>
             @endif
 
-            <form method="POST" action="{{ route('lms.siswa.tugas.kumpul', $tugas) }}" enctype="multipart/form-data">
-                @csrf
                 @if ($tugas->is_kelompok && !$kelompokSaya)
                     {{-- Belum punya kelompok — form bikin kelompok --}}
                     <div class="card border-0 shadow-sm">
@@ -167,6 +165,7 @@
                             </form>
                         </div>
                     </div>
-                @endif
+                          @endif
+            </div>
         </div>
     @endsection

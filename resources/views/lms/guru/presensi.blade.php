@@ -106,14 +106,15 @@
                 <form method="POST" action="{{ route('lms.guru.presensi.manual', $pengampuMapel) }}">
                     @csrf
                     <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+                    {{-- FIX MOBILE: min-width bikin tabel scroll horizontal di HP, kolom Status tidak ke-crop --}}
                     <div class="table-responsive">
-                        <table class="table align-middle mb-0">
+                        <table class="table align-middle mb-0" style="min-width: 300px">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Siswa</th>
-                                    <th style="width:160px">Status</th>
-                                    <th>Keterangan</th>
-                                    <th style="width:90px">Sumber</th>
+                                    <th style="min-width:150px">Siswa</th>
+                                    <th style="min-width:90px">Status</th>
+                                    <th style="min-width:160px">Keterangan</th>
+                                    <th style="min-width:90px">Sumber</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -123,7 +124,7 @@
                                         <td>{{ $siswa->nama }}</td>
                                         <td>
                                             <select name="presensi[{{ $siswa->id }}][status]"
-                                                class="form-select form-select-sm">
+                                                class="form-select form-select-sm" style="min-width:50px">
                                                 @foreach (['Hadir', 'Izin', 'Sakit', 'Alpa'] as $status)
                                                     <option value="{{ $status }}" @selected(($p->status ?? 'Alpa') === $status)>
                                                         {{ $status }}</option>

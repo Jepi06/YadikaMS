@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers\Mapping;
 
-use App\Models\Mapping\{Siswa, PenempatanPkl, TempatPkl, GuruPembimbing, Kelas};
+use App\Models\Mapping\{PenempatanPkl, TempatPkl, GuruPembimbing, Kelas};
+use App\Models\Siswa;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller

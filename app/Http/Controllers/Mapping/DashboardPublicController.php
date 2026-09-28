@@ -4,11 +4,9 @@ namespace App\Http\Controllers\Mapping;
 
 use Illuminate\Http\Request;
 
-use App\Models\Mapping\{
-    PenempatanPkl,
-    Kelas,
-    Jurusan
-};
+use App\Models\Mapping\PenempatanPkl;
+use App\Models\Jurusan;
+use App\Models\Kelas;
 
 class DashboardPublicController extends Controller
 {

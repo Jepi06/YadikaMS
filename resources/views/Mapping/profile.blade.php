@@ -6,7 +6,7 @@
 @php($pklUser = auth('pkl')->user())
 
 @section('content')
-    <div class="row g-4">
+    <div class="row g-6">
         <div class="col-lg-6">
             <div class="card">
                 <div class="card-header"><i class="bi bi-person-circle me-1"></i> Informasi Akun</div>
@@ -18,7 +18,7 @@
                         <div class="alert alert-danger py-2 small">{{ $errors->first('name') }}</div>
                     @endif
                     <div class="row g-4">
-                        <div class="col-lg-3">
+                        <div class="col-lg-6">
                             <x-profil-avatar :user="$pklUser" :uploadRoute="route('pkl.profil.avatar')" :deleteRoute="route('pkl.profil.avatar.delete')" />
                         </div>
                         <div class="col-lg-9">

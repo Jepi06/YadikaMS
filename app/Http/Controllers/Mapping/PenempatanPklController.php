@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Mapping;
 
-use App\Models\Mapping\{PenempatanPkl, Siswa, TempatPkl, GuruPembimbing, Kelas};
+use App\Models\Mapping\{PenempatanPkl, TempatPkl, GuruPembimbing};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use App\Models\Siswa;
+use App\Models\Kelas;
 class PenempatanPklController extends Controller
 {
     public function index(Request $request)

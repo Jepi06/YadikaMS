@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Mapping;
 
-use App\Models\Mapping\{Siswa, Kelas};
+use App\Models\{Siswa, Kelas};
 use Illuminate\Http\Request;
 
 class SiswaController extends Controller

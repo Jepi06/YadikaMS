@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Mapping;
 
-use App\Models\Mapping\{Kelas, TempatPkl, Siswa, PenempatanPkl};
+use App\Models\Mapping\{TempatPkl, PenempatanPkl};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-
+use App\Models\Siswa;
+use App\Models\Kelas;
 /**
  * Pengajuan tempat PKL secara PUBLIK (tanpa login) oleh siswa.
  *
