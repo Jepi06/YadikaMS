@@ -38,6 +38,8 @@ class MateriController extends Controller
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
             'file' => ['nullable', 'file', 'max:10240'], // 10MB
+            'mode_akses' => ['required', 'in:bebas,berurutan,manual,tanggal'],
+            'buka_pada' => ['nullable', 'date', 'required_if:mode_akses,tanggal'],
         ]);
 
         $urutan = $pengampuMapel->materi()->max('urutan') + 1;
@@ -50,6 +52,8 @@ class MateriController extends Controller
                 ? $request->file('file')->store('materi', 'public')
                 : null,
             'urutan' => $urutan,
+            'mode_akses' => $data['mode_akses'],
+            'buka_pada' => $data['mode_akses'] === 'tanggal' ? $data['buka_pada'] : null,
         ]);
 
         return back()->with('status', 'Materi berhasil ditambahkan.');
@@ -66,5 +70,34 @@ class MateriController extends Controller
         $materi->delete();
 
         return back()->with('status', 'Materi dihapus.');
+    }
+    /** Buka/kunci manual — khusus materi mode "Dibuka Guru". */
+    public function toggleBuka(Materi $materi)
+    {
+        $this->authorizePengampu($materi->pengampuMapel);
+        abort_unless($materi->mode_akses === 'manual', 422, 'Materi ini bukan mode "Dibuka Guru".');
+
+        $materi->update(['dibuka_manual' => ! $materi->dibuka_manual]);
+
+        return back()->with('status', $materi->dibuka_manual ? 'Materi dibuka untuk siswa.' : 'Materi dikunci lagi.');
+    }
+
+    /** Ganti mode akses materi yang sudah ada. */
+    public function updateAkses(Request $request, Materi $materi)
+    {
+        $this->authorizePengampu($materi->pengampuMapel);
+
+        $data = $request->validate([
+            'mode_akses' => ['required', 'in:bebas,berurutan,manual,tanggal'],
+            'buka_pada' => ['nullable', 'date', 'required_if:mode_akses,tanggal'],
+        ]);
+
+        $materi->update([
+            'mode_akses' => $data['mode_akses'],
+            'buka_pada' => $data['mode_akses'] === 'tanggal' ? $data['buka_pada'] : null,
+            'dibuka_manual' => $data['mode_akses'] === 'manual' ? $materi->dibuka_manual : false,
+        ]);
+
+        return back()->with('status', 'Pengaturan akses materi diperbarui.');
     }
 }

@@ -57,13 +57,14 @@ use App\Http\Controllers\SuperAdmin\ProfilController;
 use App\Http\Controllers\SuperAdmin\SiswaController as SuperAdminSiswaController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Mapping\ProfileController;
+use App\Http\Controllers\Mapping\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
 | LANDING PAGE
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', function () {
     return view('Dashboard');
 })->name('home');
@@ -235,8 +236,8 @@ Route::prefix('spmb/admin')->name('spmb.admin.')->middleware('auth.spmb')->group
     Route::get('/profil', [SpmbProfileController::class, 'edit'])->name('profil.edit');
     Route::put('/profil', [SpmbProfileController::class, 'update'])->name('profil.update');
     Route::put('/profil/password', [SpmbProfileController::class, 'updatePassword'])->name('profil.password');
-    Route::post('/spmb/profil/avatar', [Spmb\ProfileController::class, 'updateAvatar'])->name('spmb.profil.avatar');
-    Route::delete('/spmb/profil/avatar', [Spmb\ProfileController::class, 'deleteAvatar'])->name('spmb.profil.avatar.delete');
+    Route::post('/spmb/profil/avatar', [SpmbProfileController::class, 'updateAvatar'])->name('spmb.profil.avatar');
+    Route::delete('/spmb/profil/avatar', [SpmbProfileController::class, 'deleteAvatar'])->name('spmb.profil.avatar.delete');
 });
 
 /*
@@ -327,7 +328,10 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('materi.store');
         Route::delete('/materi/{materi}', [LmsGuruMateriController::class, 'destroy'])
             ->name('materi.destroy');
-
+        Route::post('/materi/{materi}/toggle-buka', [LmsGuruMateriController::class, 'toggleBuka'])
+            ->name('materi.toggle');
+        Route::put('/materi/{materi}/akses', [LmsGuruMateriController::class, 'updateAkses'])
+            ->name('materi.akses');
         Route::get('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'index'])
             ->name('tugas.index');
         Route::post('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'store'])
@@ -377,7 +381,8 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
 
         Route::get('/kelas/{pengampuMapel}/materi', [LmsSiswaMateriController::class, 'index'])
             ->name('materi.index');
-
+        Route::post('/materi/{materi}/selesai', [LmsSiswaMateriController::class, 'tandaiSelesai'])
+            ->name('materi.selesai');
         Route::get('/kelas/{pengampuMapel}/tugas', [LmsSiswaTugasController::class, 'index'])
             ->name('tugas.index');
         Route::get('/tugas/{tugas}', [LmsSiswaTugasController::class, 'show'])

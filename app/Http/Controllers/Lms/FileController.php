@@ -20,6 +20,15 @@ class FileController extends Controller
     {
         $this->authorizeAksesKelas($materi->pengampuMapel->guru_id, $materi->pengampuMapel->kelas_id);
 
+        // Guru pemilik selalu boleh; siswa harus lolos aturan kunci materi.
+        $user = Auth::guard('lms')->user();
+        if ($user->id !== $materi->pengampuMapel->guru_id) {
+            $alasan = $materi->alasanTerkunci($user->siswa);
+            abort_if($alasan, 403, $alasan);
+        }
+
+        abort_unless($materi->file_path, 404);
+
         abort_unless($materi->file_path, 404);
 
         return Storage::disk('public')->response($materi->file_path);
