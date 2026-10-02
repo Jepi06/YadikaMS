@@ -3,11 +3,15 @@
 @section('title', 'Rekap Nilai Wali Kelas')
 
 @section('content')
-    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
+        <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
         <div>
             <h4 class="fw-bold mb-0"><i class="bi bi-clipboard-data me-1"></i> Rekap Nilai — Wali Kelas</h4>
             <p class="text-muted mb-0">{{ $kelas->nama_kelas }}</p>
         </div>
+        <a href="{{ route('lms.guru.wali-kelas.absensi', ['kelas_id' => $kelas->id, 'tahun_ajaran' => $tahunAjaran, 'semester' => $semester]) }}"
+           class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-calendar-check"></i> Lihat Rekap Absensi
+        </a>
     </div>
 
     {{-- Filter kelas (kalau wali >1 kelas) + periode --}}

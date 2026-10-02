@@ -38,6 +38,7 @@ class MateriController extends Controller
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
             'file' => ['nullable', 'file', 'max:10240'], // 10MB
+            'link_url' => ['nullable', 'url:http,https', 'max:2048'],
             'mode_akses' => ['required', 'in:bebas,berurutan,manual,tanggal'],
             'buka_pada' => ['nullable', 'date', 'required_if:mode_akses,tanggal'],
         ]);
@@ -51,11 +52,11 @@ class MateriController extends Controller
             'file_path' => $request->hasFile('file')
                 ? $request->file('file')->store('materi', 'public')
                 : null,
+            'link_url' => $data['link_url'] ?? null,
             'urutan' => $urutan,
             'mode_akses' => $data['mode_akses'],
             'buka_pada' => $data['mode_akses'] === 'tanggal' ? $data['buka_pada'] : null,
         ]);
-
         return back()->with('status', 'Materi berhasil ditambahkan.');
     }
 
@@ -81,7 +82,19 @@ class MateriController extends Controller
 
         return back()->with('status', $materi->dibuka_manual ? 'Materi dibuka untuk siswa.' : 'Materi dikunci lagi.');
     }
+    /** Ubah/hapus link materi yang sudah ada. */
+    public function updateLink(Request $request, Materi $materi)
+    {
+        $this->authorizePengampu($materi->pengampuMapel);
 
+        $data = $request->validate([
+            'link_url' => ['nullable', 'url:http,https', 'max:2048'],
+        ]);
+
+        $materi->update(['link_url' => $data['link_url'] ?? null]);
+
+        return back()->with('status', 'Link materi diperbarui.');
+    }
     /** Ganti mode akses materi yang sudah ada. */
     public function updateAkses(Request $request, Materi $materi)
     {

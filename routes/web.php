@@ -321,7 +321,8 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('presensi.manual');
         Route::get('/kelas/{pengampuMapel}/presensi/rekap', [LmsGuruPresensiController::class, 'rekap'])
             ->name('presensi.rekap');
-
+        Route::put('materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
+            ->name('lms.guru.materi.link');
         Route::get('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'index'])
             ->name('materi.index');
         Route::post('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'store'])
@@ -336,6 +337,12 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('tugas.index');
         Route::post('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'store'])
             ->name('tugas.store');
+        Route::put('/tugas/{tugas}', [LmsGuruTugasController::class, 'update'])
+            ->name('tugas.update');
+        Route::post('/tugas/{tugas}/toggle-buka', [LmsGuruTugasController::class, 'toggleBuka'])
+            ->name('tugas.toggle-buka');
+        Route::post('/tugas/{tugas}/toggle-tutup', [LmsGuruTugasController::class, 'toggleTutup'])
+            ->name('tugas.toggle-tutup');
         Route::delete('/tugas/{tugas}', [LmsGuruTugasController::class, 'destroy'])
             ->name('tugas.destroy');
         Route::get('/tugas/{tugas}/kumpulan', [LmsGuruTugasController::class, 'kumpulan'])
@@ -359,6 +366,8 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('nilai.bobot');
         Route::get('/wali-kelas', [LmsGuruWaliKelasController::class, 'index'])
             ->name('wali-kelas.index');
+        Route::get('/wali-kelas/absensi', [LmsGuruWaliKelasController::class, 'absensi'])
+            ->name('wali-kelas.absensi');
     });
 
 /*

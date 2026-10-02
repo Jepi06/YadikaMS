@@ -28,7 +28,7 @@ class TugasController extends Controller
         $pengampuMapel->load('mataPelajaran');
 
         $tugas = $pengampuMapel->tugas()
-            ->with(['pengumpulan' => fn ($q) => $q->where('siswa_id', $siswa->id)])
+            ->with(['pengumpulan' => fn($q) => $q->where('siswa_id', $siswa->id)])
             ->latest('batas_waktu')
             ->get();
 
@@ -50,7 +50,7 @@ class TugasController extends Controller
             $kelompokSaya = TugasKelompok::where('tugas_id', $tugas->id)
                 ->where(function ($q) use ($siswa) {
                     $q->where('ketua_siswa_id', $siswa->id)
-                        ->orWhereHas('anggota', fn ($qq) => $qq->where('siswa.id', $siswa->id));
+                        ->orWhereHas('anggota', fn($qq) => $qq->where('siswa.id', $siswa->id));
                 })
                 ->with('ketua', 'anggota')
                 ->first();
@@ -70,7 +70,10 @@ class TugasController extends Controller
             'file' => ['nullable', 'file', 'max:10240'],
             'link_jawaban' => ['nullable', 'url', 'max:500'],
         ]);
-
+        $alasanTutup = $tugas->alasanTidakBisaKumpul();
+        if ($alasanTutup) {
+            return back()->withErrors(['file' => $alasanTutup]);
+        }
         // Kalau tugas kelompok, cuma KETUA yang boleh kumpul, dan hasilnya
         // otomatis nempel ke SEMUA anggota kelompoknya.
         if ($tugas->is_kelompok) {
@@ -92,7 +95,7 @@ class TugasController extends Controller
             $anggotaIds = $kelompok->anggota()->pluck('siswa.id')->push($kelompok->ketua_siswa_id)->unique();
 
             foreach ($anggotaIds as $anggotaId) {
-                
+
                 PengumpulanTugas::updateOrCreate(
                     ['tugas_id' => $tugas->id, 'siswa_id' => $anggotaId],
                     [
@@ -137,8 +140,8 @@ class TugasController extends Controller
         abort_unless($tugas->pengampuMapel->kelas_id === $siswa->kelas_id, 403);
 
         $sudahPunyaKelompok = TugasKelompok::where('tugas_id', $tugas->id)
-            ->whereHas('anggota', fn ($q) => $q->where('siswa.id', $siswa->id))
-            ->orWhere(fn ($q) => $q->where('tugas_id', $tugas->id)->where('ketua_siswa_id', $siswa->id))
+            ->whereHas('anggota', fn($q) => $q->where('siswa.id', $siswa->id))
+            ->orWhere(fn($q) => $q->where('tugas_id', $tugas->id)->where('ketua_siswa_id', $siswa->id))
             ->exists();
 
         abort_if($sudahPunyaKelompok, 403, 'Anda sudah tergabung di kelompok lain untuk tugas ini.');

@@ -54,12 +54,19 @@ trait UpdatesSharedProfile
             'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
-        }
+        $old = $user->avatar;
 
         $path = $request->file('avatar')->store('avatars', 'public');
+
+        if (! $path) {
+            return back()->withErrors(['avatar' => 'Gagal menyimpan foto, coba lagi.']);
+        }
+
         $user->update(['avatar' => $path]);
+
+        if ($old && $old !== '0') {
+            Storage::disk('public')->delete($old);
+        }
 
         return back()->with('status', 'Foto profil berhasil diperbarui.');
     }
@@ -68,10 +75,15 @@ trait UpdatesSharedProfile
     {
         $user = Auth::guard($guard)->user();
 
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
-            $user->update(['avatar' => null]);
+        if ($user->avatar && $user->avatar !== '0') {
+            $deleted = Storage::disk('public')->delete($user->avatar);
+
+            if (! $deleted) {
+                \Log::warning('Gagal menghapus avatar', ['path' => $user->avatar]);
+            }
         }
+
+        $user->update(['avatar' => null]);
 
         return back()->with('status', 'Foto profil berhasil dihapus.');
     }

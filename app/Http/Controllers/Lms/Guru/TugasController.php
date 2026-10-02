@@ -69,7 +69,50 @@ class TugasController extends Controller
 
         return back()->with('status', 'Tugas berhasil dibuat.');
     }
+    /** Edit judul/deskripsi/deadline/pengaturan buka-tutup. */
+    public function update(Request $request, Tugas $tugas)
+    {
+        $this->authorizePengampu($tugas->pengampuMapel);
 
+        $data = $request->validate([
+            'judul' => ['required', 'string', 'max:255'],
+            'deskripsi' => ['nullable', 'string'],
+            'batas_waktu' => ['required', 'date'],
+            'mode_buka' => ['required', 'in:bebas,manual,tanggal'],
+            'mulai_pada' => ['nullable', 'date', 'required_if:mode_buka,tanggal'],
+        ]);
+
+        $tugas->update([
+            'judul' => $data['judul'],
+            'deskripsi' => $data['deskripsi'] ?? null,
+            'batas_waktu' => $data['batas_waktu'],
+            'mode_buka' => $data['mode_buka'],
+            'mulai_pada' => $data['mode_buka'] === 'tanggal' ? $data['mulai_pada'] : null,
+        ]);
+
+        return back()->with('status', 'Tugas diperbarui.');
+    }
+
+    /** Buka/kunci manual (khusus mode_buka = manual). */
+    public function toggleBuka(Tugas $tugas)
+    {
+        $this->authorizePengampu($tugas->pengampuMapel);
+        abort_unless($tugas->mode_buka === 'manual', 422, 'Tugas ini bukan mode buka manual.');
+
+        $tugas->update(['dibuka_manual' => ! $tugas->dibuka_manual]);
+
+        return back()->with('status', $tugas->dibuka_manual ? 'Tugas dibuka.' : 'Tugas dikunci lagi.');
+    }
+
+    /** Tutup paksa / buka lagi, independen dari batas_waktu. */
+    public function toggleTutup(Tugas $tugas)
+    {
+        $this->authorizePengampu($tugas->pengampuMapel);
+
+        $tugas->update(['ditutup_manual' => ! $tugas->ditutup_manual]);
+
+        return back()->with('status', $tugas->ditutup_manual ? 'Tugas ditutup paksa.' : 'Penutupan paksa dibatalkan.');
+    }
     public function destroy(Tugas $tugas)
     {
         $this->authorizeTugas($tugas);
@@ -121,6 +164,6 @@ class TugasController extends Controller
                 ]);
         }
 
-        return back()->with('status', 'Nilai tersimpan untuk '.$pengumpulan->siswa->nama.($pengumpulan->tugas_kelompok_id ? ' (dan sekelompoknya).' : '.'));
+        return back()->with('status', 'Nilai tersimpan untuk ' . $pengumpulan->siswa->nama . ($pengumpulan->tugas_kelompok_id ? ' (dan sekelompoknya).' : '.'));
     }
 }

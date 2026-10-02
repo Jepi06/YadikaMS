@@ -1437,6 +1437,32 @@
             opacity: 1;
             transform: translateY(0);
         }
+        .btn-grad {
+  background-image: linear-gradient(to right, #314755 0%, #26a0da 51%, #314755 100%);
+}
+
+.btn-grad {
+  margin: 10px;
+  padding: 15px 45px;
+  text-align: center;
+  text-transform: uppercase;
+  transition: 0.5s;
+  background-size: 200% auto;
+  background-image: linear-gradient(to right, #314755 0%, #26a0da 51%, #314755 100%);
+  color: white;
+  box-shadow: 0 0 20px #eee;
+  border-radius: 10px;
+  display: block;
+  outline: none;
+  border: none;
+  text-decoration: none; /* hilangkan underline */
+}
+
+.btn-grad:hover {
+  background-position: right center;
+  color: #fff;
+  text-decoration: none;
+}
     </style>
 </head>
 
@@ -1480,6 +1506,7 @@
                     generasi berkarakter, kompeten, dan siap menghadapi industri global.</p>
                 <div class="hero-actions">
                     <a href="/spmb" class="btn-primary">🎓 Daftar SMBP Sekarang</a>
+                    <a href="/lms" class="btn-grad">💻 Masuk LMS</a>
                     <a href="#layanan" class="btn-outline">Lihat Layanan →</a>
                 </div>
                 <div class="hero-stats">

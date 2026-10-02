@@ -13,6 +13,7 @@ class Materi extends Model
         'judul',
         'deskripsi',
         'file_path',
+        'link_url',
         'urutan',
         'mode_akses',
         'dibuka_manual',

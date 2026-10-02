@@ -8,7 +8,7 @@
             <h4 class="fw-bold mb-0">{{ $pengampuMapel->mataPelajaran->nama ?? '-' }}</h4>
             <p class="text-muted mb-0">{{ $pengampuMapel->kelas->nama_kelas ?? '-' }} &middot; Materi</p>
         </div>
-        <a href="{{ route('lms.guru.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+        <a href="{{ route('lms.guru.kelas.index') }}" class="btn btn-sm btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Kembali
         </a>
     </div>
@@ -34,6 +34,11 @@
                     <div class="col-md-6">
                         <label class="form-label small">File (opsional, maks 10MB)</label>
                         <input type="file" name="file" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Link (opsional)</label>
+                        <input type="url" name="link_url" class="form-control" placeholder="https://youtube.com/..."
+                            value="{{ old('link_url') }}">
                     </div>
                     <div class="col-12">
                         <label class="form-label small">Deskripsi (opsional)</label>
@@ -75,6 +80,13 @@
                             <a href="{{ route('lms.file.materi', $m) }}" target="_blank" class="small">
                                 <i class="bi bi-paperclip"></i> Lihat/Unduh Lampiran
                             </a>
+                        @endif
+                        @if ($m->link_url)
+                            <div>
+                                <a href="{{ $m->link_url }}" target="_blank" rel="noopener noreferrer" class="small">
+                                    <i class="bi bi-link-45deg"></i> {{ \Illuminate\Support\Str::limit($m->link_url, 60) }}
+                                </a>
+                            </div>
                         @endif
                         <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
                             @php
