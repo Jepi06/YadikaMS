@@ -34,13 +34,20 @@
                         {{-- Terkunci: deskripsi & file disembunyikan --}}
                         <p class="small text-muted mb-0"><i class="bi bi-info-circle"></i> {{ $alasan }}</p>
                     @else
-                        @if ($m->deskripsi)
+                       @if ($m->deskripsi)
                             <p class="text-muted small mb-1">{{ $m->deskripsi }}</p>
                         @endif
                         @if ($m->file_path)
                             <a href="{{ route('lms.file.materi', $m) }}" target="_blank" class="small">
                                 <i class="bi bi-paperclip"></i> Lihat/Unduh Lampiran
                             </a>
+                        @endif
+                        @if ($m->link_url)
+                            <div>
+                                <a href="{{ $m->link_url }}" target="_blank" rel="noopener noreferrer" class="small">
+                                    <i class="bi bi-link-45deg"></i> {{ \Illuminate\Support\Str::limit($m->link_url, 60) }}
+                                </a>
+                            </div>
                         @endif
 
                         @if ($sudahSelesai)

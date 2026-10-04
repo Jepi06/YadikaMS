@@ -2,6 +2,7 @@
 
 namespace App\Models\SPMB;
 
+use App\Models\Jurusan;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

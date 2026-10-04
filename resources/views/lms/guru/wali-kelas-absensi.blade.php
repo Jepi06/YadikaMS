@@ -18,7 +18,7 @@
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 @if ($kelasDiwalikan->count() > 1)
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label small mb-1">Kelas</label>
                         <select name="kelas_id" class="form-select form-select-sm" onchange="this.form.submit()">
                             @foreach ($kelasDiwalikan as $k)
@@ -31,7 +31,7 @@
                     <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
                 @endif
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label small mb-1">Tahun Ajaran</label>
                     @php
                         $opsiTahun = $periodeList->pluck('tahun_ajaran')->unique();
@@ -46,11 +46,22 @@
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label small mb-1">Semester</label>
                     <select name="semester" class="form-select form-select-sm" onchange="this.form.submit()">
                         @foreach (['Ganjil', 'Genap'] as $s)
                             <option value="{{ $s }}" @selected($s === $semester)>{{ $s }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small mb-1">Bulan (Detail Harian)</label>
+                    <select name="bulan" class="form-select form-select-sm" onchange="this.form.submit()">
+                        @foreach ($hariMasukPerBulan as $bulan => $hm)
+                            <option value="{{ $bulan }}" @selected($bulan === $bulanDipilih)>
+                                {{ \Carbon\Carbon::createFromFormat('Y-m', $bulan)->translatedFormat('F Y') }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -66,6 +77,102 @@
             </div>
         </div>
     @else
+        {{-- ═════════════ DETAIL HARIAN ═════════════ --}}
+        @php
+            $badgeStatus = [
+                'Hadir' => ['kode' => 'H', 'class' => 'bg-success'],
+                'Izin' => ['kode' => 'I', 'class' => 'bg-info text-dark'],
+                'Sakit' => ['kode' => 'S', 'class' => 'bg-warning text-dark'],
+                'Alpa' => ['kode' => 'A', 'class' => 'bg-danger'],
+            ];
+        @endphp
+
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+            <h5 class="fw-bold mb-0">
+                Detail Harian —
+                {{ \Carbon\Carbon::createFromFormat('Y-m', $bulanDipilih)->translatedFormat('F Y') }}
+            </h5>
+            <div class="small">
+                <span class="badge bg-success">H</span> Hadir
+                <span class="badge bg-info text-dark ms-2">I</span> Izin
+                <span class="badge bg-warning text-dark ms-2">S</span> Sakit
+                <span class="badge bg-danger ms-2">A</span> Alpa
+                <span class="text-muted ms-2">· "–" = belum ada presensi</span>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm align-middle mb-0 text-center" style="font-size:.82rem">
+                    <thead class="table-light">
+                        <tr>
+                            <th rowspan="2" class="text-start"
+                                style="position:sticky;left:0;background:#f8f9fa;min-width:180px;z-index:2">Siswa</th>
+                            @foreach ($tanggalList as $tgl)
+                                @php $c = \Carbon\Carbon::parse($tgl); @endphp
+                                <th style="min-width:38px">{{ $c->format('d') }}</th>
+                            @endforeach
+                            <th class="bg-success-subtle">H</th>
+                            <th class="bg-info-subtle">I</th>
+                            <th class="bg-warning-subtle">S</th>
+                            <th class="bg-danger-subtle">A</th>
+                        </tr>
+                        <tr>
+                            @foreach ($tanggalList as $tgl)
+                                <th class="fw-normal text-muted" style="font-size:.7rem">
+                                    {{ \Carbon\Carbon::parse($tgl)->translatedFormat('D') }}
+                                </th>
+                            @endforeach
+                            <th colspan="4" class="fw-normal text-muted" style="font-size:.7rem">Total hari</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($rekap as $r)
+                            @php
+                                $dataSiswa = $detailHarian[$r->siswa->id] ?? [];
+                                $hitung = ['Hadir' => 0, 'Izin' => 0, 'Sakit' => 0, 'Alpa' => 0];
+                                foreach ($dataSiswa as $d) {
+                                    if (isset($hitung[$d['status']])) {
+                                        $hitung[$d['status']]++;
+                                    }
+                                }
+                            @endphp
+                            <tr>
+                                <td class="text-start" style="position:sticky;left:0;background:#fff;z-index:1">
+                                    {{ $r->siswa->nama }}
+                                </td>
+                                @foreach ($tanggalList as $tgl)
+                                    @php $cell = $dataSiswa[$tgl] ?? null; @endphp
+                                    <td class="p-1">
+                                        @if ($cell && isset($badgeStatus[$cell['status']]))
+                                            <span class="badge {{ $badgeStatus[$cell['status']]['class'] }}"
+                                                title="{{ \Carbon\Carbon::parse($tgl)->translatedFormat('d M Y') }}: {{ $cell['rincian'] }}">
+                                                {{ $badgeStatus[$cell['status']]['kode'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">–</span>
+                                        @endif
+                                    </td>
+                                @endforeach
+                                <td class="fw-semibold bg-success-subtle">{{ $hitung['Hadir'] }}</td>
+                                <td class="fw-semibold bg-info-subtle">{{ $hitung['Izin'] }}</td>
+                                <td class="fw-semibold bg-warning-subtle">{{ $hitung['Sakit'] }}</td>
+                                <td class="fw-semibold bg-danger-subtle">{{ $hitung['Alpa'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="alert alert-secondary small mb-4">
+            <i class="bi bi-info-circle me-1"></i>
+            Jika dalam satu hari siswa punya status berbeda di beberapa mapel, yang ditampilkan adalah status
+            terberat (Alpa &gt; Sakit &gt; Izin &gt; Hadir). Arahkan kursor ke kotak untuk melihat rinciannya.
+        </div>
+
+        {{-- ═════════════ REKAP PER BULAN ═════════════ --}}
+        <h5 class="fw-bold mb-3">Rekap Persentase Per Siswa</h5>
         <div class="card border-0 shadow-sm">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -98,8 +205,7 @@
                                                     : 'danger');
                                     @endphp
                                     <td class="text-center">
-                                        <span
-                                            class="badge bg-{{ $warna }}-subtle text-{{ $warna }}-emphasis">
+                                        <span class="badge bg-{{ $warna }}-subtle text-{{ $warna }}-emphasis">
                                             {{ $data['persen'] }}%
                                         </span>
                                         <div class="small text-muted">{{ $data['hadir'] }}/{{ $data['hari_masuk'] }}</div>
@@ -124,6 +230,7 @@
             </div>
         </div>
 
+        {{-- ═════════════ REKAP KELAS ═════════════ --}}
         <h5 class="fw-bold mt-5 mb-3">Rekap Keseluruhan Kelas</h5>
         <div class="card border-0 shadow-sm">
             <div class="table-responsive">
