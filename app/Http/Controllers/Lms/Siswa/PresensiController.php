@@ -20,25 +20,27 @@ class PresensiController extends Controller
 
         abort_if(!$siswa, 403, 'Akun Anda belum terhubung ke data siswa. Hubungi admin.');
 
-        $sesi = SesiPresensi::where('token', $token)
-            ->with('pengampuMapel.mataPelajaran')
-            ->first();
+        $sesi = SesiPresensi::cariDariTokenDinamis($token);
 
         if (!$sesi) {
             return view('lms.siswa.presensi-scan', [
                 'berhasil' => false,
-                'pesan' => 'QR tidak dikenali atau sudah tidak berlaku.',
+                'pesan' => 'QR tidak dikenali atau sudah tidak berlaku. Scan ulang QR terbaru di layar.',
             ]);
         }
 
-        if (!is_null($sesi->ditutup_at)) {
+        $sesi->load('pengampuMapel.mataPelajaran');
+
+        // FIX: masih_aktif itu boolean, bukan nullable.
+        if (!$sesi->masih_aktif) {
             return view('lms.siswa.presensi-scan', [
                 'berhasil' => false,
                 'pesan' => 'Sesi presensi ini sudah ditutup oleh guru.',
             ]);
         }
 
-        if ($sesi->pengampuMapel->kelas_id !== $siswa->kelas_id) {
+        // FIX: pakai != supaya tidak gagal karena beda tipe (string vs int).
+        if ($sesi->pengampuMapel->kelas_id != $siswa->kelas_id) {
             return view('lms.siswa.presensi-scan', [
                 'berhasil' => false,
                 'pesan' => 'QR ini bukan untuk kelas Anda.',

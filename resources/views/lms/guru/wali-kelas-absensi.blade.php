@@ -3,9 +3,9 @@
 @section('title', 'Rekap Absensi Wali Kelas')
 
 @section('content')
-    <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
+    <div class="page-header d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
         <div>
-            <h4 class="fw-bold mb-0"><i class="bi bi-calendar-check me-1"></i> Rekap Absensi — Wali Kelas</h4>
+            <h4 class="fw-bold mb-0"><i class="bi bi-calendar-check me-1 text-primary"></i> Rekap Absensi — Wali Kelas</h4>
             <p class="text-muted mb-0">{{ $kelas->nama_kelas }}</p>
         </div>
         <a href="{{ route('lms.guru.wali-kelas.index', ['kelas_id' => $kelas->id, 'tahun_ajaran' => $tahunAjaran, 'semester' => $semester]) }}"
@@ -14,7 +14,7 @@
         </a>
     </div>
 
-    <form method="GET" class="card border-0 shadow-sm mb-4">
+    <form method="GET" class="card mb-4 mt-3">
         <div class="card-body">
             <div class="row g-3 align-items-end">
                 @if ($kelasDiwalikan->count() > 1)
@@ -70,14 +70,14 @@
     </form>
 
     @if ($hariMasukPerBulan->isEmpty())
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center text-muted py-5">
-                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+        <div class="card">
+            <div class="card-body empty-state">
+                <i class="bi bi-inbox"></i>
                 Belum ada data presensi untuk periode {{ $tahunAjaran }} {{ $semester }}.
             </div>
         </div>
     @else
-        {{-- ═════════════ DETAIL HARIAN ═════════════ --}}
+        {{-- DETAIL HARIAN --}}
         @php
             $badgeStatus = [
                 'Hadir' => ['kode' => 'H', 'class' => 'bg-success'],
@@ -87,21 +87,21 @@
             ];
         @endphp
 
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2 mt-3">
             <h5 class="fw-bold mb-0">
                 Detail Harian —
                 {{ \Carbon\Carbon::createFromFormat('Y-m', $bulanDipilih)->translatedFormat('F Y') }}
             </h5>
-            <div class="small">
+            <div class="small d-flex align-items-center gap-2 flex-wrap">
                 <span class="badge bg-success">H</span> Hadir
-                <span class="badge bg-info text-dark ms-2">I</span> Izin
-                <span class="badge bg-warning text-dark ms-2">S</span> Sakit
-                <span class="badge bg-danger ms-2">A</span> Alpa
-                <span class="text-muted ms-2">· "–" = belum ada presensi</span>
+                <span class="badge bg-info text-dark">I</span> Izin
+                <span class="badge bg-warning text-dark">S</span> Sakit
+                <span class="badge bg-danger">A</span> Alpa
+                <span class="text-muted">· "–" = belum ada presensi</span>
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="card mb-4">
             <div class="table-responsive">
                 <table class="table table-bordered table-sm align-middle mb-0 text-center" style="font-size:.82rem">
                     <thead class="table-light">
@@ -138,7 +138,7 @@
                                 }
                             @endphp
                             <tr>
-                                <td class="text-start" style="position:sticky;left:0;background:#fff;z-index:1">
+                                <td class="text-start fw-semibold" style="position:sticky;left:0;background:#fff;z-index:1">
                                     {{ $r->siswa->nama }}
                                 </td>
                                 @foreach ($tanggalList as $tgl)
@@ -165,15 +165,14 @@
             </div>
         </div>
 
-        <div class="alert alert-secondary small mb-4">
-            <i class="bi bi-info-circle me-1"></i>
-            Jika dalam satu hari siswa punya status berbeda di beberapa mapel, yang ditampilkan adalah status
-            terberat (Alpa &gt; Sakit &gt; Izin &gt; Hadir). Arahkan kursor ke kotak untuk melihat rinciannya.
+        <div class="alert alert-secondary small mb-4 d-flex align-items-start gap-2">
+            <i class="bi bi-info-circle mt-1"></i>
+            <div>Jika dalam satu hari siswa punya status berbeda di beberapa mapel, yang ditampilkan adalah status terberat (Alpa &gt; Sakit &gt; Izin &gt; Hadir). Arahkan kursor ke kotak untuk melihat rinciannya.</div>
         </div>
 
-        {{-- ═════════════ REKAP PER BULAN ═════════════ --}}
-        <h5 class="fw-bold mb-3">Rekap Persentase Per Siswa</h5>
-        <div class="card border-0 shadow-sm">
+        {{-- REKAP PER BULAN --}}
+        <h5 class="fw-bold mb-3"><i class="bi bi-chart-bar me-1 text-primary"></i> Rekap Persentase Per Siswa</h5>
+        <div class="card">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -194,7 +193,7 @@
                     <tbody>
                         @foreach ($rekap as $r)
                             <tr>
-                                <td style="position:sticky;left:0;background:#fff;">{{ $r->siswa->nama }}</td>
+                                <td style="position:sticky;left:0;background:#fff;" class="fw-semibold">{{ $r->siswa->nama }}</td>
                                 @foreach ($r->per_bulan as $data)
                                     @php
                                         $warna =
@@ -230,9 +229,9 @@
             </div>
         </div>
 
-        {{-- ═════════════ REKAP KELAS ═════════════ --}}
-        <h5 class="fw-bold mt-5 mb-3">Rekap Keseluruhan Kelas</h5>
-        <div class="card border-0 shadow-sm">
+        {{-- REKAP KELAS --}}
+        <h5 class="fw-bold mt-5 mb-3"><i class="bi bi-building me-1 text-primary"></i> Rekap Keseluruhan Kelas</h5>
+        <div class="card">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
@@ -247,18 +246,18 @@
                     <tbody>
                         @foreach ($rekapKelasPerBulan as $bulan => $d)
                             <tr>
-                                <td>
+                                <td class="fw-semibold">
                                     {{ \Carbon\Carbon::createFromFormat('Y-m', $bulan)->translatedFormat('M Y') }}
-                                    <div class="small text-muted">{{ $d['hari_aktif'] }} hari aktif ×
+                                    <div class="small fw-normal text-muted">{{ $d['hari_aktif'] }} hari aktif ×
                                         {{ $kelas->siswa->count() }} siswa = {{ $d['slot'] }} slot</div>
                                 </td>
-                                <td class="text-center">{{ $d['hadir'] }} <span
+                                <td class="text-center"><span class="fw-semibold">{{ $d['hadir'] }}</span> <span
                                         class="text-muted small">({{ $d['persen_hadir'] }}%)</span></td>
-                                <td class="text-center">{{ $d['izin'] }} <span
+                                <td class="text-center"><span class="fw-semibold">{{ $d['izin'] }}</span> <span
                                         class="text-muted small">({{ $d['persen_izin'] }}%)</span></td>
-                                <td class="text-center">{{ $d['sakit'] }} <span
+                                <td class="text-center"><span class="fw-semibold">{{ $d['sakit'] }}</span> <span
                                         class="text-muted small">({{ $d['persen_sakit'] }}%)</span></td>
-                                <td class="text-center">{{ $d['alpa'] }} <span
+                                <td class="text-center"><span class="fw-semibold {{ $d['alpa'] > 0 ? 'text-danger' : '' }}">{{ $d['alpa'] }}</span> <span
                                         class="text-muted small">({{ $d['persen_alpa'] }}%)</span></td>
                             </tr>
                         @endforeach
@@ -269,24 +268,22 @@
                                     {{ $kelas->siswa->count() }} siswa = {{ $rekapKelasTotal['slot'] }} slot</div>
                             </td>
                             <td class="text-center">{{ $rekapKelasTotal['hadir'] }}
-                                ({{ $rekapKelasTotal['persen_hadir'] }}%)</td>
+                                <span class="fw-normal text-muted small">({{ $rekapKelasTotal['persen_hadir'] }}%)</span></td>
                             <td class="text-center">{{ $rekapKelasTotal['izin'] }}
-                                ({{ $rekapKelasTotal['persen_izin'] }}%)</td>
+                                <span class="fw-normal text-muted small">({{ $rekapKelasTotal['persen_izin'] }}%)</span></td>
                             <td class="text-center">{{ $rekapKelasTotal['sakit'] }}
-                                ({{ $rekapKelasTotal['persen_sakit'] }}%)</td>
+                                <span class="fw-normal text-muted small">({{ $rekapKelasTotal['persen_sakit'] }}%)</span></td>
                             <td class="text-center">{{ $rekapKelasTotal['alpa'] }}
-                                ({{ $rekapKelasTotal['persen_alpa'] }}%)</td>
+                                <span class="fw-normal text-muted small">({{ $rekapKelasTotal['persen_alpa'] }}%)</span></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="alert alert-secondary small mt-3 mb-0">
-            <i class="bi bi-info-circle me-1"></i>
-            Persentase per siswa = hari Hadir ÷ hari ada presensi tercatat di bulan itu.
-            Persentase keseluruhan kelas = jumlah kejadian status (Hadir/Izin/Sakit/Alpa) ÷ (hari aktif × jumlah siswa)
-            — jadi contoh "20 kejadian Sakit" itu dihitung dari gabungan semua siswa di kelas, bukan per orang.
+        <div class="alert alert-secondary small mt-3 mb-0 d-flex align-items-start gap-2">
+            <i class="bi bi-info-circle mt-1"></i>
+            <div>Persentase per siswa = hari Hadir ÷ hari ada presensi tercatat di bulan itu. Persentase keseluruhan kelas = jumlah kejadian status (Hadir/Izin/Sakit/Alpa) ÷ (hari aktif × jumlah siswa) — jadi contoh "20 kejadian Sakit" itu dihitung dari gabungan semua siswa di kelas, bukan per orang.</div>
         </div>
     @endif
 

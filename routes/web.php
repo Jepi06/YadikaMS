@@ -368,6 +368,8 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('wali-kelas.index');
         Route::get('/wali-kelas/absensi', [LmsGuruWaliKelasController::class, 'absensi'])
             ->name('wali-kelas.absensi');
+        Route::get('/kelas/{pengampuMapel}/presensi/qr', [LmsGuruPresensiController::class, 'qr'])
+            ->name('presensi.qr');
     });
 
 /*

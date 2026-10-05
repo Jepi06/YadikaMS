@@ -3,7 +3,7 @@
 @section('title', 'Rekap Nilai - ' . ($pengampuMapel->mataPelajaran->nama ?? ''))
 
 @section('content')
-    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div class="page-header d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <div>
             <h4 class="fw-bold mb-0">{{ $pengampuMapel->mataPelajaran->nama ?? '-' }}</h4>
             <p class="text-muted mb-0">{{ $pengampuMapel->kelas->nama_kelas ?? '-' }} &middot; Rekap Nilai</p>
@@ -14,15 +14,15 @@
     </div>
 
     @if (session('status'))
-        <div class="alert alert-success">{{ session('status') }}</div>
+        <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>{{ session('status') }}</div>
     @endif
     @if ($errors->any())
-        <div class="alert alert-danger">{{ $errors->first() }}</div>
+        <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ $errors->first() }}</div>
     @endif
 
     {{-- Bobot Penilaian --}}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white fw-semibold"><i class="bi bi-sliders me-1"></i> Bobot Penilaian</div>
+    <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-sliders me-1 text-primary"></i> Bobot Penilaian</div>
         <div class="card-body">
             <form method="POST" action="{{ route('lms.guru.nilai.bobot', $pengampuMapel) }}" id="formBobot">
                 @csrf
@@ -67,9 +67,9 @@
     {{-- Rekap Nilai --}}
     <form method="POST" action="{{ route('lms.guru.nilai.sikap', $pengampuMapel) }}">
         @csrf
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
-                <span>Rekap Nilai Siswa</span>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-table me-1 text-primary"></i> Rekap Nilai Siswa</span>
                 <span class="small text-muted">Nilai Akhir dihitung otomatis dari bobot di atas</span>
             </div>
             <div class="table-responsive">
@@ -89,7 +89,7 @@
                         @forelse ($rekapSiswa as $siswaId => $r)
                             <tr>
                                 <td>
-                                    {{ $r->siswa->nama }}
+                                    <span class="fw-semibold">{{ $r->siswa->nama }}</span>
                                     @unless ($r->lengkap)
                                         <span class="badge bg-warning-subtle text-warning-emphasis ms-1">Belum Lengkap</span>
                                     @endunless
@@ -126,17 +126,17 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="7" class="text-center text-muted py-4">Belum ada siswa di kelas ini.</td></tr>
+                            <tr><td colspan="7" class="empty-state">Belum ada siswa di kelas ini.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
             @if ($rekapSiswa->count())
-                <div class="p-3 border-top">
+                <div class="p-3 border-top d-flex align-items-center gap-2">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save me-1"></i> Simpan STS, SAS &amp; Sikap
                     </button>
-                    <span class="small text-muted ms-2">
+                    <span class="small text-muted">
                         Nilai Akhir langsung ter-update otomatis begitu disimpan.
                     </span>
                 </div>
