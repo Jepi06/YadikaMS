@@ -23,6 +23,9 @@ class TugasController extends Controller
 
     private function authorizeTugas(Tugas $tugas): void
     {
+        // Lazy loading dimatikan, jadi relasi harus dimuat eksplisit.
+        $tugas->loadMissing('pengampuMapel');
+
         abort_unless(
             $tugas->pengampuMapel->guru_id === Auth::guard('lms')->id(),
             403,
@@ -34,10 +37,13 @@ class TugasController extends Controller
     {
         $this->authorizePengampu($pengampuMapel);
 
-        $pengampuMapel->load('mataPelajaran', 'kelas');
+        $pengampuMapel->load([
+            'mataPelajaran',
+            'kelas' => fn($q) => $q->withCount('siswa'),
+        ]);
 
         $tugas = $pengampuMapel->tugas()
-            ->withCount('pengumpulan')
+            ->with('pengumpulan:id,tugas_id,siswa_id,dikumpulkan_at,nilai')
             ->latest('batas_waktu')
             ->get();
 
@@ -51,7 +57,7 @@ class TugasController extends Controller
         $data = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
-            'file' => ['nullable', 'file', 'max:10240'],
+            'lampiran' => ['nullable', 'file', 'max:10240'],
             'batas_waktu' => ['required', 'date'],
             'is_kelompok' => ['nullable', 'boolean'],
         ]);
@@ -60,8 +66,8 @@ class TugasController extends Controller
             'pengampu_mapel_id' => $pengampuMapel->id,
             'judul' => $data['judul'],
             'deskripsi' => $data['deskripsi'] ?? null,
-            'file_lampiran' => $request->hasFile('file')
-                ? $request->file('file')->store('tugas', 'public')
+            'file_lampiran' => $request->hasFile('lampiran')
+                ? $request->file('lampiran')->store('tugas', 'public')
                 : null,
             'batas_waktu' => $data['batas_waktu'],
             'is_kelompok' => $request->boolean('is_kelompok'),
@@ -69,25 +75,34 @@ class TugasController extends Controller
 
         return back()->with('status', 'Tugas berhasil dibuat.');
     }
+
     /** Edit judul/deskripsi/deadline/pengaturan buka-tutup. */
     public function update(Request $request, Tugas $tugas)
     {
-        $this->authorizePengampu($tugas->pengampuMapel);
+        $this->authorizeTugas($tugas);
 
         $data = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
             'batas_waktu' => ['required', 'date'],
-            'mode_buka' => ['required', 'in:bebas,manual,tanggal'],
-            'mulai_pada' => ['nullable', 'date', 'required_if:mode_buka,tanggal'],
+            'mode_buka' => ['nullable', 'in:bebas,manual,tanggal'],
+            'mulai_pada' => ['nullable', 'date'],
         ]);
+
+        // Kalau form cepat (hanya deadline) tidak mengirim mode_buka, pakai nilai lama.
+        $mode = $data['mode_buka'] ?? $tugas->mode_buka ?? 'bebas';
+        $mulai = $data['mulai_pada'] ?? $tugas->mulai_pada;
+
+        if ($mode === 'tanggal' && empty($mulai)) {
+            return back()->withErrors(['mulai_pada' => 'Tanggal mulai wajib diisi untuk mode buka berdasarkan tanggal.']);
+        }
 
         $tugas->update([
             'judul' => $data['judul'],
             'deskripsi' => $data['deskripsi'] ?? null,
             'batas_waktu' => $data['batas_waktu'],
-            'mode_buka' => $data['mode_buka'],
-            'mulai_pada' => $data['mode_buka'] === 'tanggal' ? $data['mulai_pada'] : null,
+            'mode_buka' => $mode,
+            'mulai_pada' => $mode === 'tanggal' ? $mulai : null,
         ]);
 
         return back()->with('status', 'Tugas diperbarui.');
@@ -96,7 +111,7 @@ class TugasController extends Controller
     /** Buka/kunci manual (khusus mode_buka = manual). */
     public function toggleBuka(Tugas $tugas)
     {
-        $this->authorizePengampu($tugas->pengampuMapel);
+        $this->authorizeTugas($tugas);
         abort_unless($tugas->mode_buka === 'manual', 422, 'Tugas ini bukan mode buka manual.');
 
         $tugas->update(['dibuka_manual' => ! $tugas->dibuka_manual]);
@@ -107,12 +122,13 @@ class TugasController extends Controller
     /** Tutup paksa / buka lagi, independen dari batas_waktu. */
     public function toggleTutup(Tugas $tugas)
     {
-        $this->authorizePengampu($tugas->pengampuMapel);
+        $this->authorizeTugas($tugas);
 
         $tugas->update(['ditutup_manual' => ! $tugas->ditutup_manual]);
 
         return back()->with('status', $tugas->ditutup_manual ? 'Tugas ditutup paksa.' : 'Penutupan paksa dibatalkan.');
     }
+
     public function destroy(Tugas $tugas)
     {
         $this->authorizeTugas($tugas);
@@ -135,11 +151,14 @@ class TugasController extends Controller
 
         $pengumpulan = $tugas->pengumpulan()->with('siswa')->get()->keyBy('siswa_id');
 
-        return view('lms.guru.tugas-kumpulan', compact('tugas', 'pengumpulan'));
+        $urlDaftar = route('lms.guru.tugas.index', $tugas->pengampuMapel);
+
+        return view('lms.guru.tugas-kumpulan', compact('tugas', 'pengumpulan', 'urlDaftar'));
     }
 
     public function simpanNilai(Request $request, PengumpulanTugas $pengumpulan)
     {
+        $pengumpulan->loadMissing('tugas.pengampuMapel', 'siswa');
         $this->authorizeTugas($pengumpulan->tugas);
 
         $data = $request->validate([
@@ -153,7 +172,7 @@ class TugasController extends Controller
             'dinilai_at' => now(),
         ]);
 
-        // Kalau ini tugas kelompok, samain nilai ke SEMUA anggota kelompoknya.
+        // Kalau ini tugas kelompok, samakan nilai ke SEMUA anggota kelompoknya.
         if ($pengumpulan->tugas_kelompok_id) {
             PengumpulanTugas::where('tugas_kelompok_id', $pengumpulan->tugas_kelompok_id)
                 ->where('id', '!=', $pengumpulan->id)

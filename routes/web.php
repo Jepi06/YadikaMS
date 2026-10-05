@@ -55,6 +55,10 @@ use App\Http\Controllers\SuperAdmin\ModulAjarController as SuperAdminModulAjarCo
 use App\Http\Controllers\SuperAdmin\PenggunaController as SuperAdminPenggunaController;
 use App\Http\Controllers\SuperAdmin\ProfilController;
 use App\Http\Controllers\SuperAdmin\SiswaController as SuperAdminSiswaController;
+use App\Http\Controllers\SuperAdmin\MonitoringPresensiController;
+use App\Http\Controllers\SuperAdmin\JadwalController;
+use App\Http\Controllers\SuperAdmin\JadwalImportController;
+use App\Http\Controllers\SuperAdmin\PengaturanJamController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Mapping\ProfileController;
@@ -476,6 +480,21 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
         Route::delete('/avatar', [ProfilController::class, 'deleteAvatar'])->name('avatar.delete');
     });
     Route::patch('/guru/{guru}/reset-password', [SuperAdminGuruController::class, 'resetPassword'])->name('guru.reset-password');
+    Route::get('/monitoring-presensi', [MonitoringPresensiController::class, 'index'])
+        ->name('monitoring-presensi.index');
+    Route::get('/jadwal/pengaturan-jam', [PengaturanJamController::class, 'edit'])->name('jadwal.pengaturan-jam');
+    Route::put('/jadwal/pengaturan-jam', [PengaturanJamController::class, 'update'])->name('jadwal.pengaturan-jam.update');
+
+    Route::get('/jadwal/import', [JadwalImportController::class, 'form'])->name('jadwal.import');
+    Route::get('/jadwal/import/template', [JadwalImportController::class, 'template'])->name('jadwal.import.template');
+    Route::get('/jadwal/export', [JadwalImportController::class, 'export'])->name('jadwal.export');
+    Route::post('/jadwal/import', [JadwalImportController::class, 'proses'])->name('jadwal.import.proses');
+    Route::resource('jadwal', JadwalController::class)->except('show');
+
+    Route::get('/monitoring-presensi', [MonitoringPresensiController::class, 'index'])
+        ->name('monitoring-presensi.index');
+    Route::get('/monitoring-presensi/{pengampuMapel}', [MonitoringPresensiController::class, 'detail'])
+        ->name('monitoring-presensi.detail');
 });
 Route::post('/admin/logout', function () {
     // Logout dari semua guard yang mungkin aktif

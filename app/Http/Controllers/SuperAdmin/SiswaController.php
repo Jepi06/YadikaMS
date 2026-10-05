@@ -14,6 +14,10 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Role;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+
 class SiswaController extends Controller
 {
     // ── Index ─────────────────────────────────────────────────────────────────
@@ -36,27 +40,53 @@ class SiswaController extends Controller
 
     // ── Create ────────────────────────────────────────────────────────────────
 
-  public function create()
-{
-    $kelas = Kelas::with(['jurusan', 'waliKelas'])  // tambah waliKelas
-        ->orderBy('tingkat')
-        ->orderBy('nama_kelas')
-        ->get();
-    
-    return view('admin.siswa.create', compact('kelas'));
-}
+    public function create()
+    {
+        $kelas = Kelas::with(['jurusan', 'waliKelas'])  // tambah waliKelas
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
+
+        return view('admin.siswa.create', compact('kelas'));
+    }
 
     // ── Store ─────────────────────────────────────────────────────────────────
 
     public function store(StoreSiswaRequest $request): RedirectResponse
     {
-        Siswa::create($request->validated());
+        $data = $request->validated();
+
+        // Login siswa memakai NIS sebagai "email" (sama seperti import)
+        if (User::where('email', $data['nis'])->exists()) {
+            return back()->withInput()->withErrors([
+                'nis' => 'Sudah ada akun dengan NIS ini.',
+            ]);
+        }
+
+        DB::transaction(function () use ($data) {
+            $user = User::create([
+                'name'           => $data['nama'],
+                'email'          => $data['nis'],
+                'password'       => Hash::make('password'),
+                'is_active'      => true,
+                'is_super_admin' => false,
+            ]);
+
+            $roleSiswaId = Role::whereHas('module', fn($m) => $m->where('kode', 'lms'))
+                ->where('kode', 'siswa')
+                ->value('id');
+
+            if ($roleSiswaId) {
+                $user->roles()->attach($roleSiswaId, ['assigned_at' => now()]);
+            }
+
+            Siswa::create($data + ['user_id' => $user->id]);
+        });
 
         return redirect()
             ->route('admin.siswa.index')
-            ->with('success', 'Siswa berhasil ditambahkan.');
+            ->with('success', "Siswa {$data['nama']} ditambahkan. Login: NIS {$data['nis']}, password default: password.");
     }
-
     // ── Show ──────────────────────────────────────────────────────────────────
 
     public function show(Siswa $siswa): View
@@ -67,21 +97,32 @@ class SiswaController extends Controller
 
     // ── Edit ──────────────────────────────────────────────────────────────────
 
-   public function edit(Siswa $siswa)
-{
-    $kelas = Kelas::with(['jurusan', 'waliKelas'])  // tambah waliKelas
-        ->orderBy('tingkat')
-        ->orderBy('nama_kelas')
-        ->get();
+    public function edit(Siswa $siswa)
+    {
+        $kelas = Kelas::with(['jurusan', 'waliKelas'])  // tambah waliKelas
+            ->orderBy('tingkat')
+            ->orderBy('nama_kelas')
+            ->get();
 
-    return view('admin.siswa.edit', compact('siswa', 'kelas'));
-}
+        return view('admin.siswa.edit', compact('siswa', 'kelas'));
+    }
 
     // ── Update ────────────────────────────────────────────────────────────────
 
     public function update(UpdateSiswaRequest $request, Siswa $siswa): RedirectResponse
     {
-        $siswa->update($request->validated());
+        $data = $request->validated();
+
+        DB::transaction(function () use ($siswa, $data) {
+            $siswa->update($data);
+
+            if ($siswa->user) {
+                $siswa->user->update([
+                    'name'  => $data['nama'] ?? $siswa->nama,
+                    'email' => $data['nis'] ?? $siswa->nis,
+                ]);
+            }
+        });
 
         return redirect()
             ->route('admin.siswa.index')
@@ -118,31 +159,31 @@ class SiswaController extends Controller
     }
     // ── Import Excel ──────────────────────────────────────────────────────────
 
-   public function importForm()
-{
-    $kelas = \App\Models\Kelas::with(['jurusan', 'waliKelas'])
-        ->orderBy('tingkat')->orderBy('nama_kelas')->get();
+    public function importForm()
+    {
+        $kelas = \App\Models\Kelas::with(['jurusan', 'waliKelas'])
+            ->orderBy('tingkat')->orderBy('nama_kelas')->get();
 
-    return view('admin.siswa.import', compact('kelas'));
-}
+        return view('admin.siswa.import', compact('kelas'));
+    }
     public function import(Request $request)
-{
-    $request->validate([
-        'file'     => ['required', 'file', 'mimes:xlsx,xls', 'max:5120'],
-        'kelas_id' => ['required', 'exists:kelas,id'],
-    ]);
+    {
+        $request->validate([
+            'file'     => ['required', 'file', 'mimes:xlsx,xls', 'max:5120'],
+            'kelas_id' => ['required', 'exists:kelas,id'],
+        ]);
 
-    $import = new SiswaImport();
-    $import->kelasId = (int) $request->kelas_id;
+        $import = new SiswaImport();
+        $import->kelasId = (int) $request->kelas_id;
 
-    Excel::import($import, $request->file('file'));
+        Excel::import($import, $request->file('file'));
 
-    $msg = "Import selesai: {$import->getImportedCount()} siswa berhasil dimasukkan.";
-    $request->session()->put('import_skipped', $import->getSkippedRows());
-    $request->session()->put('import_errors',  $import->getErrors());
+        $msg = "Import selesai: {$import->getImportedCount()} siswa berhasil dimasukkan.";
+        $request->session()->put('import_skipped', $import->getSkippedRows());
+        $request->session()->put('import_errors',  $import->getErrors());
 
-    return redirect()->route('admin.siswa.index')->with('success', $msg);
-}
+        return redirect()->route('admin.siswa.index')->with('success', $msg);
+    }
     // ── Download Template ─────────────────────────────────────────────────────
 
     public function downloadTemplate()

@@ -7,6 +7,7 @@ use App\Models\Kelas;
 use App\Models\Lms\MataPelajaran;
 use App\Models\Lms\PengampuMapel;
 use App\Models\Lms\WaliKelasPeriode;
+use App\Models\Mapping\GuruPembimbing; // ← BARU
 use App\Models\Role;
 use App\Models\User;
 use App\Support\TahunAjaran;
@@ -81,6 +82,8 @@ class GuruController extends Controller
             $guru->roles()->attach($roleGuruLmsId, ['assigned_at' => now()]);
         }
 
+        $this->syncGuruPembimbing($guru); // ← BARU
+
         return redirect()->route('admin.guru.kelola', $guru)
             ->with('status', "Guru {$guru->name} dibuat. Email login: {$guru->email}, password default: password. Lanjutkan atur penugasan mengajar di bawah.");
     }
@@ -100,6 +103,8 @@ class GuruController extends Controller
 
         $guru->update($data);
 
+        $this->syncGuruPembimbing($guru); // ← BARU
+
         return redirect()->route('admin.guru.index')->with('status', 'Data guru diperbarui.');
     }
 
@@ -116,6 +121,7 @@ class GuruController extends Controller
 
         return redirect()->route('admin.guru.index')->with('status', "Guru {$guru->name} dihapus.");
     }
+
     /** Reset password guru ke default: "password". */
     public function resetPassword(User $guru)
     {
@@ -125,6 +131,7 @@ class GuruController extends Controller
 
         return back()->with('status', "Password {$guru->name} berhasil direset ke default: \"password\".");
     }
+
     /** Halaman kelola 1 guru: penugasan mengajar + wali kelas. */
     public function kelola(User $guru)
     {
@@ -299,6 +306,8 @@ class GuruController extends Controller
                     $guru->roles()->attach($roleGuruLmsId, ['assigned_at' => now()]);
                 }
 
+                $this->syncGuruPembimbing($guru); // ← BARU
+
                 $userCache[$cacheKey] = $guru;
             }
 
@@ -342,6 +351,31 @@ class GuruController extends Controller
         }
 
         return view('admin.guru.import-hasil', compact('hasil', 'errors'));
+    }
+
+    /**
+     * ← BARU: buat/tautkan baris guru_pembimbing untuk 1 user guru.
+     * Urutan cari: (1) sudah tertaut ke user ini, (2) belum tertaut
+     * tapi emailnya sama. Kalau tidak ada, buat baru.
+     */
+    private function syncGuruPembimbing(User $guru): void
+    {
+        $row = GuruPembimbing::where('user_id', $guru->id)->first()
+            ?? GuruPembimbing::whereNull('user_id')->where('email', $guru->email)->first();
+
+        if ($row) {
+            $row->update([
+                'user_id' => $guru->id,
+                'nama'    => $guru->name,
+                'email'   => $guru->email,
+            ]);
+        } else {
+            GuruPembimbing::create([
+                'user_id' => $guru->id,
+                'nama'    => $guru->name,
+                'email'   => $guru->email,
+            ]);
+        }
     }
 
     /** "Budi Santoso, S.Kom" -> "budi.santoso@smk.sch.id" (gelar dibuang, unik). */

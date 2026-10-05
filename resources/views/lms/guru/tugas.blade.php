@@ -1,7 +1,7 @@
 {{-- resources/views/lms/guru/tugas.blade.php
      Variabel dari controller:
-       $pengampuMapel → PengampuMapel (route model binding)
-       $tugas         → koleksi Tugas milik pengampuMapel ini (nama lain juga dikenali, lihat @php) --}}
+       $pengampuMapel → PengampuMapel (route model binding), relasi mataPelajaran & kelas (siswa_count) sudah dimuat
+       $tugas         → koleksi Tugas milik pengampuMapel ini, relasi pengumpulan sudah dimuat --}}
 @extends('lms.layouts.app')
 
 @section('title', 'Kelola Tugas - LMS Yadika')
@@ -11,7 +11,7 @@
     @php
         use Illuminate\Support\Carbon;
 
-        $daftar = collect($tugas ?? ($tugasList ?? ($daftarTugas ?? ($pengampuMapel->tugas ?? []))))
+        $daftar = collect($tugas ?? [])
             ->sortByDesc(fn($t) => $t->batas_waktu)
             ->values();
 
@@ -21,12 +21,12 @@
         $namaKelas = $kelas->nama_kelas ?? ($kelas->nama ?? null);
         $semester = $pengampuMapel->semester ?? null;
         $tahunAjaran = $pengampuMapel->tahun_ajaran ?? null;
-        $jumlahSiswa = $kelas?->siswa?->count() ?? 0;
+        $jumlahSiswa = (int) ($kelas->siswa_count ?? 0);
 
         // --- helper per tugas ---
-        $isKelompok = fn($t) => (bool) ($t->is_kelompok ?? ($t->tugas_kelompok ?? (($t->tipe ?? null) === 'kelompok')));
+        $isKelompok = fn($t) => (bool) $t->is_kelompok;
         $deadline = fn($t) => $t->batas_waktu ? Carbon::parse($t->batas_waktu) : null;
-        $ditutupManual = fn($t) => (bool) ($t->ditutup ?? ($t->is_ditutup ?? ($t->is_tutup ?? false)));
+        $ditutupManual = fn($t) => (bool) $t->ditutup_manual;
         $statusTugas = function ($t) use ($deadline, $ditutupManual) {
             if ($ditutupManual($t)) return 'tertutup';
             $d = $deadline($t);
@@ -82,6 +82,12 @@
             </button>
         </div>
     </div>
+
+    @if (session('status'))
+        <div class="rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3 flex items-start gap-2">
+            <i class="bi bi-check-circle mt-0.5"></i><span>{{ session('status') }}</span>
+        </div>
+    @endif
 
     {{-- STATISTIK --}}
     <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -186,7 +192,7 @@
                             <i class="bi bi-cloud-arrow-up text-xl"></i>
                         </div>
                         <p id="lampiranLabel" class="text-sm font-semibold text-slate-800">Pilih berkas lampiran</p>
-                        <p class="text-xs text-slate-500 mt-0.5">PDF, ZIP, DOCX, dll.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">PDF, ZIP, DOCX, dll. (maks. 10 MB)</p>
                     </label>
                     <input id="lampiran" name="lampiran" type="file" class="sr-only">
                 </div>
@@ -252,7 +258,7 @@
                     $persen = $jumlahSiswa > 0 ? min(100, round($jmlKumpul / $jumlahSiswa * 100)) : 0;
                     $belum = max(0, $jumlahSiswa - $jmlKumpul);
                     $rataNilai = $t->pengumpulan->whereNotNull('nilai')->avg('nilai');
-                    $lampiran = $t->lampiran ?? ($t->lampiran_path ?? ($t->file_path ?? null));
+                    $lampiran = $t->file_lampiran;
                     $grup = ($status === 'terbuka' ? 'terbuka' : 'tertutup') . ($kelompok ? ' kelompok' : '');
                     $panelId = 'panel-tugas-' . $t->id;
                 @endphp
@@ -367,6 +373,10 @@
                                 @method('PUT')
                                 <input type="hidden" name="judul" value="{{ $t->judul }}">
                                 <input type="hidden" name="deskripsi" value="{{ $t->deskripsi }}">
+                                <input type="hidden" name="mode_buka" value="{{ $t->mode_buka ?? 'bebas' }}">
+                                @if ($t->mulai_pada)
+                                    <input type="hidden" name="mulai_pada" value="{{ Carbon::parse($t->mulai_pada)->format('Y-m-d\TH:i') }}">
+                                @endif
                                 <label class="text-xs font-semibold text-slate-500">Perbarui Batas Waktu</label>
                                 <div class="flex items-center gap-2">
                                     <input type="datetime-local" name="batas_waktu" required
@@ -383,19 +393,21 @@
                             <div class="space-y-1.5">
                                 <label class="text-xs font-semibold text-slate-500">Akses Pengumpulan</label>
                                 <div class="flex items-center gap-2">
-                                    <form method="POST" action="{{ route('lms.guru.tugas.toggle-buka', $t) }}" class="flex-1">
-                                        @csrf
-                                        <button type="submit"
-                                            class="w-full h-9 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1">
-                                            <i class="bi bi-unlock"></i>Buka / Buka Kembali
-                                        </button>
-                                    </form>
+                                    @if (($t->mode_buka ?? null) === 'manual')
+                                        <form method="POST" action="{{ route('lms.guru.tugas.toggle-buka', $t) }}" class="flex-1">
+                                            @csrf
+                                            <button type="submit"
+                                                class="w-full h-9 px-2 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1">
+                                                <i class="bi {{ $t->dibuka_manual ? 'bi-lock' : 'bi-unlock' }}"></i>{{ $t->dibuka_manual ? 'Kunci Lagi' : 'Buka Tugas' }}
+                                            </button>
+                                        </form>
+                                    @endif
                                     <form method="POST" action="{{ route('lms.guru.tugas.toggle-tutup', $t) }}" class="flex-1"
-                                        onsubmit="return confirm('Tutup pengumpulan tugas ini sekarang?')">
+                                        onsubmit="return confirm('{{ $t->ditutup_manual ? 'Batalkan penutupan paksa tugas ini?' : 'Tutup pengumpulan tugas ini sekarang?' }}')">
                                         @csrf
                                         <button type="submit"
                                             class="w-full h-9 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1">
-                                            <i class="bi bi-slash-circle"></i>Tutup Sekarang
+                                            <i class="bi {{ $t->ditutup_manual ? 'bi-arrow-counterclockwise' : 'bi-slash-circle' }}"></i>{{ $t->ditutup_manual ? 'Batalkan Penutupan' : 'Tutup Sekarang' }}
                                         </button>
                                     </form>
                                 </div>

@@ -1,10 +1,12 @@
 {{-- resources/views/lms/guru/presensi.blade.php
-     Variabel dari controller (nama alternatif dikenali, lihat @php):
-       $pengampuMapel → PengampuMapel
-       $tanggal       → string/Carbon tanggal yang dilihat (default: hari ini)
-       $siswaList     → daftar siswa kelas (default: $pengampuMapel->kelas->siswa)
-       $presensi      → koleksi PresensiLms untuk tanggal itu (punya siswa_id, status, keterangan, sumber/metode)
-       $sesiAktif     → bool, sesi QR sedang dibuka --}}
+     Variabel dari PresensiController@index:
+       $pengampuMapel → PengampuMapel (relasi mataPelajaran & kelas.siswa sudah di-load)
+       $tanggal       → string Y-m-d tanggal yang dilihat
+       $isHariIni     → bool
+       $sesi          → SesiPresensi hari ini (atau null)
+       $presensiSiswa → koleksi PresensiLms tanggal itu, sudah keyBy siswa_id
+       $scanUrl       → URL scan untuk token QR saat ini (atau null)
+       $tidakHadir    → koleksi presensi non-Hadir --}}
 @extends('lms.layouts.app')
 
 @section('title', 'Presensi - LMS Yadika')
@@ -12,10 +14,8 @@
 
 @section('content')
     @php
-        use Illuminate\Support\Carbon;
-
-        $tgl = Carbon::parse($tanggal ?? now()->toDateString());
-        $isToday = $tgl->isToday();
+        $tgl = \Illuminate\Support\Carbon::parse($tanggal ?? now()->toDateString());
+        $isToday = $isHariIni ?? $tgl->isToday();
 
         $mp = $pengampuMapel->mataPelajaran ?? null;
         $namaMapel = $mp->nama ?? ($mp->nama_mapel ?? ($mp->nama_mata_pelajaran ?? 'Mata Pelajaran'));
@@ -23,11 +23,11 @@
         $namaKelas = $kelasModel->nama_kelas ?? ($kelasModel->nama ?? null);
         $semester = $pengampuMapel->semester ?? null;
 
-        $roster = collect($siswaList ?? ($daftarSiswa ?? ($kelasModel?->siswa ?? [])))
+        $roster = collect($kelasModel?->siswa ?? [])
             ->sortBy(fn($s) => strtolower($s->nama ?? ($s->name ?? '')))
             ->values();
 
-        $presensiMap = collect($presensi ?? ($presensiHariIni ?? ($daftarPresensi ?? [])))->keyBy('siswa_id');
+        $presensiMap = collect($presensiSiswa ?? [])->keyBy('siswa_id');
 
         $normStatus = function ($s) {
             $s = ucfirst(strtolower((string) $s));
@@ -41,7 +41,7 @@
         $persenHadir = $totalSiswa > 0 ? round($hitung['Hadir'] / $totalSiswa * 100) : 0;
         $belumHadir = $totalSiswa - $hitung['Hadir'];
 
-        $aktif = (bool) ($sesiAktif ?? false);
+        $aktif = $isToday && ($sesi ?? null) && $sesi->masih_aktif;
 
         $rowCls = ['Hadir' => '', 'Izin' => 'bg-blue-50/60', 'Sakit' => 'bg-amber-50/70', 'Alpa' => 'bg-rose-50/70'];
         $selCls = [
@@ -54,6 +54,12 @@
 
         $urlTanggal = fn($d) => route('lms.guru.presensi.index', ['pengampuMapel' => $pengampuMapel, 'tanggal' => $d->toDateString()]);
     @endphp
+
+    @if (session('status'))
+        <div class="rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3 flex items-start gap-2">
+            <i class="bi bi-check-circle mt-0.5"></i><span>{{ session('status') }}</span>
+        </div>
+    @endif
 
     {{-- HEADER --}}
     <section class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -152,13 +158,13 @@
                     @if ($aktif)
                         <div class="bg-slate-100 rounded-xl p-4 flex flex-col items-center text-center">
                             <div class="bg-white p-3.5 rounded-lg shadow-sm w-full max-w-[240px] aspect-square flex items-center justify-center">
-                                <img id="qrImage" src="{{ route('lms.guru.presensi.qr', $pengampuMapel) }}" alt="QR presensi"
-                                    class="w-full h-full object-contain">
+                                <div id="qrBox" class="w-full" aria-label="QR presensi"></div>
                             </div>
+                            <p id="qrError" class="hidden mt-2 text-xs text-rose-600 whitespace-pre-line break-all"></p>
                             <div class="w-full mt-3 space-y-1.5">
                                 <div class="flex items-center justify-between text-xs text-slate-500 font-medium">
                                     <span class="flex items-center gap-1"><i class="bi bi-arrow-repeat text-blue-600"></i>Token refresh</span>
-                                    <span class="font-mono font-semibold text-blue-600" id="countdownText">30s</span>
+                                    <span class="font-mono font-semibold text-blue-600" id="countdownText">--</span>
                                 </div>
                                 <div class="w-full h-1.5 rounded-full bg-slate-200 overflow-hidden">
                                     <div class="h-full bg-blue-600 rounded-full transition-all duration-1000 ease-linear" id="countdownBar" style="width: 100%"></div>
@@ -200,7 +206,7 @@
                                 @csrf
                                 <button type="submit"
                                     class="w-full py-2.5 px-4 rounded-lg bg-blue-600 text-white text-sm font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-sm">
-                                    <i class="bi bi-play-circle"></i><span>Buka Sesi Presensi</span>
+                                    <i class="bi bi-play-circle"></i><span>{{ ($sesi ?? null) ? 'Buka Kembali Sesi Presensi' : 'Buka Sesi Presensi' }}</span>
                                 </button>
                             </form>
                         @endif
@@ -404,26 +410,130 @@
         });
 
         @if ($isToday && $aktif)
-        // QR dinamis: muat ulang gambar tiap 30 detik
-        const DURASI = 30;
-        let sisa = DURASI;
+        // ── QR dinamis ─────────────────────────────────────────────
+        // Endpoint qr() mengembalikan JSON {aktif, url, sisa}; QR digambar di browser sebagai SVG.
+        // Path relatif (absolute=false) supaya selalu satu origin dengan halaman yang dibuka,
+        // apa pun isi APP_URL (localhost / IP LAN / ngrok / domain).
+        const QR_ENDPOINT = @json(route('lms.guru.presensi.qr', $pengampuMapel, false));
+        const qrBox = document.getElementById('qrBox');
+        const qrError = document.getElementById('qrError');
         const teks = document.getElementById('countdownText');
         const bar = document.getElementById('countdownBar');
-        const img = document.getElementById('qrImage');
-        const baseUrl = img.getAttribute('src').split('?')[0];
+        let durasi = 30, sisa = durasi, memuat = false;
 
-        function segarkanQr() {
-            img.src = baseUrl + '?_=' + Date.now();
-            sisa = DURASI;
-            teks.textContent = sisa + 's';
-            bar.style.width = '100%';
+        function tampilkanError(pesan) {
+            if (!qrError) return;
+            qrError.textContent = pesan || '';
+            qrError.classList.toggle('hidden', !pesan);
         }
-        setInterval(() => {
-            sisa--;
-            if (sisa <= 0) { segarkanQr(); return; }
-            teks.textContent = sisa + 's';
-            bar.style.width = (sisa / DURASI * 100) + '%';
-        }, 1000);
+
+        function gambarQr(url) {
+            if (typeof qrcode === 'undefined') {
+                tampilkanError('Library QR gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.');
+                return;
+            }
+            if (!url) {
+                tampilkanError('URL QR kosong.');
+                return;
+            }
+            try {
+                const q = qrcode(0, 'M');   // 0 = ukuran otomatis, M = koreksi error sedang
+                q.addData(url);
+                q.make();
+                qrBox.innerHTML = q.createSvgTag({ scalable: true, margin: 0 });
+                const svg = qrBox.querySelector('svg');
+                if (svg) {
+                    svg.style.width = '100%';
+                    svg.style.height = 'auto';
+                    svg.style.display = 'block';
+                }
+                tampilkanError('');
+            } catch (e) {
+                tampilkanError('Gagal membuat QR: ' + e.message);
+            }
+        }
+
+        function tampilkanSisa() {
+            teks.textContent = Math.max(sisa, 0) + 's';
+            bar.style.width = Math.max(0, Math.min(100, sisa / durasi * 100)) + '%';
+        }
+
+        async function segarkanQr() {
+            if (memuat) return;
+            memuat = true;
+            try {
+                const res = await fetch(QR_ENDPOINT, {
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store',
+                    credentials: 'same-origin'
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const d = await res.json();
+                if (!d.aktif) { location.reload(); return; }   // sesi sudah ditutup/kedaluwarsa
+                gambarQr(d.url);
+                sisa = Number(d.sisa) || durasi;
+                durasi = Math.max(durasi, sisa);
+                tampilkanSisa();
+            } catch (e) {
+                tampilkanError('Gagal memuat QR terbaru, mencoba lagi...');
+                sisa = 5; // gagal jaringan: coba lagi sebentar lagi
+            } finally {
+                memuat = false;
+            }
+        }
+
+        // ── Pemuat library QR (lokal dulu, lalu CDN sebagai cadangan) ──
+        // Path diawali "/" (bukan asset()) supaya tidak terpengaruh APP_URL / http-vs-https di balik proxy.
+        const SUMBER_QR = [
+            '/vendor/qrcode.js',
+            'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'
+        ];
+
+        function muatScript(src) {
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = () => (typeof qrcode === 'function'
+                    ? resolve()
+                    : reject(new Error('file terbaca tapi isinya bukan library QR')));
+                s.onerror = () => reject(new Error('tidak bisa dimuat'));
+                document.head.appendChild(s);
+            });
+        }
+
+        async function muatLibraryQr() {
+            const gagal = [];
+            for (const src of SUMBER_QR) {
+                try {
+                    await muatScript(src);
+                    return true;
+                } catch (e) {
+                    let info = e.message;
+                    try {
+                        const r = await fetch(src, { cache: 'no-store' });
+                        info += ' [HTTP ' + r.status + ', ' + (r.headers.get('content-type') || '?') + ']';
+                    } catch (_) { info += ' [fetch gagal]'; }
+                    gagal.push(src + ' → ' + info);
+                }
+            }
+            tampilkanError('Library QR gagal dimuat:\n' + gagal.join('\n'));
+            return false;
+        }
+
+        muatLibraryQr().then(ok => {
+            if (!ok) return;
+
+            // Gambar QR awal dari server (supaya langsung tampil sebelum fetch pertama selesai)
+            gambarQr(@json($scanUrl ?? ''));
+
+            setInterval(() => {
+                sisa--;
+                if (sisa <= 0) { segarkanQr(); }
+                tampilkanSisa();
+            }, 1000);
+
+            segarkanQr(); // sinkronkan hitung mundur dengan server saat halaman dibuka
+        });
         @endif
     </script>
 @endpush

@@ -129,10 +129,20 @@
                 href="{{ route('admin.modul-ajar.index') }}">
                 <i class="bi bi-archive-fill me-2"></i> Arsip Modul Ajar
             </a>
+            <a class="nav-link {{ request()->routeIs('admin.monitoring-presensi.*') ? 'active' : '' }}"
+                href="{{ route('admin.monitoring-presensi.index') }}">
+                <i class="bi bi-broadcast me-2"></i> Monitoring Presensi
+            </a>
+            <a class="nav-link {{ request()->routeIs('admin.jadwal.*') ? 'active' : '' }}"
+                href="{{ route('admin.jadwal.index') }}">
+                <i class="bi bi-calendar-week me-2"></i> Jadwal Guru
+            </a>
             <a class="nav-link {{ request()->routeIs('admin.profil.*') ? 'active' : '' }}"
                 href="{{ route('admin.profil.edit') }}">
                 <i class="bi bi-person-circle me-2"></i> Profil Saya
             </a>
+
+
         </nav>
 
         {{-- Logout di paling bawah --}}

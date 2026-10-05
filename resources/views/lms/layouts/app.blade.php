@@ -40,7 +40,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'LMS Yadika')</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <script>
         tailwind.config = {
             theme: {

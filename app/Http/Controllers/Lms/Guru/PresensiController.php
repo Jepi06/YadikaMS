@@ -120,5 +120,43 @@ class PresensiController extends Controller
         return back()->with('status', 'Sesi presensi ditutup.');
     }
 
-    // simpanManual() dan rekap() tetap sama seperti kode Anda.
+    public function simpanManual(Request $request, PengampuMapel $pengampuMapel)
+{
+    $this->authorizePengampu($pengampuMapel);
+
+    $data = $request->validate([
+        'tanggal' => ['required', 'date'],
+        'status' => ['required', 'array'],
+        'status.*' => ['required', 'in:Hadir,Izin,Sakit,Alpa'],
+    ]);
+
+    foreach ($data['status'] as $siswaId => $status) {
+        PresensiLms::updateOrCreate(
+            [
+                'pengampu_mapel_id' => $pengampuMapel->id,
+                'siswa_id' => $siswaId,
+                'tanggal' => $data['tanggal'],
+            ],
+            [
+                'status' => $status,
+                'dicatat_manual_oleh' => Auth::guard('lms')->id(),
+            ]
+        );
+    }
+
+    return back()->with('status', 'Presensi manual berhasil disimpan.');
+}
+
+public function rekap(Request $request, PengampuMapel $pengampuMapel)
+{
+    $this->authorizePengampu($pengampuMapel);
+
+    // TODO: sesuaikan dengan kebutuhan rekap Anda —
+    // ini baru kerangka dasar, belum tahu view & data apa yang diharapkan.
+    $pengampuMapel->load(['mataPelajaran', 'kelas.siswa']);
+
+    $presensi = PresensiLms::where('pengampu_mapel_id', $pengampuMapel->id)->get();
+
+    return view('lms.guru.presensi-rekap', compact('pengampuMapel', 'presensi'));
+}
 }

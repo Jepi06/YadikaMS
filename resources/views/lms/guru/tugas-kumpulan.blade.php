@@ -1,7 +1,6 @@
 {{-- resources/views/lms/guru/tugas-kumpulan.blade.php
-     Variabel dari controller (nama alternatif dikenali, lihat @php):
        $tugas       → Tugas (punya pengampuMapel, judul, batas_waktu, deskripsi)
-       $pengumpulan → koleksi pengumpulan tugas ini (siswa_id, dikumpulkan_at, nilai, catatan guru, file/link, catatan siswa)
+       $pengumpulan → koleksi pengumpulan tugas ini (siswa_id, dikumpulkan_at, nilai, catatan_guru, file_jawaban, link_jawaban, catatan_siswa)
        $pengampuMapel (opsional) → default: $tugas->pengampuMapel --}}
 @extends('lms.layouts.app')
 
@@ -191,10 +190,11 @@
                         @php
                             $p = $b->p;
                             $formId = 'nilai-' . $b->s->id;
-                            $fileJawaban = $p ? ($p->file ?? ($p->file_path ?? ($p->berkas ?? null))) : null;
-                            $linkJawaban = $p ? ($p->link ?? ($p->tautan ?? null)) : null;
-                            $catatanSiswa = $p ? ($p->catatan_siswa ?? ($p->catatan ?? null)) : null;
-                            $feedback = $p ? ($p->catatan_guru ?? ($p->feedback ?? '')) : '';
+                            // NOTE: nama kolom disamakan dengan model PengumpulanTugas (lihat tugas.blade.php lama & route lms.file.jawaban)
+                            $fileJawaban = $p?->file_jawaban;
+                            $linkJawaban = $p?->link_jawaban;
+                            $catatanSiswa = $p?->catatan_siswa;
+                            $feedback = $p?->catatan_guru ?? '';
                             $terlambat = $p && $deadline && Carbon::parse($p->dikumpulkan_at)->gt($deadline);
                             $dibawahKKM = $b->nilai !== null && $b->nilai < $batasKKM;
                         @endphp
