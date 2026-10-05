@@ -15,18 +15,30 @@
 
         // Nilai mode akses (value radio/select) => tampilan
         $modeInfo = [
-            'bebas'     => ['label' => 'Bebas — Langsung Terbuka', 'badge' => 'bg-emerald-50 text-emerald-800', 'dot' => 'bg-emerald-500'],
-            'berurutan' => ['label' => 'Berurutan — Syarat Materi Sebelumnya', 'badge' => 'bg-blue-50 text-blue-800', 'dot' => 'bg-blue-500'],
-            'manual'      => ['label' => 'Dibuka Guru — Terkunci Manual', 'badge' => 'bg-amber-50 text-amber-800', 'dot' => 'bg-amber-500'],
+            'bebas' => [
+                'label' => 'Bebas — Langsung Terbuka',
+                'badge' => 'bg-emerald-50 text-emerald-800',
+                'dot' => 'bg-emerald-500',
+            ],
+            'berurutan' => [
+                'label' => 'Berurutan — Syarat Materi Sebelumnya',
+                'badge' => 'bg-blue-50 text-blue-800',
+                'dot' => 'bg-blue-500',
+            ],
+            'manual' => [
+                'label' => 'Dibuka Guru — Terkunci Manual',
+                'badge' => 'bg-amber-50 text-amber-800',
+                'dot' => 'bg-amber-500',
+            ],
             'tanggal' => ['label' => 'Terjadwal', 'badge' => 'bg-purple-50 text-purple-800', 'dot' => 'bg-purple-600'],
         ];
         $modeOf = fn($m) => strtolower($m->mode_akses ?? 'bebas');
         $jadwalOf = fn($m) => $m->buka_pada;
 
-        $total      = $daftar->count();
-        $terjadwal  = $daftar->filter(fn($m) => $modeOf($m) === 'tanggal')->count();
-        $manual     = $daftar->filter(fn($m) => $modeOf($m) === 'manual')->count();
-        $lampiran   = $daftar->filter(fn($m) => !empty($m->file_path))->count();
+        $total = $daftar->count();
+        $terjadwal = $daftar->filter(fn($m) => $modeOf($m) === 'tanggal')->count();
+        $manual = $daftar->filter(fn($m) => $modeOf($m) === 'manual')->count();
+        $lampiran = $daftar->filter(fn($m) => !empty($m->file_path))->count();
     @endphp
 
     {{-- Header --}}
@@ -45,9 +57,12 @@
                 <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">
                     {{ $pengampuMapel->mataPelajaran->nama ?? '-' }}
                 </h1>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100">
+                <span
+                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100">
                     {{ $pengampuMapel->kelas->nama_kelas ?? '-' }}
-                    @if ($pengampuMapel->tahun_ajaran ?? null) · {{ $pengampuMapel->tahun_ajaran }} @endif
+                    @if ($pengampuMapel->tahun_ajaran ?? null)
+                        · {{ $pengampuMapel->tahun_ajaran }}
+                    @endif
                 </span>
             </div>
         </div>
@@ -59,12 +74,7 @@
 
     {{-- Ringkasan --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        @foreach ([
-            ['Total Materi', $total, 'bi-journal-text', 'bg-blue-50 text-blue-600'],
-            ['Akses Terjadwal', $terjadwal, 'bi-clock', 'bg-purple-50 text-purple-600'],
-            ['Dibuka Manual', $manual, 'bi-lock', 'bg-amber-50 text-amber-600'],
-            ['Lampiran File', $lampiran, 'bi-paperclip', 'bg-slate-100 text-slate-600'],
-        ] as [$label, $nilai, $ikon, $warna])
+        @foreach ([['Total Materi', $total, 'bi-journal-text', 'bg-blue-50 text-blue-600'], ['Akses Terjadwal', $terjadwal, 'bi-clock', 'bg-purple-50 text-purple-600'], ['Dibuka Manual', $manual, 'bi-lock', 'bg-amber-50 text-amber-600'], ['Lampiran File', $lampiran, 'bi-paperclip', 'bg-slate-100 text-slate-600']] as [$label, $nilai, $ikon, $warna])
             <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-start justify-between">
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">{{ $label }}</p>
@@ -78,7 +88,8 @@
     </div>
 
     {{-- Form tambah materi --}}
-    <details class="group bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden" {{ $errors->any() ? 'open' : '' }}>
+    <details class="group bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden"
+        {{ $errors->any() ? 'open' : '' }}>
         <summary class="list-none cursor-pointer px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
@@ -110,7 +121,8 @@
                 {{-- Kiri --}}
                 <div class="space-y-4">
                     <div>
-                        <label class="text-sm font-semibold text-slate-700">Judul Materi <span class="text-rose-500">*</span></label>
+                        <label class="text-sm font-semibold text-slate-700">Judul Materi <span
+                                class="text-rose-500">*</span></label>
                         <input type="text" name="judul" value="{{ old('judul') }}" required
                             placeholder="Contoh: 05. RESTful API dengan Laravel Sanctum"
                             class="mt-1 w-full h-11 px-4 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500">
@@ -139,11 +151,14 @@
                             <span>Berkas Lampiran</span>
                             <span class="text-xs font-normal text-slate-400">Maks. 10 MB</span>
                         </label>
-                        <div class="relative mt-1 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 transition p-5 text-center">
-                            <input type="file" name="file" id="inputFile" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        <div
+                            class="relative mt-1 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 transition p-5 text-center">
+                            <input type="file" name="file" id="inputFile"
+                                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 onchange="document.getElementById('namaFile').textContent = this.files[0]?.name ?? 'Klik untuk telusuri atau seret berkas ke sini'">
                             <i class="bi bi-cloud-arrow-up text-2xl text-blue-600"></i>
-                            <p id="namaFile" class="text-sm text-slate-600 mt-1">Klik untuk telusuri atau seret berkas ke sini</p>
+                            <p id="namaFile" class="text-sm text-slate-600 mt-1">Klik untuk telusuri atau seret berkas ke
+                                sini</p>
                         </div>
                     </div>
 
@@ -152,10 +167,13 @@
                         <div class="mt-1 grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
                             @foreach (['bebas' => 'Bebas', 'berurutan' => 'Berurutan', 'manual' => 'Dibuka Guru', 'tanggal' => 'Terjadwal'] as $val => $lbl)
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="mode_akses" value="{{ $val }}" class="peer sr-only"
-                                        onchange="toggleJadwalBaru()" {{ old('mode_akses', 'bebas') === $val ? 'checked' : '' }}>
-                                    <div class="px-3 py-2 rounded-lg text-center text-sm font-semibold text-slate-500 peer-checked:bg-white peer-checked:text-blue-700 peer-checked:shadow-sm transition flex items-center justify-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full {{ $modeInfo[$val]['dot'] }}"></span>{{ $lbl }}
+                                    <input type="radio" name="mode_akses" value="{{ $val }}"
+                                        class="peer sr-only" onchange="toggleJadwalBaru()"
+                                        {{ old('mode_akses', 'bebas') === $val ? 'checked' : '' }}>
+                                    <div
+                                        class="px-3 py-2 rounded-lg text-center text-sm font-semibold text-slate-500 peer-checked:bg-white peer-checked:text-blue-700 peer-checked:shadow-sm transition flex items-center justify-center gap-1.5">
+                                        <span
+                                            class="w-2 h-2 rounded-full {{ $modeInfo[$val]['dot'] }}"></span>{{ $lbl }}
                                     </div>
                                 </label>
                             @endforeach
@@ -185,7 +203,8 @@
             <h2 class="text-lg font-bold text-slate-800">Daftar Materi Diterbitkan</h2>
             <p class="text-xs text-slate-500">Kelola akses, tautan, dan lampiran tiap materi.</p>
         </div>
-        <span class="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold">Semua ({{ $total }})</span>
+        <span class="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold">Semua
+            ({{ $total }})</span>
     </div>
 
     <div class="space-y-4">
@@ -200,13 +219,15 @@
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition p-5">
                 <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                     <div class="flex items-start gap-4 min-w-0">
-                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 font-bold text-lg">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 font-bold text-lg">
                             {{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}
                         </div>
                         <div class="min-w-0 space-y-2">
                             <div class="flex flex-wrap items-center gap-2">
                                 <h3 class="font-bold text-slate-900">{{ $m->judul }}</h3>
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $info['badge'] }}">
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $info['badge'] }}">
                                     <span class="w-2 h-2 rounded-full {{ $info['dot'] }}"></span>
                                     @if ($mode === 'tanggal' && $jadwal)
                                         Terjadwal · {{ \Carbon\Carbon::parse($jadwal)->translatedFormat('d M Y, H:i') }}
@@ -222,17 +243,17 @@
 
                             <div class="flex flex-wrap items-center gap-2">
                                 @if ($m->file_path ?? null)
-                                    <a href="{{ route('lms.file.materi', $m) }}"
-                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-sm text-slate-700 transition">
-                                        <i class="bi bi-file-earmark-arrow-down text-blue-600"></i>
-                                        <span class="font-medium">{{ basename($m->file_path) }}</span>
+                                    <a href="{{ route('lms.file.materi', $m) }}" target="_blank" rel="noopener"
+                                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs font-semibold">
+                                        <i class="bi bi-download"></i><span>Buka / Unduh</span>
                                     </a>
                                 @endif
                                 @if ($m->link_url ?? null)
                                     <a href="{{ $m->link_url }}" target="_blank" rel="noopener"
                                         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-sm text-slate-700 transition">
                                         <i class="bi bi-box-arrow-up-right text-rose-500"></i>
-                                        <span class="font-medium truncate max-w-[16rem]">{{ \Illuminate\Support\Str::limit(preg_replace('#^https?://#', '', $m->link_url), 40) }}</span>
+                                        <span
+                                            class="font-medium truncate max-w-[16rem]">{{ \Illuminate\Support\Str::limit(preg_replace('#^https?://#', '', $m->link_url), 40) }}</span>
                                     </a>
                                 @endif
                             </div>
@@ -240,14 +261,18 @@
                             {{-- Ubah tautan (PUT lms.guru.materi.link) --}}
                             @if (Route::has('lms.guru.materi.link'))
                                 <details class="text-sm">
-                                    <summary class="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold list-none inline-flex items-center gap-1">
+                                    <summary
+                                        class="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold list-none inline-flex items-center gap-1">
                                         <i class="bi bi-pencil"></i> Ubah tautan
                                     </summary>
-                                    <form method="POST" action="{{ route('lms.guru.materi.link', $m) }}" class="mt-2 flex gap-2 max-w-xl">
+                                    <form method="POST" action="{{ route('lms.guru.materi.link', $m) }}"
+                                        class="mt-2 flex gap-2 max-w-xl">
                                         @csrf @method('PUT')
-                                        <input type="url" name="link_url" value="{{ $m->link_url }}" placeholder="https://..."
+                                        <input type="url" name="link_url" value="{{ $m->link_url }}"
+                                            placeholder="https://..."
                                             class="flex-1 h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                                        <button class="px-3 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">Simpan</button>
+                                        <button
+                                            class="px-3 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">Simpan</button>
                                     </form>
                                 </details>
                             @endif
@@ -275,7 +300,8 @@
                             <select name="mode_akses" onchange="aksesBerubah(this)"
                                 class="bg-transparent text-sm font-semibold text-slate-700 px-1 py-1 focus:outline-none cursor-pointer">
                                 @foreach (['bebas' => 'Bebas', 'berurutan' => 'Berurutan', 'manual' => 'Dibuka Guru', 'tanggal' => 'Terjadwal'] as $val => $lbl)
-                                    <option value="{{ $val }}" @selected($mode === $val)>{{ $lbl }}</option>
+                                    <option value="{{ $val }}" @selected($mode === $val)>{{ $lbl }}
+                                    </option>
                                 @endforeach
                             </select>
                             <input type="datetime-local" name="buka_pada"
@@ -299,7 +325,8 @@
                 </div>
             </div>
         @empty
-            <div class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center text-slate-400 text-sm">
+            <div
+                class="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center text-slate-400 text-sm">
                 Belum ada materi untuk kelas ini. Klik "Tambah Materi Pembelajaran Baru" di atas.
             </div>
         @endforelse

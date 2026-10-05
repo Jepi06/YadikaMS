@@ -1,7 +1,4 @@
-{{-- resources/views/lms/guru/modul-ajar.blade.php
-     Variabel dari controller:
-       $pengampuMapel  → PengampuMapel (hasil route model binding)
-       $modulAjar      → koleksi ModulAjar milik pengampuMapel ini (nama alternatif juga dikenali, lihat @php) --}}
+
 @extends('lms.layouts.app')
 
 @section('title', 'Modul Ajar - LMS Yadika')

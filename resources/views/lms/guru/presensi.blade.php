@@ -1,12 +1,4 @@
-{{-- resources/views/lms/guru/presensi.blade.php
-     Variabel dari PresensiController@index:
-       $pengampuMapel → PengampuMapel (relasi mataPelajaran & kelas.siswa sudah di-load)
-       $tanggal       → string Y-m-d tanggal yang dilihat
-       $isHariIni     → bool
-       $sesi          → SesiPresensi hari ini (atau null)
-       $presensiSiswa → koleksi PresensiLms tanggal itu, sudah keyBy siswa_id
-       $scanUrl       → URL scan untuk token QR saat ini (atau null)
-       $tidakHadir    → koleksi presensi non-Hadir --}}
+
 @extends('lms.layouts.app')
 
 @section('title', 'Presensi - LMS Yadika')
@@ -306,7 +298,7 @@
                                     $row = $presensiMap[$s->id] ?? null;
                                     $st = $statusSiswa($s);
                                     $src = strtolower((string) ($row->sumber ?? ($row->metode ?? '')));
-                                    $viaQr = str_contains($src, 'qr') || str_contains($src, 'scan');
+                                    $viaQr = str_contains($src, 'qr') || str_contains($src, 'scan') || str_contains($src, 'barcode');
                                 @endphp
                                 <tr class="roster-row hover:bg-slate-50 transition-colors {{ $rowCls[$st] }}">
                                     <td class="py-3 px-3.5">
@@ -369,6 +361,11 @@
 @endsection
 
 @push('scripts')
+    @if ($isToday && $aktif)
+        {{-- Pakai file lokal yang sama dengan versi lama yang sudah terbukti jalan --}}
+        <script src="{{ asset('js/qrcode.min.js') }}"></script>
+        <style>#qrBox img, #qrBox canvas { max-width: 100%; height: auto; margin: 0 auto; }</style>
+    @endif
     <script>
         const TOTAL_SISWA = {{ $totalSiswa }};
         const KELAS_ROW = { Hadir: '', Izin: 'bg-blue-50/60', Sakit: 'bg-amber-50/70', Alpa: 'bg-rose-50/70' };
@@ -411,15 +408,14 @@
 
         @if ($isToday && $aktif)
         // ── QR dinamis ─────────────────────────────────────────────
-        // Endpoint qr() mengembalikan JSON {aktif, url, sisa}; QR digambar di browser sebagai SVG.
-        // Path relatif (absolute=false) supaya selalu satu origin dengan halaman yang dibuka,
-        // apa pun isi APP_URL (localhost / IP LAN / ngrok / domain).
+        // Endpoint qr() mengembalikan JSON {aktif, url, sisa}; QR digambar di browser (qrcodejs).
+        // Path relatif (absolute=false) supaya selalu satu origin dengan halaman yang dibuka.
         const QR_ENDPOINT = @json(route('lms.guru.presensi.qr', $pengampuMapel, false));
         const qrBox = document.getElementById('qrBox');
         const qrError = document.getElementById('qrError');
         const teks = document.getElementById('countdownText');
         const bar = document.getElementById('countdownBar');
-        let durasi = 30, sisa = durasi, memuat = false;
+        let durasi = 30, sisa = durasi, memuat = false, qr = null;
 
         function tampilkanError(pesan) {
             if (!qrError) return;
@@ -428,24 +424,21 @@
         }
 
         function gambarQr(url) {
-            if (typeof qrcode === 'undefined') {
-                tampilkanError('Library QR gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.');
+            if (typeof QRCode === 'undefined') {
+                tampilkanError('Library QR gagal dimuat (cek file public/js/qrcode.min.js). Coba refresh halaman.');
                 return;
             }
-            if (!url) {
-                tampilkanError('URL QR kosong.');
-                return;
-            }
+            if (!url) { tampilkanError('URL QR kosong.'); return; }
             try {
-                const q = qrcode(0, 'M');   // 0 = ukuran otomatis, M = koreksi error sedang
-                q.addData(url);
-                q.make();
-                qrBox.innerHTML = q.createSvgTag({ scalable: true, margin: 0 });
-                const svg = qrBox.querySelector('svg');
-                if (svg) {
-                    svg.style.width = '100%';
-                    svg.style.height = 'auto';
-                    svg.style.display = 'block';
+                if (!qr) {
+                    qr = new QRCode(qrBox, {
+                        text: url,
+                        width: 220, height: 220,
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } else {
+                    qr.clear();
+                    qr.makeCode(url);
                 }
                 tampilkanError('');
             } catch (e) {
@@ -475,65 +468,22 @@
                 durasi = Math.max(durasi, sisa);
                 tampilkanSisa();
             } catch (e) {
-                tampilkanError('Gagal memuat QR terbaru, mencoba lagi...');
                 sisa = 5; // gagal jaringan: coba lagi sebentar lagi
             } finally {
                 memuat = false;
             }
         }
 
-        // ── Pemuat library QR (lokal dulu, lalu CDN sebagai cadangan) ──
-        // Path diawali "/" (bukan asset()) supaya tidak terpengaruh APP_URL / http-vs-https di balik proxy.
-        const SUMBER_QR = [
-            '/vendor/qrcode.js',
-            'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js'
-        ];
+        // QR awal dari server, langsung tampil tanpa menunggu fetch pertama
+        gambarQr(@json($scanUrl ?? ''));
 
-        function muatScript(src) {
-            return new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = src;
-                s.onload = () => (typeof qrcode === 'function'
-                    ? resolve()
-                    : reject(new Error('file terbaca tapi isinya bukan library QR')));
-                s.onerror = () => reject(new Error('tidak bisa dimuat'));
-                document.head.appendChild(s);
-            });
-        }
+        setInterval(() => {
+            sisa--;
+            if (sisa <= 0) { segarkanQr(); }
+            tampilkanSisa();
+        }, 1000);
 
-        async function muatLibraryQr() {
-            const gagal = [];
-            for (const src of SUMBER_QR) {
-                try {
-                    await muatScript(src);
-                    return true;
-                } catch (e) {
-                    let info = e.message;
-                    try {
-                        const r = await fetch(src, { cache: 'no-store' });
-                        info += ' [HTTP ' + r.status + ', ' + (r.headers.get('content-type') || '?') + ']';
-                    } catch (_) { info += ' [fetch gagal]'; }
-                    gagal.push(src + ' → ' + info);
-                }
-            }
-            tampilkanError('Library QR gagal dimuat:\n' + gagal.join('\n'));
-            return false;
-        }
-
-        muatLibraryQr().then(ok => {
-            if (!ok) return;
-
-            // Gambar QR awal dari server (supaya langsung tampil sebelum fetch pertama selesai)
-            gambarQr(@json($scanUrl ?? ''));
-
-            setInterval(() => {
-                sisa--;
-                if (sisa <= 0) { segarkanQr(); }
-                tampilkanSisa();
-            }, 1000);
-
-            segarkanQr(); // sinkronkan hitung mundur dengan server saat halaman dibuka
-        });
+        segarkanQr(); // sinkronkan hitung mundur dengan server saat halaman dibuka
         @endif
     </script>
 @endpush

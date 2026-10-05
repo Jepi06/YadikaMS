@@ -10,9 +10,62 @@ use App\Models\Lms\SesiPresensi;
 use App\Support\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class MonitoringPresensiController extends Controller
 {
+    /** Boleh membuka presensi sekian menit sebelum jam mulai dan tetap dihitung untuk jadwal itu. */
+    private const TOLERANSI_MENIT = 15;
+
+    /**
+     * Tentukan sesi presensi hari ini "milik" jadwal yang mana.
+     *
+     * Sesi hanya ada 1 per pengampu per hari, jadi tanpa pemetaan ini semua jadwal
+     * kelas yang sama ikut dianggap "dibuka". Aturan:
+     *  1. Jadwal yang rentang jamnya (dikurangi toleransi) mencakup waktu dibuka_at.
+     *  2. Kalau dibuka di luar semua jam: jadwal berikutnya yang belum selesai,
+     *     atau jadwal terakhir kalau semuanya sudah lewat.
+     *
+     * @return int|null id jadwal pemilik sesi, null jika tidak ada sesi / jadwal.
+     */
+    private function jadwalPemilikSesi(?SesiPresensi $sesi, Collection $slots, string $hariIni): ?int
+    {
+        if (! $sesi || ! $sesi->dibuka_at || $slots->isEmpty()) {
+            return null;
+        }
+
+        $dibuka = Carbon::parse($sesi->dibuka_at);
+
+        foreach ($slots as $j) {
+            $mulai   = Carbon::parse("{$hariIni} {$j->jam_mulai}")->subMinutes(self::TOLERANSI_MENIT);
+            $selesai = Carbon::parse("{$hariIni} {$j->jam_selesai}");
+
+            if ($dibuka->gte($mulai) && $dibuka->lt($selesai)) {
+                return $j->id;
+            }
+        }
+
+        $berikut = $slots->first(
+            fn($j) => $dibuka->lt(Carbon::parse("{$hariIni} {$j->jam_selesai}"))
+        );
+
+        return ($berikut ?? $slots->last())->id;
+    }
+
+    /** Status 1 jadwal: dibuka | menunggu | belum_buka | terlewat. */
+    private function statusJadwal($j, ?int $idPemilikSesi, string $hariIni): string
+    {
+        $mulai   = Carbon::parse("{$hariIni} {$j->jam_mulai}");
+        $selesai = Carbon::parse("{$hariIni} {$j->jam_selesai}");
+
+        return match (true) {
+            $idPemilikSesi !== null && $idPemilikSesi === $j->id => 'dibuka',
+            now()->lt($mulai)                                    => 'menunggu',
+            now()->lt($selesai)                                  => 'belum_buka',
+            default                                              => 'terlewat',
+        };
+    }
+
     public function index()
     {
         $hariIni = now()->toDateString();
@@ -26,6 +79,12 @@ class MonitoringPresensiController extends Controller
             ->selectRaw('pengampu_mapel_id, COUNT(*) as total')
             ->groupBy('pengampu_mapel_id')
             ->pluck('total', 'pengampu_mapel_id');
+
+        // Semua slot jadwal hari ini per pengampu (dipakai untuk memetakan sesi -> jadwal)
+        $jadwalMap = JadwalPelajaran::where('hari', now()->dayOfWeekIso)
+            ->orderBy('jam_mulai')
+            ->get()
+            ->groupBy('pengampu_mapel_id');
 
         // ── A. Jadwal hari ini vs realisasi presensi ───────────
         $urutan = ['belum_buka' => 0, 'terlewat' => 1, 'dibuka' => 2, 'menunggu' => 3];
@@ -41,18 +100,13 @@ class MonitoringPresensiController extends Controller
                 ->where('semester', TahunAjaran::semesterSekarang()))
             ->orderBy('jam_mulai')
             ->get()
-            ->map(function ($j) use ($hariIni, $sesiHariIni, $sesiAktif, $sudahPresensi) {
-                $p       = $j->pengampuMapel;
-                $mulai   = Carbon::parse("{$hariIni} {$j->jam_mulai}");
-                $selesai = Carbon::parse("{$hariIni} {$j->jam_selesai}");
-                $sesi    = $sesiHariIni->get($p->id);
+            ->map(function ($j) use ($hariIni, $sesiHariIni, $sesiAktif, $sudahPresensi, $jadwalMap) {
+                $p    = $j->pengampuMapel;
+                $sesi = $sesiHariIni->get($p->id);
 
-                $status = match (true) {
-                    (bool) $sesi        => 'dibuka',
-                    now()->lt($mulai)   => 'menunggu',
-                    now()->lt($selesai) => 'belum_buka',
-                    default             => 'terlewat',
-                };
+                $idPemilik = $this->jadwalPemilikSesi($sesi, $jadwalMap->get($p->id, collect()), $hariIni);
+                $status    = $this->statusJadwal($j, $idPemilik, $hariIni);
+                $dibuka    = $status === 'dibuka';
 
                 return [
                     'pengampu_id' => $p->id,
@@ -63,9 +117,10 @@ class MonitoringPresensiController extends Controller
                     'mulai'       => substr($j->jam_mulai, 0, 5),
                     'selesai'     => substr($j->jam_selesai, 0, 5),
                     'status'      => $status,
-                    'sesi_aktif'  => $sesiAktif->has($p->id),
-                    'dibuka_at'   => $sesi?->dibuka_at,
-                    'sudah'       => $sudahPresensi[$p->id] ?? 0,
+                    'sesi_aktif'  => $dibuka && $sesiAktif->has($p->id),
+                    'dibuka_at'   => $dibuka ? $sesi?->dibuka_at : null,
+                    // hitungan siswa hanya bermakna untuk jadwal yang sesinya benar-benar dibuka
+                    'sudah'       => $dibuka ? ($sudahPresensi[$p->id] ?? 0) : null,
                     'total'       => $p->kelas->siswa_count ?? 0,
                 ];
             })
@@ -75,31 +130,23 @@ class MonitoringPresensiController extends Controller
         $ringkas = $jadwalHariIni->countBy('status');
 
         // ── B. Status per guru (dengan peringatan jadwal) ───────
-        $jadwalMap = JadwalPelajaran::where('hari', now()->dayOfWeekIso)
-            ->get()->groupBy('pengampu_mapel_id');
-
         $pengampu = PengampuMapel::with(['guru', 'mataPelajaran', 'kelas' => fn($q) => $q->withCount('siswa')])->get();
 
         $daftarGuru = $pengampu->groupBy('guru_id')
             ->map(function ($items) use ($sesiAktif, $sesiHariIni, $sudahPresensi, $jadwalMap, $hariIni) {
 
                 $semuaKelas = $items->map(function ($p) use ($sesiAktif, $sesiHariIni, $sudahPresensi, $jadwalMap, $hariIni) {
-                    $sesi = $sesiAktif->get($p->id);
+                    $sesiA = $sesiAktif->get($p->id);
+
+                    $slots     = $jadwalMap->get($p->id, collect());
+                    $idPemilik = $this->jadwalPemilikSesi($sesiHariIni->get($p->id), $slots, $hariIni);
 
                     $jadwalStatus = null;
                     $jadwalJam = null;
                     $rank = ['belum_buka' => 0, 'terlewat' => 1, 'dibuka' => 2, 'menunggu' => 3];
 
-                    foreach ($jadwalMap->get($p->id, collect()) as $j) {
-                        $mulai   = Carbon::parse("{$hariIni} {$j->jam_mulai}");
-                        $selesai = Carbon::parse("{$hariIni} {$j->jam_selesai}");
-
-                        $st = match (true) {
-                            $sesiHariIni->has($p->id) => 'dibuka',
-                            now()->lt($mulai)         => 'menunggu',
-                            now()->lt($selesai)       => 'belum_buka',
-                            default                   => 'terlewat',
-                        };
+                    foreach ($slots as $j) {
+                        $st = $this->statusJadwal($j, $idPemilik, $hariIni);
 
                         if ($jadwalStatus === null || $rank[$st] < $rank[$jadwalStatus]) {
                             $jadwalStatus = $st;
@@ -111,8 +158,8 @@ class MonitoringPresensiController extends Controller
                         'pengampu_id'   => $p->id,
                         'kelas'         => $p->kelas->nama_kelas ?? '-',
                         'mapel'         => $p->mataPelajaran->nama ?? '-',
-                        'aktif'         => (bool) $sesi,
-                        'ditutup_at'    => $sesi?->ditutup_at,
+                        'aktif'         => (bool) $sesiA,
+                        'ditutup_at'    => $sesiA?->ditutup_at,
                         'sudah'         => $sudahPresensi[$p->id] ?? 0,
                         'total'         => $p->kelas->siswa_count ?? 0,
                         'jadwal_status' => $jadwalStatus,
