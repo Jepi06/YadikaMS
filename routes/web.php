@@ -451,6 +451,8 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
     Route::get('/guru/import', [SuperAdminGuruController::class, 'importForm'])->name('guru.import.form');
     Route::post('/guru/import', [SuperAdminGuruController::class, 'importProcess'])->name('guru.import.process');
     Route::get('/guru/import/template', [SuperAdminGuruController::class, 'downloadTemplate'])->name('guru.import.template');
+    Route::put('guru/{guru}/kepala-jurusan', [SuperAdminGuruController::class, 'updateKepalaJurusan'])
+        ->name('guru.kepala-jurusan.update');
     Route::prefix('kenaikan-kelas')->name('kenaikan-kelas.')->group(function () {
         Route::get('/', [KenaikanKelasController::class, 'index'])->name('index');
         Route::get('/template', [KenaikanKelasController::class, 'downloadTemplate'])->name('template');

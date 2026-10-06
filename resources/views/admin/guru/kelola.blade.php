@@ -21,10 +21,11 @@
     @endif
 
     <div class="row g-4">
-        {{-- Penugasan Mengajar --}}
+        {{-- ============ KOLOM KIRI: Penugasan Mengajar ============ --}}
         <div class="col-lg-7">
             <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white fw-semibold"><i class="bi bi-plus-circle me-1"></i> Tambah Penugasan Mengajar</div>
+                <div class="card-header bg-white fw-semibold"><i class="bi bi-plus-circle me-1"></i> Tambah Penugasan
+                    Mengajar</div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('admin.guru.mengajar.store', $guru) }}">
                         @csrf
@@ -43,13 +44,16 @@
                                 <select name="kelas_id" class="form-select" required>
                                     <option value="">Pilih kelas</option>
                                     @foreach ($kelasList as $k)
-                                        <option value="{{ $k->id }}">{{ $k->nama_kelas }} ({{ $k->jurusan->nama ?? '-' }})</option>
+                                        <option value="{{ $k->id }}">{{ $k->nama_kelas }}
+                                            ({{ $k->jurusan->nama ?? '-' }})
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small">Tahun Ajaran</label>
-                                <input type="text" name="tahun_ajaran" class="form-control" value="{{ $tahunAjaran }}" required>
+                                <input type="text" name="tahun_ajaran" class="form-control" value="{{ $tahunAjaran }}"
+                                    required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small">Semester</label>
@@ -86,7 +90,7 @@
                                     <td class="small text-muted">{{ $p->tahun_ajaran }} — {{ $p->semester }}</td>
                                     <td class="text-end">
                                         <form method="POST" action="{{ route('admin.guru.mengajar.destroy', $p) }}"
-                                              onsubmit="return confirm('Hapus penugasan ini? Materi/tugas/nilai yang sudah ada di kelas ini ikut terhapus.')">
+                                            onsubmit="return confirm('Hapus penugasan ini? Materi/tugas/nilai yang sudah ada di kelas ini ikut terhapus.')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -96,7 +100,10 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="4" class="text-center text-muted py-4">Belum ada penugasan mengajar.</td></tr>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">Belum ada penugasan mengajar.
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -104,8 +111,10 @@
             </div>
         </div>
 
-        {{-- Wali Kelas --}}
+        {{-- ============ KOLOM KANAN: Wali Kelas + Kepala Jurusan ============ --}}
         <div class="col-lg-5">
+
+            {{-- Wali Kelas --}}
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white fw-semibold"><i class="bi bi-clipboard-data me-1"></i> Wali Kelas</div>
                 <div class="card-body">
@@ -115,7 +124,7 @@
                         <div class="alert alert-success d-flex justify-content-between align-items-center">
                             <span>Wali kelas <strong>{{ $waliKelasSaatIni->kelas->nama_kelas ?? '-' }}</strong></span>
                             <form method="POST" action="{{ route('admin.guru.wali-kelas.destroy', $waliKelasSaatIni) }}"
-                                  onsubmit="return confirm('Cabut status wali kelas ini?')">
+                                onsubmit="return confirm('Cabut status wali kelas ini?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Cabut</button>
@@ -135,18 +144,70 @@
                         <select name="kelas_id" class="form-select mb-2" required>
                             <option value="">Pilih kelas</option>
                             @foreach ($kelasList as $k)
-                                <option value="{{ $k->id }}">{{ $k->nama_kelas }} ({{ $k->jurusan->nama ?? '-' }})</option>
+                                <option value="{{ $k->id }}">{{ $k->nama_kelas }} ({{ $k->jurusan->nama ?? '-' }})
+                                </option>
                             @endforeach
                         </select>
                         <button type="submit" class="btn btn-dark w-100">
                             <i class="bi bi-save me-1"></i> Simpan
                         </button>
                         <p class="small text-muted mt-2 mb-0">
-                            <i class="bi bi-info-circle"></i> Kalau kelas yang dipilih sudah punya wali kelas lain di periode ini, otomatis digantikan guru ini.
+                            <i class="bi bi-info-circle"></i> Kalau kelas yang dipilih sudah punya wali kelas lain di
+                            periode ini, otomatis digantikan guru ini.
                         </p>
                     </form>
                 </div>
             </div>
-        </div>
-    </div>
+
+            {{-- Kepala Jurusan --}}
+            {{-- Kepala Jurusan --}}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-diagram-3 me-1"></i> Kepala Jurusan
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ route('admin.guru.kepala-jurusan.update', $guru) }}">
+                        @csrf
+                        @method('PUT')
+
+                        <p class="small text-muted">
+                            Centang jurusan yang dipimpin guru ini. Satu jurusan hanya boleh punya satu kepala.
+                        </p>
+
+                        @foreach ($jurusanList as $j)
+                            @php
+                                $dipimpinGuruIni = (int) $j->kepala_jurusan_id === (int) $guru->id;
+                                $dipimpinLain = $j->kepala_jurusan_id && !$dipimpinGuruIni;
+                            @endphp
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="jurusan_ids[]"
+                                    value="{{ $j->id }}" id="jurusan-{{ $j->id }}"
+                                    @checked($dipimpinGuruIni) @disabled($dipimpinLain)>
+                                <label class="form-check-label {{ $dipimpinLain ? 'text-muted' : '' }}"
+                                    for="jurusan-{{ $j->id }}">
+                                    {{ $j->nama }}
+                                    <span class="badge bg-secondary ms-1">{{ $j->kode }}</span>
+                                    @if ($dipimpinLain)
+                                        <div class="small">
+                                            <i class="bi bi-lock-fill"></i>
+                                            Sudah dipimpin {{ $j->kepalaJurusan->name ?? '-' }}
+                                        </div>
+                                    @endif
+                                </label>
+                            </div>
+                        @endforeach
+
+                        <button type="submit" class="btn btn-dark w-100 mt-2">
+                            <i class="bi bi-save me-1"></i> Simpan
+                        </button>
+                        <p class="small text-muted mt-2 mb-0">
+                            <i class="bi bi-info-circle"></i> Guru otomatis mendapat role PKL kepala jurusan. Untuk
+                            mengganti kepala, lepas dulu centang dari guru yang sekarang menjabat.
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+        </div>{{-- /col-lg-5 --}}
+    </div>{{-- /row --}}
 @endsection

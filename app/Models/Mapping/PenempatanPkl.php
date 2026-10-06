@@ -2,6 +2,7 @@
 
 namespace App\Models\Mapping;
 
+use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
