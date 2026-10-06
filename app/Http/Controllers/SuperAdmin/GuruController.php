@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Jurusan;
 use App\Models\Kelas;
 use App\Models\Lms\MataPelajaran;
 use App\Models\Lms\PengampuMapel;
 use App\Models\Lms\WaliKelasPeriode;
-use App\Models\Mapping\GuruPembimbing; // ← BARU
+use App\Models\Mapping\GuruPembimbing;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\SinkronRolePkl;
 use App\Support\TahunAjaran;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -23,6 +25,10 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class GuruController extends Controller
 {
+    /** Sesuaikan dengan data tabel modules/roles Anda. */
+    private const KODE_MODUL_PKL = 'pkl';
+    private const KODE_ROLE_KAJUR = 'kepala_jurusan';
+    private const KODE_ROLE_KESISWAAN = 'kesiswaan';
     /** Daftar semua guru LMS + jumlah penugasan mengajar periode aktif. */
     public function index(Request $request)
     {
@@ -31,7 +37,7 @@ class GuruController extends Controller
         $semester = TahunAjaran::semesterSekarang();
 
         $guru = User::whereHas('roles', fn($r) => $r->where('kode', 'guru')
-                ->whereHas('module', fn($m) => $m->where('kode', 'lms')))
+            ->whereHas('module', fn($m) => $m->where('kode', 'lms')))
             ->when($q, fn($query) => $query->where(fn($sub) => $sub
                 ->where('name', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%")))
@@ -82,7 +88,7 @@ class GuruController extends Controller
             $guru->roles()->attach($roleGuruLmsId, ['assigned_at' => now()]);
         }
 
-        $this->syncGuruPembimbing($guru); // ← BARU
+        $this->syncGuruPembimbing($guru);
 
         return redirect()->route('admin.guru.kelola', $guru)
             ->with('status', "Guru {$guru->name} dibuat. Email login: {$guru->email}, password default: password. Lanjutkan atur penugasan mengajar di bawah.");
@@ -103,7 +109,7 @@ class GuruController extends Controller
 
         $guru->update($data);
 
-        $this->syncGuruPembimbing($guru); // ← BARU
+        $this->syncGuruPembimbing($guru);
 
         return redirect()->route('admin.guru.index')->with('status', 'Data guru diperbarui.');
     }
@@ -132,7 +138,7 @@ class GuruController extends Controller
         return back()->with('status', "Password {$guru->name} berhasil direset ke default: \"password\".");
     }
 
-    /** Halaman kelola 1 guru: penugasan mengajar + wali kelas. */
+    /** Halaman kelola 1 guru: penugasan mengajar + wali kelas + kepala jurusan. */
     public function kelola(User $guru)
     {
         $tahunAjaran = TahunAjaran::sekarang();
@@ -152,9 +158,25 @@ class GuruController extends Controller
             ->where('semester', $semester)
             ->first();
 
+        $jurusanList = Jurusan::with('kepalaJurusan')->orderBy('nama')->get();
+        // Guru ini sudah jadi kesiswaan? + daftar kesiswaan lain (untuk info)
+        $adalahKesiswaan = $guru->hasPklRole(self::KODE_ROLE_KESISWAAN);
+
+        $daftarKesiswaan = User::whereHas('roles', fn($r) => $r->where('kode', self::KODE_ROLE_KESISWAAN)
+            ->whereHas('module', fn($m) => $m->where('kode', self::KODE_MODUL_PKL)))
+            ->orderBy('name')
+            ->get(['id', 'name']);
         return view('admin.guru.kelola', compact(
-            'guru', 'pengampuMapel', 'mataPelajaranList', 'kelasList',
-            'waliKelasSaatIni', 'tahunAjaran', 'semester'
+            'guru',
+            'pengampuMapel',
+            'mataPelajaranList',
+            'kelasList',
+            'waliKelasSaatIni',
+            'tahunAjaran',
+            'semester',
+            'jurusanList',
+            'adalahKesiswaan',   // ← BARU
+            'daftarKesiswaan'    // ← BARU
         ));
     }
 
@@ -176,6 +198,9 @@ class GuruController extends Controller
 
         PengampuMapel::create($data + ['guru_id' => $guru->id]);
 
+        // Kalau mapelnya BK → otomatis dapat role PKL Guru BK
+        SinkronRolePkl::untuk($guru);
+
         return back()->with('status', 'Penugasan mengajar ditambahkan.');
     }
 
@@ -183,6 +208,9 @@ class GuruController extends Controller
     {
         $guruId = $pengampuMapel->guru_id;
         $pengampuMapel->delete();
+
+        // Cabut role Guru BK kalau sudah tidak mengajar BK
+        SinkronRolePkl::untuk($guruId, true);
 
         return redirect()->route('admin.guru.kelola', $guruId)->with('status', 'Penugasan mengajar dihapus.');
     }
@@ -196,10 +224,22 @@ class GuruController extends Controller
             'semester' => ['required', 'in:Ganjil,Genap'],
         ]);
 
+        // Wali kelas lama untuk kelas ini (akan tergeser)
+        $waliLama = WaliKelasPeriode::where('kelas_id', $data['kelas_id'])
+            ->where('tahun_ajaran', $data['tahun_ajaran'])
+            ->where('semester', $data['semester'])
+            ->value('user_id');
+
         WaliKelasPeriode::updateOrCreate(
             ['kelas_id' => $data['kelas_id'], 'tahun_ajaran' => $data['tahun_ajaran'], 'semester' => $data['semester']],
             ['user_id' => $guru->id]
         );
+
+        SinkronRolePkl::untuk($guru);
+
+        if ($waliLama && (int) $waliLama !== (int) $guru->id) {
+            SinkronRolePkl::untuk($waliLama, true);
+        }
 
         return back()->with('status', 'Wali kelas berhasil diatur.');
     }
@@ -209,9 +249,92 @@ class GuruController extends Controller
         $guruId = $waliKelasPeriode->user_id;
         $waliKelasPeriode->delete();
 
+        SinkronRolePkl::untuk($guruId, true);
+
         return redirect()->route('admin.guru.kelola', $guruId)->with('status', 'Penugasan wali kelas dicabut.');
     }
 
+    /** Atur jurusan yang dipimpin guru ini (checkbox). */
+    /** Atur jurusan yang dipimpin guru ini (checkbox). Satu jurusan = satu kepala. */
+    public function updateKepalaJurusan(Request $request, User $guru)
+    {
+        $data = $request->validate([
+            'jurusan_ids' => ['nullable', 'array'],
+            'jurusan_ids.*' => ['exists:jurusan,id'],
+        ]);
+
+        $dipilih = collect($data['jurusan_ids'] ?? [])->map(fn($id) => (int) $id)->all();
+
+        // Tolak kalau ada jurusan yang sudah dipimpin guru lain
+        $dipegangLain = Jurusan::with('kepalaJurusan')
+            ->whereIn('id', $dipilih)
+            ->whereNotNull('kepala_jurusan_id')
+            ->where('kepala_jurusan_id', '!=', $guru->id)
+            ->get();
+
+        if ($dipegangLain->isNotEmpty()) {
+            $daftar = $dipegangLain->map(function ($j) {
+                $nama = $j->kepalaJurusan->name ?? '-';
+                return "{$j->nama} (dipimpin {$nama})";
+            })->implode(', ');
+
+            return back()->withErrors([
+                'jurusan_ids' => "Jurusan sudah punya kepala: {$daftar}. Lepas dulu dari guru tersebut sebelum menunjuk guru lain.",
+            ]);
+        }
+
+        // Lepas jurusan yang sebelumnya dipimpin guru ini tapi sekarang tidak dicentang
+        Jurusan::where('kepala_jurusan_id', $guru->id)
+            ->whereNotIn('id', $dipilih)
+            ->update(['kepala_jurusan_id' => null]);
+
+        // Jadikan guru ini kepala jurusan yang dicentang
+        Jurusan::whereIn('id', $dipilih)->update(['kepala_jurusan_id' => $guru->id]);
+
+        // Sinkronkan role PKL 'kepala_jurusan'
+        $roleId = Role::whereHas('module', fn($m) => $m->where('kode', self::KODE_MODUL_PKL))
+            ->where('kode', self::KODE_ROLE_KAJUR)
+            ->value('id');
+
+        if ($roleId) {
+            if (Jurusan::where('kepala_jurusan_id', $guru->id)->exists()) {
+                if (! $guru->roles()->where('role_id', $roleId)->exists()) {
+                    $guru->roles()->attach($roleId, ['assigned_at' => now()]);
+                }
+            } else {
+                $guru->roles()->detach($roleId);
+            }
+        }
+
+        return back()->with('status', 'Jurusan yang dipimpin berhasil diperbarui.');
+    }
+    /** Jadikan / cabut guru ini sebagai guru kesiswaan (boleh banyak orang). */
+    public function updateKesiswaan(Request $request, User $guru)
+    {
+        $aktif = $request->boolean('kesiswaan');
+
+        $roleId = Role::whereHas('module', fn($m) => $m->where('kode', self::KODE_MODUL_PKL))
+            ->where('kode', self::KODE_ROLE_KESISWAAN)
+            ->value('id');
+
+        if (! $roleId) {
+            return back()->withErrors([
+                'kesiswaan' => "Role PKL '" . self::KODE_ROLE_KESISWAAN . "' tidak ditemukan di tabel roles.",
+            ]);
+        }
+
+        $sudahPunya = $guru->roles()->where('role_id', $roleId)->exists();
+
+        if ($aktif && ! $sudahPunya) {
+            $guru->roles()->attach($roleId, ['assigned_at' => now()]);
+        } elseif (! $aktif && $sudahPunya) {
+            $guru->roles()->detach($roleId);
+        }
+
+        return back()->with('status', $aktif
+            ? "{$guru->name} sekarang menjadi guru kesiswaan."
+            : "Status guru kesiswaan {$guru->name} dicabut.");
+    }
     public function importForm()
     {
         return view('admin.guru.import');
@@ -306,7 +429,7 @@ class GuruController extends Controller
                     $guru->roles()->attach($roleGuruLmsId, ['assigned_at' => now()]);
                 }
 
-                $this->syncGuruPembimbing($guru); // ← BARU
+                $this->syncGuruPembimbing($guru);
 
                 $userCache[$cacheKey] = $guru;
             }
@@ -330,6 +453,9 @@ class GuruController extends Controller
                         'tahun_ajaran' => $tahunAjaran,
                         'semester' => $semester,
                     ]);
+
+                    SinkronRolePkl::untuk($guru); // otomatis role Guru BK kalau mapel BK
+
                     $hasil[] = "{$guru->name} mengajar {$mapel->nama} di {$kelas->nama_kelas}";
                 }
             }
@@ -345,6 +471,9 @@ class GuruController extends Controller
                         ['kelas_id' => $kelasWali->id, 'tahun_ajaran' => $tahunAjaran, 'semester' => $semester],
                         ['user_id' => $guru->id]
                     );
+
+                    SinkronRolePkl::untuk($guru); // otomatis role Wali Kelas
+
                     $hasil[] = "{$guru->name} jadi wali kelas {$kelasWali->nama_kelas}";
                 }
             }
@@ -354,7 +483,7 @@ class GuruController extends Controller
     }
 
     /**
-     * ← BARU: buat/tautkan baris guru_pembimbing untuk 1 user guru.
+     * Buat/tautkan baris guru_pembimbing untuk 1 user guru.
      * Urutan cari: (1) sudah tertaut ke user ini, (2) belum tertaut
      * tapi emailnya sama. Kalau tidak ada, buat baru.
      */
@@ -366,14 +495,14 @@ class GuruController extends Controller
         if ($row) {
             $row->update([
                 'user_id' => $guru->id,
-                'nama'    => $guru->name,
-                'email'   => $guru->email,
+                'nama' => $guru->name,
+                'email' => $guru->email,
             ]);
         } else {
             GuruPembimbing::create([
                 'user_id' => $guru->id,
-                'nama'    => $guru->name,
-                'email'   => $guru->email,
+                'nama' => $guru->name,
+                'email' => $guru->email,
             ]);
         }
     }

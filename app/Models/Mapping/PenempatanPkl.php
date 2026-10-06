@@ -2,9 +2,12 @@
 
 namespace App\Models\Mapping;
 
+use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use App\Models\Lms\WaliKelasPeriode;
+use App\Support\TahunAjaran;
 
 class PenempatanPkl extends Model
 {
@@ -156,12 +159,62 @@ class PenempatanPkl extends Model
     {
         return $this->tahapUntukUser($user) !== null;
     }
+    /**
+     * Pengajuan yang sedang menunggu approval dari $user (sesuai tahap & scope-nya).
+     */
+    public static function menungguApproval(User $user)
+    {
+        $peran = [
+            'wali_kelas'     => $user->hasPklRole('wali_kelas'),
+            'guru_bk'        => $user->hasPklRole('guru_bk'),
+            'kesiswaan'      => $user->hasPklRole('kesiswaan'),
+            'kepala_jurusan' => $user->hasPklRole('kepala_jurusan'),
+        ];
 
+        if (! in_array(true, $peran, true)) {
+            return collect();
+        }
+
+        return static::with('siswa.kelas.jurusan')
+            ->where('status', 'diajukan')
+            ->where(function ($q) use ($peran) {
+                if ($peran['wali_kelas']) {
+                    $q->orWhere('status_wali_kelas', 'pending');
+                }
+                if ($peran['guru_bk']) {
+                    $q->orWhere(fn($x) => $x->where('status_wali_kelas', 'approved')
+                        ->where('status_guru_bk', 'pending'));
+                }
+                if ($peran['kesiswaan']) {
+                    $q->orWhere(fn($x) => $x->where('status_guru_bk', 'approved')
+                        ->where('status_kesiswaan', 'pending'));
+                }
+                if ($peran['kepala_jurusan']) {
+                    $q->orWhere(fn($x) => $x->where('status_kesiswaan', 'approved')
+                        ->where('status_kepala_jurusan', 'pending'));
+                }
+            })
+            ->get()
+            ->filter(fn($p) => $p->canApproveBy($user))
+            ->values();
+    }
     private function diampuOlehWaliKelas(User $user): bool
     {
         $this->loadMissing('siswa.kelas');
 
-        return $this->siswa?->kelas?->wali_kelas_id === $user->id;
+        if (! $this->siswa) {
+            return false;
+        }
+
+        if ((int) ($this->siswa->kelas?->wali_kelas_id) === (int) $user->id) {
+            return true;
+        }
+
+        return WaliKelasPeriode::where('user_id', $user->id)
+            ->where('kelas_id', $this->siswa->kelas_id)
+            ->where('tahun_ajaran', TahunAjaran::sekarang())
+            ->where('semester', TahunAjaran::semesterSekarang())
+            ->exists();
     }
 
     private function diampuOlehKepalaJurusan(User $user): bool
@@ -228,7 +281,60 @@ class PenempatanPkl extends Model
 
         return $pending;
     }
+    /**
+     * Info status PKL untuk siswa yang login di LMS (null kalau bukan siswa).
+     */
+    public static function infoSiswaLms(User $user): ?array
+    {
+        if (! $user->isSiswaLms()) {
+            return null;
+        }
 
+        try {
+            // ⚠ SESUAIKAN: cara menemukan data Siswa dari akun LMS ini.
+            $siswa = method_exists($user, 'siswa') ? $user->siswa : null;
+            $siswa ??= Siswa::where('user_id', $user->id)->first();
+
+            if (! $siswa) {
+                return null;
+            }
+
+            $p = static::with('tempatPkl')
+                ->where('siswa_id', $siswa->id)
+                ->latest()
+                ->first();
+
+            $dibuka = PengaturanPkl::pengajuanDibuka();
+            $kelasTarget = PengaturanPkl::kelasTarget($siswa->kelas);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        // Belum mengajukan: notif HANYA kalau admin membuka pengajuan & siswa kelas XII
+        if (! $p && ! ($dibuka && $kelasTarget)) {
+            return null;
+        }
+
+        $state = match (true) {
+            ! $p                       => 'belum',
+            $p->status === 'rejected'  => 'ditolak',
+            $p->status === 'draft'     => 'draft',
+            $p->status === 'approved'  => 'approved',
+            default                    => 'diajukan',
+        };
+
+        $kunciCari = $siswa->nis ?: $siswa->nama;
+        $perluAjukan = in_array($state, ['belum', 'ditolak']);
+
+        return [
+            'state'    => $state,
+            'progress' => $p?->approval_progress ?? 0,
+            'tempat'   => $p?->tempatPkl?->nama_tempat,
+            'url'      => ($perluAjukan && $dibuka)
+                ? route('pkl.pengajuan.create')
+                : route('pkl', ['search' => $kunciCari]),
+        ];
+    }
     public function getCurrentApprovalStageAttribute(): ?string
     {
         return $this->pending_approvers[0] ?? null;

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Mapping;
 
+use App\Models\Kelas;
+use App\Models\Lms\WaliKelasPeriode;
 use App\Models\Mapping\PenempatanPkl;
+use App\Support\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,22 +18,22 @@ class ApprovalController extends Controller
         $query = PenempatanPkl::with(['siswa.kelas.jurusan', 'tempatPkl', 'guruPembimbing']);
 
         /**
-         * PERBAIKAN BESAR: role sekarang many-to-many, jadi satu user bisa
-         * punya lebih dari satu role PKL sekaligus (mis. wali_kelas SEKALIGUS
-         * kepala_jurusan). match() atas satu nilai tunggal tidak cukup lagi —
-         * di bawah ini tiap role yang dimiliki $user menambahkan kondisi
-         * OR-nya sendiri, masing-masing dengan scoping yang sama seperti
-         * PenempatanPkl::tahapUntukUser().
+         * Role many-to-many: satu user bisa punya lebih dari satu role PKL.
+         * Tiap role yang dimiliki menambahkan kondisi OR-nya sendiri, dengan
+         * scoping yang sama seperti PenempatanPkl::tahapUntukUser().
          */
         $query->where(function ($outer) use ($user) {
             $adaCabangCocok = false;
 
             if ($user->hasPklRole('wali_kelas')) {
                 $adaCabangCocok = true;
-                $outer->orWhere(function ($q) use ($user) {
+                // PERBAIKAN: wali kelas dibaca dari WaliKelasPeriode (periode aktif),
+                // bukan hanya kolom kelas.wali_kelas_id yang tidak pernah terisi.
+                $kelasDiwalikan = $this->kelasYangDiwalikan($user);
+                $outer->orWhere(function ($q) use ($kelasDiwalikan) {
                     $q->where('status', 'diajukan')
                         ->where('status_wali_kelas', 'pending')
-                        ->whereHas('siswa.kelas', fn($qq) => $qq->where('wali_kelas_id', $user->id));
+                        ->whereHas('siswa', fn($qq) => $qq->whereIn('kelas_id', $kelasDiwalikan));
                 });
             }
 
@@ -113,9 +116,7 @@ class ApprovalController extends Controller
     private function processApproval(PenempatanPkl $penempatan, $user, string $action, ?string $catatan): void
     {
         /**
-         * PERBAIKAN: dulu $roleMap[$user->role_pkl] — pecah begitu role_pkl
-         * dihapus, dan tidak pernah benar untuk user multi-role. Sekarang
-         * pakai tahapUntukUser() yang sama persis dipakai canApproveBy(),
+         * Pakai tahapUntukUser() yang sama persis dipakai canApproveBy(),
          * supaya kolom yang diupdate selalu sesuai tahap yang benar-benar
          * sedang aktif & jadi hak user ini.
          */
@@ -144,6 +145,24 @@ class ApprovalController extends Controller
         ) {
             $penempatan->update(['status' => 'approved']);
         }
+    }
+
+    /**
+     * Daftar kelas_id yang diwalikan user ini: dari WaliKelasPeriode (periode
+     * aktif) ditambah kolom lama kelas.wali_kelas_id kalau masih terisi.
+     * Aturannya sama dengan PenempatanPkl::diampuOlehWaliKelas().
+     */
+    private function kelasYangDiwalikan($user): array
+    {
+        $dariPeriode = WaliKelasPeriode::where('user_id', $user->id)
+            ->where('tahun_ajaran', TahunAjaran::sekarang())
+            ->where('semester', TahunAjaran::semesterSekarang())
+            ->pluck('kelas_id')
+            ->all();
+
+        $dariKolomLama = Kelas::where('wali_kelas_id', $user->id)->pluck('id')->all();
+
+        return array_values(array_unique(array_merge($dariPeriode, $dariKolomLama)));
     }
 
     /**

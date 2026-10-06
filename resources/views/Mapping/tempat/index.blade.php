@@ -65,7 +65,15 @@
                                 </td>
                                 <td><span class="badge bg-info-subtle text-info">{{ $t->penempatan_pkl_count }}
                                         siswa</span></td>
-                                <td>
+                                <td class="text-nowrap">
+                                    {{-- BARU: detail tempat + arsip MOU --}}
+                                    <a href="{{ route('tempat.show', $t) }}" class="btn btn-sm btn-outline-info"
+                                        title="Detail & Arsip MOU">
+                                        <i class="bi bi-eye"></i>
+                                        @if ($t->mou_count > 0)
+                                            <span class="badge bg-info ms-1">{{ $t->mou_count }}</span>
+                                        @endif
+                                    </a>
                                     <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
                                         data-bs-target="#modalEditTempat{{ $t->id }}"><i
                                             class="bi bi-pencil"></i></button>
@@ -141,7 +149,13 @@
                                                 <button type="button" class="btn-close"
                                                     data-bs-dismiss="modal"></button>
                                             </div>
-                                            <div class="modal-body pt-0">Hapus <strong>{{ $t->nama_tempat }}</strong>?
+                                            <div class="modal-body pt-0">
+                                                Hapus <strong>{{ $t->nama_tempat }}</strong>?
+                                                @if ($t->mou_count > 0)
+                                                    <div class="alert alert-warning small mt-2 mb-0 py-2">
+                                                        {{ $t->mou_count }} arsip MOU tempat ini ikut terhapus.
+                                                    </div>
+                                                @endif
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary btn-sm"

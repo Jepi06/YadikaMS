@@ -3,6 +3,7 @@
 namespace App\Models\Mapping;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Mapping\PenempatanPkl> $penempatanPkl
  * @property-read int|null $penempatan_pkl_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Mapping\MouPkl> $mou
+ * @property-read int|null $mou_count
  * @mixin \Eloquent
  */
 class TempatPkl extends Model
@@ -23,9 +26,23 @@ class TempatPkl extends Model
     protected $table = 'tempat_pkl';
     protected $fillable = ['nama_tempat', 'alamat', 'bidang_usaha', 'nama_kontak', 'no_telp', 'kuota_maksimal'];
 
+    protected static function booted(): void
+    {
+        // Baris mou_pkl ikut terhapus oleh FK cascade; berkas fisiknya dihapus di sini.
+        static::deleting(function (TempatPkl $tempat) {
+            $tempat->mou->each(fn($m) => Storage::disk('local')->delete($m->file_path));
+        });
+    }
+
     public function penempatanPkl()
     {
         return $this->hasMany(PenempatanPkl::class);
+    }
+
+    /** Arsip MOU dengan tempat ini (bisa lebih dari satu, mis. perpanjangan). */
+    public function mou()
+    {
+        return $this->hasMany(MouPkl::class);
     }
 
     /**
@@ -63,7 +80,7 @@ class TempatPkl extends Model
     }
 
     /**
-     * BARU: daftar tempat PKL yang MASIH TERSEDIA (belum penuh),
+     * Daftar tempat PKL yang MASIH TERSEDIA (belum penuh),
      * dipakai di form pengajuan (siswa) & form tambah penempatan (admin)
      * supaya tempat yang sudah full otomatis tersembunyi dari pilihan.
      * kuota_maksimal = null artinya tanpa batas, selalu dianggap tersedia.
