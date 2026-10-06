@@ -10,84 +10,75 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;display=swap"
         rel="stylesheet">
-  
+      <link rel="stylesheet" href="{{ asset('css/lms.css') }}">
 </head>
 
 <body>
     <!-- NAVBAR -->
-    <header class="glass-nav">
-        <div class="container">
-            <div class="nav-inner"
-                style="display: flex; align-items: center; justify-content: space-between; height: 3.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;" class="">
-                    <!-- Dropdown Menu using details/summary -->
-                    <details style="position: relative; list-style: none;">
-                        <summary aria-label="Buka Menu Navigasi"
-                            style="list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 2.375rem; height: 2.375rem; border-radius: 0.625rem; border: 1px solid var(--slate-200); background: #ffffff; color: var(--slate-700); box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s;">
-                            <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 12h16M4 18h16"></path>
-                            </svg>
-                        </summary>
-                        <div
-                            style="position: absolute; top: calc(100% + 0.5rem); left: 0; min-width: 14rem; background: #ffffff; border: 1px solid var(--slate-200); border-radius: 0.75rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05); padding: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; z-index: 100;">
-                            <a href="#fitur"
-                                style="display: flex; align-items: center; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--slate-700); transition: background 0.15s; text-decoration: none;"
-                                class="">Fitur Unggulan</a>
-                            <a href="#alur-presensi"
-                                style="display: flex; align-items: center; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--slate-700); transition: background 0.15s; text-decoration: none;"
-                                class="">Presensi Barcode</a>
-                            <a href="#jurusan"
-                                style="display: flex; align-items: center; padding: 0.5rem 0.75rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 600; color: var(--slate-700); transition: background 0.15s; text-decoration: none;"
-                                class="">Jurusan</a>
-                            <div style="height: 1px; background: var(--slate-100); margin: 0.25rem 0;"></div>
-                            <div style="display: flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 0.375rem; background: #ecfdf5; color: var(--emerald-700); font-size: 0.6875rem; font-weight: 600;"
-                                class="">
-                                <span class="pulse-dot"></span>
-                                Server Aktif (T.A 2024/2025)
-                            </div>
-                        </div>
-                    </details>
+   <header class="glass-nav">
+    <div class="container">
+        <div class="nav-inner">
 
-                    <!-- Brand Identity -->
-                    <a class="brand-link" href="{{ route('lms') }}"
-                        style="display: flex; align-items: center; gap: 0.625rem; text-decoration: none;">
-                        <div class="brand-icon-box" style="width: 2.375rem; height: 2.375rem; border-radius: 0.625rem;">
-                            <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 14l9-5-9-5-9 5 9 5z" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2"></path>
-                                <path
-                                    d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
-                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                <path d="M12 14v7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
-                                </path>
-                            </svg>
-                        </div>
-                        <div style="display: flex; flex-direction: column; line-height: 1.2;">
-                            <span class="brand-name"
-                                style="font-size: 1.0625rem; font-weight: 700; white-space: nowrap;">LMS Yadika
-                                Soreang</span>
-                            <span class="brand-subtitle" style="font-size: 0.6875rem; white-space: nowrap;">SMK Yadika
-                                Soreang</span>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Right Action CTA (Compact & Sleek) -->
-                <div style="display: flex; align-items: center;" class="">
-                    <a class="btn-login" href="{{ route('lms.login') }}"
-                        style="padding: 0.375rem 0.875rem; border-radius: 0.5rem; font-size: 0.8125rem; gap: 0.375rem;">
-                        <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+            <div class="nav-left">
+                <!-- Hamburger: hanya tampil di mobile -->
+                <details class="mobile-menu" id="mobileMenu">
+                    <summary class="mobile-menu-btn" aria-label="Buka Menu Navigasi">
+                        <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
-                        <span class="">Masuk</span>
-                    </a>
-                </div>
+                    </summary>
+                    <div class="mobile-menu-panel">
+                        <a href="#fitur">Fitur Unggulan</a>
+                        <a href="#alur-presensi">Presensi Barcode</a>
+                        <a href="#jurusan">Jurusan</a>
+                        <div class="mobile-menu-divider"></div>
+                        <div class="mobile-menu-status">
+                            <span class="pulse-dot"></span>
+                            Server Aktif (T.A 2024/2025)
+                        </div>
+                    </div>
+                </details>
+
+                <!-- Brand -->
+                <a class="brand-link" href="{{ route('lms') }}">
+                    <div class="brand-icon-box">
+                        <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 14l9-5-9-5-9 5 9 5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            <path d="M12 14v7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">LMS Yadika Soreang</span>
+                        <span class="brand-subtitle">SMK Yadika Soreang</span>
+                    </div>
+                </a>
             </div>
+
+            <!-- Navigasi desktop: hanya tampil di desktop -->
+            <nav class="nav-links">
+                <a class="nav-link" href="#fitur">Fitur Unggulan</a>
+                <a class="nav-link" href="#alur-presensi">Presensi Barcode</a>
+                <a class="nav-link" href="#jurusan">Jurusan</a>
+                <span class="server-status-badge">
+                    <span class="pulse-dot"></span>
+                    Server Aktif (T.A 2024/2025)
+                </span>
+            </nav>
+
+            <!-- CTA -->
+            <div class="nav-right">
+                <a class="btn-login" href="{{ route('lms.login') }}">
+                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                    </svg>
+                    <span>Masuk</span>
+                </a>
+            </div>
+
         </div>
-    </header>
+    </div>
+</header>
     <!-- HERO SECTION -->
     <section class="hero-section">
         <!-- Atmospheric glows -->
@@ -121,14 +112,6 @@
                                     stroke-linejoin="round" stroke-width="2.5"></path>
                             </svg>
                         </a>
-                        <a class="btn-hero-secondary" href="#fitur">
-                            <svg class="icon-md" fill="none" stroke="currentColor" style="color: var(--sky-400);"
-                                viewBox="0 0 24 24">
-                                <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                            </svg>
-                            <span class="">Pelajari Fitur</span>
-                        </a>
                     </div>
                     <!-- Micro Credibility Indicators -->
                     <div class="credibility-grid">
@@ -156,7 +139,7 @@
                                 <div class="browser-dot dot-red"></div>
                                 <div class="browser-dot dot-amber"></div>
                                 <div class="browser-dot dot-emerald"></div>
-                                <span class="browser-url">portal.yadika-lms.id</span>
+                                <span class="browser-url">lms.yadika-ms.my.id</span>
                             </div>
                             <span class="status-badge-online">
                                 <span class="dot-online"></span>
@@ -547,12 +530,19 @@
                     <span class="footer-sub">Learning Management System</span>
                 </div>
                 <p class="footer-copyright">
-                    © {{ date('Y') }} SMK Yadika Soreang. Hak Cipta Dilindungi.
+                    © 2026 SMK Yadika Soreang. Hak Cipta Dilindungi.
                 </p>
             </div>
         </div>
     </footer>
-
+<script>
+    // Tutup dropdown mobile setelah link diklik
+    document.querySelectorAll('#mobileMenu a').forEach(function (a) {
+        a.addEventListener('click', function () {
+            document.getElementById('mobileMenu').removeAttribute('open');
+        });
+    });
+</script>
 
 </body>
 
