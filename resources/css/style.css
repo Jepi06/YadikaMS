@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .glass-nav {
+    background: rgba(255,255,255,.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  .hero-gradient {
+    background: radial-gradient(120% 120% at 75% 20%, #1e40af 0%, #0d2547 48%, #061325 100%);
+  }
+  .glow-card { transition: all .3s cubic-bezier(.4,0,.2,1); }
+  .glow-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 35px -10px rgba(13,37,71,.12), 0 0 0 1px rgba(14,165,233,.3);
+  }
+  .pattern-grid {
+    background-size: 32px 32px;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+  }
+}
