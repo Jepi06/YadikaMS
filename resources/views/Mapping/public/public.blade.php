@@ -598,7 +598,8 @@
                         <select id="select-jurusan" name="jurusan" class="custom-select">
                             <option value="">Semua Jurusan</option>
                             @foreach ($jurusan as $j)
-                                <option value="{{ $j->id }}" {{ request('jurusan') == $j->id ? 'selected' : '' }}>
+                                <option value="{{ $j->id }}"
+                                    {{ request('jurusan') == $j->id ? 'selected' : '' }}>
                                     {{ $j->nama }}
                                 </option>
                             @endforeach
@@ -632,7 +633,9 @@
                     <a href="{{ route('pkl.pengajuan.create') }}" class="btn-action-apply">
                         📄 Ajukan Tempat PKL
                     </a>
-
+                    <a href="{{ route('pkl.mou.public') }}" class="btn-action-login">
+                        🤝 Mitra & MOU
+                    </a>
                     <a href="{{ route('pkl.login') }}" class="btn-action-login">
                         🔐 Login Sistem PKL
                     </a>
@@ -649,7 +652,9 @@
             @if ($search !== '')
                 <div class="search-banner">
                     <span>Hasil pencarian untuk "<strong>{{ $search }}</strong>"</span>
-                    <a href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => null, 'page_disetujui' => null]) }}">Hapus pencarian</a>
+                    <a
+                        href="{{ request()->fullUrlWithQuery(['search' => null, 'page' => null, 'page_disetujui' => null]) }}">Hapus
+                        pencarian</a>
                 </div>
             @endif
 
@@ -660,11 +665,11 @@
                         <div class="header-badge-tag" style="background:#fffbeb;color:#d97706">⏳</div>
                         <div>
                             <h3>Status Pengajuan Belum Disetujui</h3>
-                            <p>Siswa yang pengajuannya masih dalam proses approval, beserta tahap yang sedang ditunggu.</p>
+                            <p>Siswa yang pengajuannya masih dalam proses approval, beserta tahap yang sedang ditunggu.
+                            </p>
                         </div>
                     </div>
-                    <span class="card-count-badge"
-                        style="background:#fffbeb;color:#b45309;border-color:#fde68a">
+                    <span class="card-count-badge" style="background:#fffbeb;color:#b45309;border-color:#fde68a">
                         {{ $belumApproved->total() }} Menunggu
                     </span>
                 </div>
@@ -710,9 +715,14 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td><span class="badge-soft badge-soft-kelas">{{ $item->siswa->kelas->nama_kelas ?? '-' }}</span></td>
-                                    <td><span class="badge-soft badge-soft-jurusan">{{ $item->siswa->kelas->jurusan->nama ?? '-' }}</span></td>
-                                    <td><span class="company-tag">{{ $item->tempatPkl->nama_tempat ?? '-' }}</span></td>
+                                    <td><span
+                                            class="badge-soft badge-soft-kelas">{{ $item->siswa->kelas->nama_kelas ?? '-' }}</span>
+                                    </td>
+                                    <td><span
+                                            class="badge-soft badge-soft-jurusan">{{ $item->siswa->kelas->jurusan->nama ?? '-' }}</span>
+                                    </td>
+                                    <td><span class="company-tag">{{ $item->tempatPkl->nama_tempat ?? '-' }}</span>
+                                    </td>
                                     <td>
                                         <div class="approval-grid">
                                             @foreach ($tahapan as $kolom => $label)
@@ -750,7 +760,8 @@
 
                 <div class="table-footer">
                     <div class="table-footer-text">
-                        Menampilkan <strong>{{ $belumApproved->firstItem() ?? 0 }} - {{ $belumApproved->lastItem() ?? 0 }}</strong>
+                        Menampilkan <strong>{{ $belumApproved->firstItem() ?? 0 }} -
+                            {{ $belumApproved->lastItem() ?? 0 }}</strong>
                         dari <strong>{{ $belumApproved->total() }}</strong> data
                     </div>
                     {{ $belumApproved->links() }}
@@ -767,8 +778,7 @@
                             <p>Data siswa yang telah disetujui seluruh approval.</p>
                         </div>
                     </div>
-                    <span class="card-count-badge"
-                        style="background:#ecfdf5;color:#047857;border-color:#a7f3d0">
+                    <span class="card-count-badge" style="background:#ecfdf5;color:#047857;border-color:#a7f3d0">
                         {{ $data->total() }} Siswa
                     </span>
                 </div>
@@ -805,10 +815,15 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td><span class="badge-soft badge-soft-kelas">{{ $item->siswa->kelas->nama_kelas ?? '-' }}</span></td>
-                                    <td><span class="badge-soft badge-soft-jurusan">{{ $item->siswa->kelas->jurusan->nama ?? '-' }}</span></td>
+                                    <td><span
+                                            class="badge-soft badge-soft-kelas">{{ $item->siswa->kelas->nama_kelas ?? '-' }}</span>
+                                    </td>
+                                    <td><span
+                                            class="badge-soft badge-soft-jurusan">{{ $item->siswa->kelas->jurusan->nama ?? '-' }}</span>
+                                    </td>
                                     <td class="fw-semibold">{{ $item->guruPembimbing->nama ?? '-' }}</td>
-                                    <td><span class="company-tag">{{ $item->tempatPkl->nama_tempat ?? '-' }}</span></td>
+                                    <td><span class="company-tag">{{ $item->tempatPkl->nama_tempat ?? '-' }}</span>
+                                    </td>
                                     <td class="text-center">
                                         <span class="status-pill-approved"><span class="dot"></span>Approved</span>
                                     </td>
