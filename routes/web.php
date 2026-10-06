@@ -63,6 +63,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Mapping\ProfileController;
 
+use App\Http\Controllers\Mapping\MouPublicController;
+
 /*
 |--------------------------------------------------------------------------
 | LANDING PAGE
@@ -90,7 +92,8 @@ Route::prefix('pkl')->group(function () {
 
     Route::get('/pengajuan/api/kelas/{kelas}/siswa', [SiswaController::class, 'byKelas'])
         ->name('pkl.pengajuan.api.kelas.siswa');
-
+    Route::get('/mitra-mou', [MouPublicController::class, 'index'])->name('pkl.mou.public');
+    Route::get('/mitra-mou/berkas/{mou}', [MouPublicController::class, 'berkas'])->name('pkl.mou.public.berkas');
     Route::middleware('guest:pkl')->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('pkl.login');
         Route::post('/login', [AuthController::class, 'login'])->name('pkl.login.process');
@@ -100,7 +103,9 @@ Route::prefix('pkl')->group(function () {
 Route::post('/pkl/logout', [AuthController::class, 'logout'])
     ->middleware('auth.pkl')
     ->name('pkl.logout');
-
+Route::get('/pkl/masuk-dari-lms', [AuthController::class, 'masukDariLms'])
+    ->middleware('auth.lms')
+    ->name('pkl.masuk-lms');
 /*
 |==========================================================================
 | PKL – PROTECTED
@@ -109,7 +114,8 @@ Route::post('/pkl/logout', [AuthController::class, 'logout'])
 Route::prefix('pkl')->middleware('auth.pkl')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('pkl.dashboard');
-
+    Route::put('/pengaturan/pengajuan', [PenempatanPklController::class, 'togglePengajuan'])
+        ->name('pengaturan.pengajuan');
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::post('/siswa', [SiswaController::class, 'store'])->name('siswa.store');
     Route::put('/siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update');
@@ -161,6 +167,12 @@ Route::prefix('pkl')->middleware('auth.pkl')->group(function () {
     Route::put('/profil/password', [PklProfileController::class, 'updatePassword'])->name('pkl.profil.password');
     Route::post('/pkl/profil/avatar', [ProfileController::class, 'updateAvatar'])->name('pkl.profil.avatar');
     Route::delete('/pkl/profil/avatar', [ProfileController::class, 'deleteAvatar'])->name('pkl.profil.avatar.delete');
+
+    Route::get('/tempat-pkl/{tempat}', [TempatPklController::class, 'show'])->name('tempat.show');
+    Route::post('/tempat-pkl/{tempat}/mou', [TempatPklController::class, 'storeMou'])->name('tempat.mou.store');
+    Route::patch('/mou/{mou}/publik', [TempatPklController::class, 'toggleMouPublik'])->name('tempat.mou.publik');
+    Route::delete('/mou/{mou}', [TempatPklController::class, 'destroyMou'])->name('tempat.mou.destroy');
+    Route::get('/mou/{mou}/berkas', [TempatPklController::class, 'berkasMou'])->name('tempat.mou.berkas');
 });
 
 /*
@@ -453,6 +465,8 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
     Route::get('/guru/import/template', [SuperAdminGuruController::class, 'downloadTemplate'])->name('guru.import.template');
     Route::put('guru/{guru}/kepala-jurusan', [SuperAdminGuruController::class, 'updateKepalaJurusan'])
         ->name('guru.kepala-jurusan.update');
+    Route::put('/guru/{guru}/kesiswaan', [SuperAdminGuruController::class, 'updateKesiswaan'])
+        ->name('guru.kesiswaan.update');
     Route::prefix('kenaikan-kelas')->name('kenaikan-kelas.')->group(function () {
         Route::get('/', [KenaikanKelasController::class, 'index'])->name('index');
         Route::get('/template', [KenaikanKelasController::class, 'downloadTemplate'])->name('template');

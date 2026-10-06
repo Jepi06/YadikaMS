@@ -3,6 +3,34 @@
 @section('page-title', 'Penempatan PKL')
 
 @section('content')
+    {{-- Saklar buka/tutup pengajuan PKL oleh siswa --}}
+    @php $pengajuanDibuka = \App\Models\Mapping\PengaturanPkl::pengajuanDibuka(); @endphp
+    <div class="card shadow-sm mb-3">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <div class="fw-semibold">
+                    Pengajuan PKL oleh siswa
+                    <span class="badge {{ $pengajuanDibuka ? 'bg-success' : 'bg-secondary' }} ms-1">
+                        {{ $pengajuanDibuka ? 'DIBUKA' : 'DITUTUP' }}
+                    </span>
+                </div>
+                <div class="small text-muted">
+                    Kalau dibuka, form pengajuan aktif dan notifikasi muncul di LMS siswa kelas XII.
+                </div>
+            </div>
+            <form method="POST" action="{{ route('pengaturan.pengajuan') }}">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="dibuka" value="0">
+                <div class="form-check form-switch d-inline-block me-2">
+                    <input class="form-check-input" type="checkbox" role="switch" name="dibuka" value="1"
+                        id="switchPengajuan" @checked($pengajuanDibuka) onchange="this.form.submit()">
+                    <label class="form-check-label" for="switchPengajuan">Buka pengajuan</label>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
             <span><i class="bi bi-map me-2 text-primary"></i>Data Penempatan PKL</span>
@@ -63,7 +91,7 @@
                     <tbody>
                         @forelse($penempatan as $i => $p)
                             @php
-                                // BARU: tandai apakah data ini masih perlu dilengkapi admin
+                                // Tandai apakah data ini masih perlu dilengkapi admin
                                 // (berasal dari pengajuan publik siswa: guru/tanggal masih kosong).
                                 $belumLengkap = is_null($p->guru_pembimbing_id) || is_null($p->tanggal_mulai);
                             @endphp
@@ -132,7 +160,7 @@
 
                                     @if ($p->status === 'draft')
                                         @if ($belumLengkap)
-                                            {{-- BARU: tombol tunggal "Lengkapi" untuk pengajuan publik siswa
+                                            {{-- Tombol tunggal "Lengkapi" untuk pengajuan publik siswa
                                                  yang guru pembimbing / jadwalnya masih kosong --}}
                                             <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
                                                 data-bs-target="#modalLengkapi{{ $p->id }}" title="Lengkapi Data">
@@ -199,7 +227,7 @@
                                 </div>
                             @endif
 
-                            {{-- BARU: Modal Lengkapi — khusus pengajuan publik siswa (guru pembimbing & jadwal) --}}
+                            {{-- Modal Lengkapi — khusus pengajuan publik siswa (guru pembimbing & jadwal) --}}
                             @if ($p->status === 'draft' && $belumLengkap)
                                 <div class="modal fade" id="modalLengkapi{{ $p->id }}" tabindex="-1">
                                     <div class="modal-dialog">
@@ -424,12 +452,9 @@
 @push('scripts')
     <script>
         {{--
-    PERBAIKAN: sebelumnya hardcode "/pkl-api/kelas/${kelasId}/siswa" yang TIDAK
-    cocok dengan route asli (/pkl/api/kelas/{kelas}/siswa, name: api.kelas.siswa).
-    Ini bikin fetch selalu 404 dan daftar siswa di modal tidak pernah muncul.
-    Sekarang dibangun dari route() helper supaya otomatis benar walau prefix
-    route berubah di kemudian hari.
---}}
+            URL dibangun dari route() helper supaya otomatis benar walau prefix
+            route berubah di kemudian hari (route: api.kelas.siswa).
+        --}}
         const urlSiswaByKelasTemplate = "{{ route('api.kelas.siswa', ['kelas' => '__KELAS_ID__']) }}";
         const urlSiswaByKelas = (kelasId) => urlSiswaByKelasTemplate.replace('__KELAS_ID__', kelasId);
 

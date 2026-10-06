@@ -246,6 +246,9 @@
                     class="nav-link {{ request()->routeIs('pkl.pengajuan.*') ? 'active' : '' }}">
                     <i class="bi bi-clipboard-plus me-2"></i>Ajukan Tempat PKL
                 </a>
+                <a href="{{ route('pkl.mou.public') }}" class="btn-action-login">
+                    🤝 Mitra & MOU
+                </a>
                 <a href="{{ route('pkl.login') }}" class="nav-link {{ request()->routeIs('pkl.login') ? 'active' : '' }}">
                     <i class="bi bi-lock me-2"></i>Login Sistem PKL
                 </a>

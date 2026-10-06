@@ -8,6 +8,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Jurusan;
+use App\Models\Mapping\PenempatanPkl;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -38,10 +39,21 @@ class AppServiceProvider extends ServiceProvider
         // layout-nya, jadi @php lokal di layout saja tidak cukup — harus
         // di-share lewat composer supaya tersedia di semua view 'lms.*'.
         View::composer('lms.*', function ($view) {
-            $view->with('lmsUser', Auth::guard('lms')->user());
+            static $data = null; // hitung sekali per request
+
+            if ($data === null) {
+                $user = Auth::guard('lms')->user();
+
+                $data = [
+                    'pklMenunggu' => $user ? PenempatanPkl::menungguApproval($user)->count() : 0,
+                    'pklSiswa'    => $user ? PenempatanPkl::infoSiswaLms($user) : null,
+                ];
+            }
+
+            $view->with($data);
         });
-         if (config('app.env') !== 'local') {
-        \URL::forceScheme('https');
-    }
+        if (config('app.env') !== 'local') {
+            \URL::forceScheme('https');
+        }
     }
 }

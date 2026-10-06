@@ -207,6 +207,48 @@
                     </form>
                 </div>
             </div>
+            {{-- Guru Kesiswaan --}}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-shield-check me-1"></i> Guru Kesiswaan
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ route('admin.guru.kesiswaan.update', $guru) }}">
+                        @csrf
+                        @method('PUT')
+
+                        <input type="hidden" name="kesiswaan" value="0">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" name="kesiswaan"
+                                value="1" id="switchKesiswaan" @checked($adalahKesiswaan)>
+                            <label class="form-check-label fw-semibold" for="switchKesiswaan">
+                                Jadikan guru kesiswaan
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark w-100">
+                            <i class="bi bi-save me-1"></i> Simpan
+                        </button>
+
+                        <p class="small text-muted mt-2 mb-0">
+                            <i class="bi bi-info-circle"></i> Boleh lebih dari satu guru. Guru kesiswaan menyetujui
+                            pengajuan PKL semua kelas setelah Guru BK.
+                        </p>
+                    </form>
+
+                    @if ($daftarKesiswaan->isNotEmpty())
+                        <hr>
+                        <div class="small text-muted mb-1">Guru kesiswaan saat ini:</div>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach ($daftarKesiswaan as $k)
+                                <span class="badge {{ $k->id === $guru->id ? 'bg-primary' : 'bg-secondary' }}">
+                                    {{ $k->name }}
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
 
         </div>{{-- /col-lg-5 --}}
     </div>{{-- /row --}}

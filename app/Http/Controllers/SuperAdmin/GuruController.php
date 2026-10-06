@@ -28,7 +28,7 @@ class GuruController extends Controller
     /** Sesuaikan dengan data tabel modules/roles Anda. */
     private const KODE_MODUL_PKL = 'pkl';
     private const KODE_ROLE_KAJUR = 'kepala_jurusan';
-
+    private const KODE_ROLE_KESISWAAN = 'kesiswaan';
     /** Daftar semua guru LMS + jumlah penugasan mengajar periode aktif. */
     public function index(Request $request)
     {
@@ -159,7 +159,13 @@ class GuruController extends Controller
             ->first();
 
         $jurusanList = Jurusan::with('kepalaJurusan')->orderBy('nama')->get();
+        // Guru ini sudah jadi kesiswaan? + daftar kesiswaan lain (untuk info)
+        $adalahKesiswaan = $guru->hasPklRole(self::KODE_ROLE_KESISWAAN);
 
+        $daftarKesiswaan = User::whereHas('roles', fn($r) => $r->where('kode', self::KODE_ROLE_KESISWAAN)
+            ->whereHas('module', fn($m) => $m->where('kode', self::KODE_MODUL_PKL)))
+            ->orderBy('name')
+            ->get(['id', 'name']);
         return view('admin.guru.kelola', compact(
             'guru',
             'pengampuMapel',
@@ -168,7 +174,9 @@ class GuruController extends Controller
             'waliKelasSaatIni',
             'tahunAjaran',
             'semester',
-            'jurusanList'
+            'jurusanList',
+            'adalahKesiswaan',   // ← BARU
+            'daftarKesiswaan'    // ← BARU
         ));
     }
 
@@ -247,59 +255,86 @@ class GuruController extends Controller
     }
 
     /** Atur jurusan yang dipimpin guru ini (checkbox). */
-  /** Atur jurusan yang dipimpin guru ini (checkbox). Satu jurusan = satu kepala. */
-public function updateKepalaJurusan(Request $request, User $guru)
-{
-    $data = $request->validate([
-        'jurusan_ids' => ['nullable', 'array'],
-        'jurusan_ids.*' => ['exists:jurusan,id'],
-    ]);
-
-    $dipilih = collect($data['jurusan_ids'] ?? [])->map(fn($id) => (int) $id)->all();
-
-    // Tolak kalau ada jurusan yang sudah dipimpin guru lain
-    $dipegangLain = Jurusan::with('kepalaJurusan')
-        ->whereIn('id', $dipilih)
-        ->whereNotNull('kepala_jurusan_id')
-        ->where('kepala_jurusan_id', '!=', $guru->id)
-        ->get();
-
-    if ($dipegangLain->isNotEmpty()) {
-        $daftar = $dipegangLain->map(function ($j) {
-            $nama = $j->kepalaJurusan->name ?? '-';
-            return "{$j->nama} (dipimpin {$nama})";
-        })->implode(', ');
-
-        return back()->withErrors([
-            'jurusan_ids' => "Jurusan sudah punya kepala: {$daftar}. Lepas dulu dari guru tersebut sebelum menunjuk guru lain.",
+    /** Atur jurusan yang dipimpin guru ini (checkbox). Satu jurusan = satu kepala. */
+    public function updateKepalaJurusan(Request $request, User $guru)
+    {
+        $data = $request->validate([
+            'jurusan_ids' => ['nullable', 'array'],
+            'jurusan_ids.*' => ['exists:jurusan,id'],
         ]);
-    }
 
-    // Lepas jurusan yang sebelumnya dipimpin guru ini tapi sekarang tidak dicentang
-    Jurusan::where('kepala_jurusan_id', $guru->id)
-        ->whereNotIn('id', $dipilih)
-        ->update(['kepala_jurusan_id' => null]);
+        $dipilih = collect($data['jurusan_ids'] ?? [])->map(fn($id) => (int) $id)->all();
 
-    // Jadikan guru ini kepala jurusan yang dicentang
-    Jurusan::whereIn('id', $dipilih)->update(['kepala_jurusan_id' => $guru->id]);
+        // Tolak kalau ada jurusan yang sudah dipimpin guru lain
+        $dipegangLain = Jurusan::with('kepalaJurusan')
+            ->whereIn('id', $dipilih)
+            ->whereNotNull('kepala_jurusan_id')
+            ->where('kepala_jurusan_id', '!=', $guru->id)
+            ->get();
 
-    // Sinkronkan role PKL 'kepala_jurusan'
-    $roleId = Role::whereHas('module', fn($m) => $m->where('kode', self::KODE_MODUL_PKL))
-        ->where('kode', self::KODE_ROLE_KAJUR)
-        ->value('id');
+        if ($dipegangLain->isNotEmpty()) {
+            $daftar = $dipegangLain->map(function ($j) {
+                $nama = $j->kepalaJurusan->name ?? '-';
+                return "{$j->nama} (dipimpin {$nama})";
+            })->implode(', ');
 
-    if ($roleId) {
-        if (Jurusan::where('kepala_jurusan_id', $guru->id)->exists()) {
-            if (! $guru->roles()->where('role_id', $roleId)->exists()) {
-                $guru->roles()->attach($roleId, ['assigned_at' => now()]);
+            return back()->withErrors([
+                'jurusan_ids' => "Jurusan sudah punya kepala: {$daftar}. Lepas dulu dari guru tersebut sebelum menunjuk guru lain.",
+            ]);
+        }
+
+        // Lepas jurusan yang sebelumnya dipimpin guru ini tapi sekarang tidak dicentang
+        Jurusan::where('kepala_jurusan_id', $guru->id)
+            ->whereNotIn('id', $dipilih)
+            ->update(['kepala_jurusan_id' => null]);
+
+        // Jadikan guru ini kepala jurusan yang dicentang
+        Jurusan::whereIn('id', $dipilih)->update(['kepala_jurusan_id' => $guru->id]);
+
+        // Sinkronkan role PKL 'kepala_jurusan'
+        $roleId = Role::whereHas('module', fn($m) => $m->where('kode', self::KODE_MODUL_PKL))
+            ->where('kode', self::KODE_ROLE_KAJUR)
+            ->value('id');
+
+        if ($roleId) {
+            if (Jurusan::where('kepala_jurusan_id', $guru->id)->exists()) {
+                if (! $guru->roles()->where('role_id', $roleId)->exists()) {
+                    $guru->roles()->attach($roleId, ['assigned_at' => now()]);
+                }
+            } else {
+                $guru->roles()->detach($roleId);
             }
-        } else {
+        }
+
+        return back()->with('status', 'Jurusan yang dipimpin berhasil diperbarui.');
+    }
+    /** Jadikan / cabut guru ini sebagai guru kesiswaan (boleh banyak orang). */
+    public function updateKesiswaan(Request $request, User $guru)
+    {
+        $aktif = $request->boolean('kesiswaan');
+
+        $roleId = Role::whereHas('module', fn($m) => $m->where('kode', self::KODE_MODUL_PKL))
+            ->where('kode', self::KODE_ROLE_KESISWAAN)
+            ->value('id');
+
+        if (! $roleId) {
+            return back()->withErrors([
+                'kesiswaan' => "Role PKL '" . self::KODE_ROLE_KESISWAAN . "' tidak ditemukan di tabel roles.",
+            ]);
+        }
+
+        $sudahPunya = $guru->roles()->where('role_id', $roleId)->exists();
+
+        if ($aktif && ! $sudahPunya) {
+            $guru->roles()->attach($roleId, ['assigned_at' => now()]);
+        } elseif (! $aktif && $sudahPunya) {
             $guru->roles()->detach($roleId);
         }
-    }
 
-    return back()->with('status', 'Jurusan yang dipimpin berhasil diperbarui.');
-}
+        return back()->with('status', $aktif
+            ? "{$guru->name} sekarang menjadi guru kesiswaan."
+            : "Status guru kesiswaan {$guru->name} dicabut.");
+    }
     public function importForm()
     {
         return view('admin.guru.import');
