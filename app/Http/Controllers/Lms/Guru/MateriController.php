@@ -27,7 +27,18 @@ class MateriController extends Controller
         $pengampuMapel->load('mataPelajaran', 'kelas');
         $materi = $pengampuMapel->materi()->orderBy('urutan')->orderBy('created_at')->get();
 
-        return view('lms.guru.materi', compact('pengampuMapel', 'materi'));
+        // Materi global milik kelas lain (mapel & tahun ajaran sama) — ditampilkan read-only
+        $materiGlobal = Materi::where('is_global', true)
+            ->where('pengampu_mapel_id', '!=', $pengampuMapel->id)
+            ->whereHas('pengampuMapel', fn ($p) => $p
+                ->where('mata_pelajaran_id', $pengampuMapel->mata_pelajaran_id)
+                ->where('tahun_ajaran', $pengampuMapel->tahun_ajaran))
+            ->with('pengampuMapel.kelas')
+            ->orderBy('urutan')
+            ->orderBy('created_at')
+            ->get();
+
+        return view('lms.guru.materi', compact('pengampuMapel', 'materi', 'materiGlobal'));
     }
 
     public function store(Request $request, PengampuMapel $pengampuMapel)
@@ -41,6 +52,7 @@ class MateriController extends Controller
             'link_url' => ['nullable', 'url:http,https', 'max:2048'],
             'mode_akses' => ['required', 'in:bebas,berurutan,manual,tanggal'],
             'buka_pada' => ['nullable', 'date', 'required_if:mode_akses,tanggal'],
+            'is_global' => ['nullable', 'boolean'],
         ]);
 
         $urutan = $pengampuMapel->materi()->max('urutan') + 1;
@@ -56,7 +68,9 @@ class MateriController extends Controller
             'urutan' => $urutan,
             'mode_akses' => $data['mode_akses'],
             'buka_pada' => $data['mode_akses'] === 'tanggal' ? $data['buka_pada'] : null,
+            'is_global' => $request->boolean('is_global'),
         ]);
+
         return back()->with('status', 'Materi berhasil ditambahkan.');
     }
 
@@ -72,6 +86,7 @@ class MateriController extends Controller
 
         return back()->with('status', 'Materi dihapus.');
     }
+
     /** Buka/kunci manual — khusus materi mode "Dibuka Guru". */
     public function toggleBuka(Materi $materi)
     {
@@ -82,6 +97,19 @@ class MateriController extends Controller
 
         return back()->with('status', $materi->dibuka_manual ? 'Materi dibuka untuk siswa.' : 'Materi dikunci lagi.');
     }
+
+    /** Jadikan materi global (bisa dibuka kelas lain) atau khusus kelas ini. */
+    public function toggleGlobal(Materi $materi)
+    {
+        $this->authorizePengampu($materi->pengampuMapel);
+
+        $materi->update(['is_global' => ! $materi->is_global]);
+
+        return back()->with('status', $materi->is_global
+            ? 'Materi dibagikan ke kelas lain (global).'
+            : 'Materi sekarang khusus kelas ini.');
+    }
+
     /** Ubah/hapus link materi yang sudah ada. */
     public function updateLink(Request $request, Materi $materi)
     {
@@ -95,6 +123,7 @@ class MateriController extends Controller
 
         return back()->with('status', 'Link materi diperbarui.');
     }
+
     /** Ganti mode akses materi yang sudah ada. */
     public function updateAkses(Request $request, Materi $materi)
     {

@@ -18,15 +18,71 @@ class Materi extends Model
         'mode_akses',
         'dibuka_manual',
         'buka_pada',
+        'is_global',
     ];
+
     protected $casts = [
         'dibuka_manual' => 'boolean',
         'buka_pada' => 'datetime',
+        'is_global' => 'boolean',
     ];
+
     public function pengampuMapel()
     {
         return $this->belongsTo(PengampuMapel::class);
     }
+
+    /**
+     * Materi yang boleh dilihat pada sebuah pengampu mapel (kelas):
+     * milik kelas itu sendiri + materi global dari kelas lain
+     * dengan mata pelajaran & tahun ajaran yang sama.
+     *
+     * Pemakaian: Materi::terlihatUntuk($pengampuMapel)->orderBy('urutan')->get();
+     */
+    public function scopeTerlihatUntuk($query, PengampuMapel $pm)
+    {
+        return $query->where(function ($q) use ($pm) {
+            $q->where('pengampu_mapel_id', $pm->id)
+                ->orWhere(function ($q) use ($pm) {
+                    $q->where('is_global', true)
+                        ->whereHas('pengampuMapel', fn ($p) => $p
+                            ->where('mata_pelajaran_id', $pm->mata_pelajaran_id)
+                            ->where('tahun_ajaran', $pm->tahun_ajaran));
+                });
+        });
+    }
+
+    /**
+     * Apakah siswa ini boleh mengakses materi (milik kelasnya, atau global untuk mapel yang sama).
+     * Dipakai untuk pengecekan izin unduh file (route lms.file.materi).
+     */
+    public function bisaDiaksesSiswa(?\App\Models\Siswa $siswa): bool
+    {
+        if (! $siswa) {
+            return false;
+        }
+
+        $pm = $this->pengampuMapel;
+        if (! $pm) {
+            return false;
+        }
+
+        // Milik kelas siswa sendiri
+        if (isset($siswa->kelas_id) && $pm->kelas_id == $siswa->kelas_id) {
+            return true;
+        }
+
+        // Global: siswa harus punya pengampu mapel yang sama (mapel + tahun ajaran) di kelasnya
+        if ($this->is_global && isset($siswa->kelas_id)) {
+            return PengampuMapel::where('kelas_id', $siswa->kelas_id)
+                ->where('mata_pelajaran_id', $pm->mata_pelajaran_id)
+                ->where('tahun_ajaran', $pm->tahun_ajaran)
+                ->exists();
+        }
+
+        return false;
+    }
+
     /**
      * Return null kalau materi TERBUKA untuk siswa ini, atau string
      * alasan kenapa masih TERKUNCI.

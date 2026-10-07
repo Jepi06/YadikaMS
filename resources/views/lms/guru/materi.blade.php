@@ -3,6 +3,7 @@
     Dipanggil dari Guru\MateriController@index, route: lms.guru.materi.index
     Variabel: $pengampuMapel (with mataPelajaran, kelas) dan daftar materi
     ($materi atau $daftarMateri — salah satu saja cukup).
+    Opsional: $materiGlobal → materi global milik kelas lain (read-only, dengan pengampuMapel.kelas).
 --}}
 @extends('lms.layouts.app')
 
@@ -11,7 +12,15 @@
 
 @section('content')
     @php
-        $daftar = collect($materi ?? ($daftarMateri ?? []));
+        $semua = collect($materi ?? ($daftarMateri ?? []));
+
+        // Materi milik kelas ini (bisa diedit) vs materi global dari kelas lain (read-only)
+        $milikIni = fn($m) => ($m->pengampu_mapel_id ?? $pengampuMapel->id) == $pengampuMapel->id;
+        $daftar = $semua->filter($milikIni)->values();
+        $dariKelasLain = collect($materiGlobal ?? [])
+            ->merge($semua->reject($milikIni))
+            ->unique('id')
+            ->values();
 
         // Nilai mode akses (value radio/select) => tampilan
         $modeInfo = [
@@ -34,11 +43,13 @@
         ];
         $modeOf = fn($m) => strtolower($m->mode_akses ?? 'bebas');
         $jadwalOf = fn($m) => $m->buka_pada;
+        $isGlobal = fn($m) => (bool) ($m->is_global ?? false);
 
         $total = $daftar->count();
         $terjadwal = $daftar->filter(fn($m) => $modeOf($m) === 'tanggal')->count();
         $manual = $daftar->filter(fn($m) => $modeOf($m) === 'manual')->count();
         $lampiran = $daftar->filter(fn($m) => !empty($m->file_path))->count();
+        $nGlobal = $daftar->filter(fn($m) => $isGlobal($m))->count();
     @endphp
 
     {{-- Header --}}
@@ -73,8 +84,8 @@
     </div>
 
     {{-- Ringkasan --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        @foreach ([['Total Materi', $total, 'bi-journal-text', 'bg-blue-50 text-blue-600'], ['Akses Terjadwal', $terjadwal, 'bi-clock', 'bg-purple-50 text-purple-600'], ['Dibuka Manual', $manual, 'bi-lock', 'bg-amber-50 text-amber-600'], ['Lampiran File', $lampiran, 'bi-paperclip', 'bg-slate-100 text-slate-600']] as [$label, $nilai, $ikon, $warna])
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        @foreach ([['Total Materi', $total, 'bi-journal-text', 'bg-blue-50 text-blue-600'], ['Global (Kelas Lain)', $nGlobal, 'bi-globe2', 'bg-indigo-50 text-indigo-600'], ['Akses Terjadwal', $terjadwal, 'bi-clock', 'bg-purple-50 text-purple-600'], ['Dibuka Manual', $manual, 'bi-lock', 'bg-amber-50 text-amber-600'], ['Lampiran File', $lampiran, 'bi-paperclip', 'bg-slate-100 text-slate-600']] as [$label, $nilai, $ikon, $warna])
             <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-start justify-between">
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-wider text-slate-500">{{ $label }}</p>
@@ -185,6 +196,27 @@
                         <input type="datetime-local" name="buka_pada" value="{{ old('buka_pada') }}"
                             class="mt-1 w-full h-11 px-4 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500">
                     </div>
+
+                    {{-- Toggle: khusus kelas ini / global --}}
+                    <label
+                        class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition">
+                        <div class="relative w-11 h-6 shrink-0 mt-0.5">
+                            <input type="checkbox" name="is_global" value="1" class="peer sr-only"
+                                {{ old('is_global') ? 'checked' : '' }}>
+                            <div class="absolute inset-0 rounded-full bg-slate-300 peer-checked:bg-indigo-600 transition-colors"></div>
+                            <span
+                                class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5"></span>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                                <i class="bi bi-globe2 text-indigo-600"></i> Bagikan ke kelas lain (Global)
+                            </div>
+                            <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                                Nonaktif: materi hanya untuk <span class="font-semibold">{{ $pengampuMapel->kelas->nama_kelas ?? 'kelas ini' }}</span>.
+                                Aktif: siswa di kelas lain yang belajar mata pelajaran yang sama juga bisa membukanya.
+                            </p>
+                        </div>
+                    </label>
                 </div>
             </div>
 
@@ -201,7 +233,7 @@
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-lg font-bold text-slate-800">Daftar Materi Diterbitkan</h2>
-            <p class="text-xs text-slate-500">Kelola akses, tautan, dan lampiran tiap materi.</p>
+            <p class="text-xs text-slate-500">Kelola akses, tautan, lampiran, dan cakupan kelas tiap materi.</p>
         </div>
         <span class="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold">Semua
             ({{ $total }})</span>
@@ -214,6 +246,7 @@
                 $info = $modeInfo[$mode] ?? $modeInfo['bebas'];
                 $jadwal = $jadwalOf($m);
                 $terbuka = (bool) $m->dibuka_manual;
+                $global = $isGlobal($m);
             @endphp
 
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition p-5">
@@ -235,6 +268,18 @@
                                         {{ $info['label'] }}
                                     @endif
                                 </span>
+                                @if ($global)
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100"
+                                        title="Siswa kelas lain dengan mata pelajaran yang sama bisa membuka materi ini">
+                                        <i class="bi bi-globe2"></i> Global
+                                    </span>
+                                @else
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">
+                                        <i class="bi bi-door-closed"></i> Khusus {{ $pengampuMapel->kelas->nama_kelas ?? 'kelas ini' }}
+                                    </span>
+                                @endif
                             </div>
 
                             @if ($m->deskripsi ?? null)
@@ -281,6 +326,21 @@
 
                     {{-- Aksi --}}
                     <div class="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-start">
+                        {{-- Toggle global / khusus kelas (POST lms.guru.materi.global) --}}
+                        @if (Route::has('lms.guru.materi.global'))
+                            <form method="POST" action="{{ route('lms.guru.materi.global', $m) }}">
+                                @csrf
+                                <button type="submit"
+                                    title="{{ $global ? 'Klik untuk jadikan khusus kelas ini' : 'Klik untuk bagikan ke kelas lain' }}"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition {{ $global ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' }}">
+                                    <span class="relative inline-block w-7 h-4 rounded-full {{ $global ? 'bg-indigo-600' : 'bg-slate-300' }}">
+                                        <span class="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all {{ $global ? 'left-3.5' : 'left-0.5' }}"></span>
+                                    </span>
+                                    {{ $global ? 'Global' : 'Khusus Kelas' }}
+                                </button>
+                            </form>
+                        @endif
+
                         @if ($mode === 'manual')
                             <form method="POST" action="{{ route('lms.guru.materi.toggle', $m) }}">
                                 @csrf
@@ -314,7 +374,7 @@
                         </form>
 
                         <form method="POST" action="{{ route('lms.guru.materi.destroy', $m) }}"
-                            onsubmit="return confirm('Hapus materi ini? File lampiran ikut terhapus.')">
+                            onsubmit="return confirm('Hapus materi ini? File lampiran ikut terhapus.{{ $global ? ' Materi ini juga akan hilang dari kelas lain.' : '' }}')">
                             @csrf @method('DELETE')
                             <button type="submit" title="Hapus materi"
                                 class="w-9 h-9 rounded-lg hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center transition">
@@ -331,6 +391,58 @@
             </div>
         @endforelse
     </div>
+
+    {{-- Materi global dari kelas lain (read-only) --}}
+    @if ($dariKelasLain->isNotEmpty())
+        <div class="flex items-center justify-between pt-2">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="bi bi-globe2 text-indigo-600"></i> Materi Global dari Kelas Lain
+                </h2>
+                <p class="text-xs text-slate-500">Dibagikan oleh guru kelas lain pada mata pelajaran yang sama. Siswa
+                    {{ $pengampuMapel->kelas->nama_kelas ?? 'kelas ini' }} juga bisa membukanya.</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                {{ $dariKelasLain->count() }} materi
+            </span>
+        </div>
+
+        <div class="space-y-3">
+            @foreach ($dariKelasLain as $g)
+                <div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-5">
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div class="min-w-0 space-y-1.5">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="font-bold text-slate-900">{{ $g->judul }}</h3>
+                                <span
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100">
+                                    <i class="bi bi-share"></i> Dari {{ $g->pengampuMapel->kelas->nama_kelas ?? 'kelas lain' }}
+                                </span>
+                            </div>
+                            @if ($g->deskripsi ?? null)
+                                <p class="text-sm text-slate-600 leading-relaxed max-w-3xl">{{ $g->deskripsi }}</p>
+                            @endif
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 shrink-0">
+                            @if ($g->file_path ?? null)
+                                <a href="{{ route('lms.file.materi', $g) }}" target="_blank" rel="noopener"
+                                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all text-xs font-semibold">
+                                    <i class="bi bi-download"></i><span>Buka / Unduh</span>
+                                </a>
+                            @endif
+                            @if ($g->link_url ?? null)
+                                <a href="{{ $g->link_url }}" target="_blank" rel="noopener"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-sm text-slate-700 transition">
+                                    <i class="bi bi-box-arrow-up-right text-rose-500"></i>
+                                    <span class="font-medium truncate max-w-[12rem]">{{ \Illuminate\Support\Str::limit(preg_replace('#^https?://#', '', $g->link_url), 30) }}</span>
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
 @endsection
 
 @push('scripts')

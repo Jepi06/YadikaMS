@@ -289,14 +289,14 @@
                                         <div class="flex flex-wrap gap-2">
                                             @if ($fileJawaban)
                                                 <a href="{{ route('lms.file.jawaban', $p) }}" target="_blank" rel="noopener"
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 text-blue-700 hover:bg-slate-200 transition-colors text-xs font-mono max-w-full">
-                                                    <i class="bi bi-file-earmark-arrow-down"></i><span class="truncate">{{ basename($fileJawaban) }}</span>
+                                                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors text-xs font-semibold shadow-sm">
+                                                    <i class="bi bi-file-earmark-arrow-down"></i><span>Buka Berkas</span>
                                                 </a>
                                             @endif
                                             @if ($linkJawaban)
                                                 <a href="{{ $linkJawaban }}" target="_blank" rel="noopener noreferrer"
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-xs font-mono max-w-full sm:max-w-[260px]">
-                                                    <i class="bi bi-link-45deg"></i><span class="truncate">{{ preg_replace('#^https?://#', '', $linkJawaban) }}</span>
+                                                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 transition-colors text-xs font-semibold shadow-sm">
+                                                    <i class="bi bi-box-arrow-up-right"></i><span>Buka Tautan</span>
                                                 </a>
                                             @endif
                                             @if (! $fileJawaban && ! $linkJawaban)
