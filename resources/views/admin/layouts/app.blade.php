@@ -137,6 +137,10 @@
                 href="{{ route('admin.jadwal.index') }}">
                 <i class="bi bi-calendar-week me-2"></i> Jadwal Guru
             </a>
+            <a href="{{ route('admin.rekap-absensi.index') }}"
+                class="... {{ request()->routeIs('admin.rekap-absensi.*') ? 'active-class' : '' }}">
+                <i class="bi bi-calendar-check"></i> Rekap Absensi
+            </a>
             <a class="nav-link {{ request()->routeIs('admin.profil.*') ? 'active' : '' }}"
                 href="{{ route('admin.profil.edit') }}">
                 <i class="bi bi-person-circle me-2"></i> Profil Saya

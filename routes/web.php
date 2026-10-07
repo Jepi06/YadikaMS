@@ -59,6 +59,7 @@ use App\Http\Controllers\SuperAdmin\MonitoringPresensiController;
 use App\Http\Controllers\SuperAdmin\JadwalController;
 use App\Http\Controllers\SuperAdmin\JadwalImportController;
 use App\Http\Controllers\SuperAdmin\PengaturanJamController;
+use App\Http\Controllers\SuperAdmin\RekapAbsensiController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Mapping\ProfileController;
@@ -511,6 +512,8 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
         ->name('monitoring-presensi.index');
     Route::get('/monitoring-presensi/{pengampuMapel}', [MonitoringPresensiController::class, 'detail'])
         ->name('monitoring-presensi.detail');
+    Route::get('/rekap-absensi', [RekapAbsensiController::class, 'index'])
+        ->name('rekap-absensi.index');
 });
 Route::post('/admin/logout', function () {
     // Logout dari semua guard yang mungkin aktif
