@@ -7,6 +7,58 @@
 @section('title', 'Penilaian Tugas - LMS Yadika')
 @section('breadcrumb', 'Penilaian Tugas')
 
+@push('styles')
+    <style>
+        /* ====== Tabel penilaian: desktop = tabel, mobile = kartu per siswa ====== */
+        .kolom-nilai { min-width: 9.5rem; }
+        .input-nilai { font-size: 1rem; } /* 16px: mencegah auto-zoom di iOS & angka tidak terpotong */
+        .teks-mobile { display: none; }
+
+        @media (max-width: 1023px) {
+            .tabel-nilai,
+            .tabel-nilai tbody { display: block; width: 100%; }
+            .tabel-nilai thead { display: none; }
+
+            .tabel-nilai tr.baris-nilai {
+                display: block;
+                margin: .75rem;
+                padding: .25rem 0;
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                border-radius: .75rem;
+                box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+            }
+            /* filter pencarian memakai class .hidden → harus menang atas display:block di atas */
+            .tabel-nilai tr.baris-nilai.hidden { display: none; }
+
+            .tabel-nilai tbody tr.baris-nilai > td {
+                display: block;
+                width: 100% !important;
+                min-width: 0 !important;
+                padding: .5rem 1rem !important;
+                border: 0;
+            }
+            .tabel-nilai td[data-label]::before {
+                content: attr(data-label);
+                display: block;
+                margin-bottom: .25rem;
+                font-size: .6875rem;
+                font-weight: 600;
+                letter-spacing: .05em;
+                text-transform: uppercase;
+                color: #64748b;
+            }
+            .tabel-nilai td.kolom-aksi { text-align: left !important; }
+            .tabel-nilai td.kolom-aksi button {
+                width: 100%;
+                gap: .5rem;
+                margin: 0 !important;
+            }
+            .teks-mobile { display: inline; font-size: .875rem; font-weight: 700; }
+        }
+    </style>
+@endpush
+
 @section('content')
     @php
         use Illuminate\Support\Carbon;
@@ -171,16 +223,16 @@
         </div>
     </section>
 
-    {{-- TABEL PENILAIAN --}}
+    {{-- TABEL PENILAIAN (desktop) / KARTU (mobile) --}}
     <section class="bg-white border border-slate-200/70 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto custom-scrollbar">
-            <table class="w-full text-left border-collapse">
+            <table class="tabel-nilai w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider font-semibold">
                         <th class="py-3.5 px-4">Siswa & NISN</th>
                         <th class="py-3.5 px-4">Status</th>
                         <th class="py-3.5 px-4">Submisi & Berkas</th>
-                        <th class="py-3.5 px-4 w-36">Nilai (0-100)</th>
+                        <th class="py-3.5 px-4 kolom-nilai">Nilai (0-100)</th>
                         <th class="py-3.5 px-4 min-w-[240px]">Catatan untuk Siswa</th>
                         <th class="py-3.5 px-4 text-center w-24">Aksi</th>
                     </tr>
@@ -197,12 +249,14 @@
                             $feedback = $p?->catatan_guru ?? '';
                             $terlambat = $p && $deadline && Carbon::parse($p->dikumpulkan_at)->gt($deadline);
                             $dibawahKKM = $b->nilai !== null && $b->nilai < $batasKKM;
+                            // 85.00 → 85 ; 85.50 → 85.5 (supaya angka pendek & tidak terpotong)
+                            $nilaiTampil = $b->nilai !== null ? (float) $b->nilai : '';
                         @endphp
                         <tr class="baris-nilai hover:bg-slate-50 transition-colors {{ $b->status === 'unsubmitted' ? 'opacity-75' : '' }} {{ $b->status === 'pending' ? 'bg-sky-50/30' : '' }}"
                             data-status="{{ $b->status }}">
                             <td class="py-4 px-4 align-top">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 font-semibold flex items-center justify-center text-xs">{{ $inisial($b->nama) }}</div>
+                                    <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 font-semibold flex items-center justify-center text-xs shrink-0">{{ $inisial($b->nama) }}</div>
                                     <div class="min-w-0">
                                         <div class="font-bold text-slate-900 nama-siswa">{{ $b->nama }}</div>
                                         @if ($b->nisn)<div class="text-xs font-mono text-slate-400 nisn-siswa">NISN: {{ $b->nisn }}</div>@endif
@@ -210,7 +264,7 @@
                                 </div>
                             </td>
 
-                            <td class="py-4 px-4 align-top">
+                            <td class="py-4 px-4 align-top" data-label="Status">
                                 @if ($b->status === 'graded')
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Sudah Dinilai
@@ -229,19 +283,19 @@
                                 @endif
                             </td>
 
-                            <td class="py-4 px-4 align-top">
+                            <td class="py-4 px-4 align-top" data-label="Submisi & Berkas">
                                 @if ($p)
                                     <div class="space-y-2">
                                         <div class="flex flex-wrap gap-2">
                                             @if ($fileJawaban)
                                                 <a href="{{ route('lms.file.jawaban', $p) }}" target="_blank" rel="noopener"
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 text-blue-700 hover:bg-slate-200 transition-colors text-xs font-mono">
-                                                    <i class="bi bi-file-earmark-arrow-down"></i><span>{{ basename($fileJawaban) }}</span>
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 text-blue-700 hover:bg-slate-200 transition-colors text-xs font-mono max-w-full">
+                                                    <i class="bi bi-file-earmark-arrow-down"></i><span class="truncate">{{ basename($fileJawaban) }}</span>
                                                 </a>
                                             @endif
                                             @if ($linkJawaban)
                                                 <a href="{{ $linkJawaban }}" target="_blank" rel="noopener noreferrer"
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-xs font-mono max-w-[260px]">
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-xs font-mono max-w-full sm:max-w-[260px]">
                                                     <i class="bi bi-link-45deg"></i><span class="truncate">{{ preg_replace('#^https?://#', '', $linkJawaban) }}</span>
                                                 </a>
                                             @endif
@@ -261,22 +315,23 @@
                                 @endif
                             </td>
 
-                            <td class="py-4 px-4 align-top">
+                            <td class="py-4 px-4 align-top kolom-nilai" data-label="Nilai (0-100)">
                                 <div class="relative flex items-center">
-                                    <input form="{{ $formId }}" name="nilai" type="number" min="0" max="100" step="0.01"
-                                        value="{{ $b->nilai }}" placeholder="{{ $p ? 'Nilai...' : '-' }}"
+                                    <input form="{{ $formId }}" name="nilai" type="number" inputmode="decimal"
+                                        min="0" max="100" step="0.01"
+                                        value="{{ $nilaiTampil }}" placeholder="{{ $p ? 'Nilai...' : '-' }}"
                                         {{ $p ? '' : 'disabled' }}
-                                        class="w-full h-10 px-3 pr-12 rounded-lg text-sm font-mono font-bold focus:ring-2 focus:ring-blue-500/40 focus:outline-none
-                                            {{ $p ? 'bg-slate-100 text-slate-900 focus:bg-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed' }}
-                                            {{ $dibawahKKM ? 'text-rose-600' : '' }}">
-                                    <span class="absolute right-3 text-slate-400 text-xs font-mono">/100</span>
+                                        class="input-nilai w-full h-11 pl-3 pr-12 rounded-lg font-mono font-bold focus:ring-2 focus:ring-blue-500/40 focus:outline-none
+                                            {{ $p ? 'bg-slate-100 focus:bg-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed' }}
+                                            {{ $p ? ($dibawahKKM ? 'text-rose-600' : 'text-slate-900') : '' }}">
+                                    <span class="absolute right-3 text-slate-400 text-xs font-mono pointer-events-none">/100</span>
                                 </div>
                                 @if ($dibawahKKM)
                                     <div class="text-[11px] text-rose-600 font-semibold mt-1">Di bawah KKM ({{ $batasKKM }})</div>
                                 @endif
                             </td>
 
-                            <td class="py-4 px-4 align-top">
+                            <td class="py-4 px-4 align-top" data-label="Catatan untuk Siswa">
                                 @if ($p)
                                     <textarea form="{{ $formId }}" name="catatan_guru" rows="2"
                                         placeholder="Beri catatan atau umpan balik..."
@@ -286,20 +341,22 @@
                                 @endif
                             </td>
 
-                            <td class="py-4 px-4 align-top text-center">
+                            <td class="py-4 px-4 align-top text-center kolom-aksi">
                                 @if ($p)
                                     <form id="{{ $formId }}" method="POST" action="{{ route('lms.guru.tugas.kumpulan.nilai', $p) }}">
                                         @csrf
                                     </form>
                                     <button type="submit" form="{{ $formId }}"
                                         title="{{ $b->status === 'graded' ? 'Perbarui Nilai' : 'Simpan Penilaian' }}"
-                                        class="w-10 h-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all shadow-sm mx-auto">
+                                        class="h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center justify-center transition-all shadow-sm mx-auto">
                                         <i class="bi bi-check-lg text-xl"></i>
+                                        <span class="teks-mobile">{{ $b->status === 'graded' ? 'Perbarui Nilai' : 'Simpan Penilaian' }}</span>
                                     </button>
                                 @else
                                     <button type="button" disabled title="Tugas belum dikumpulkan"
-                                        class="w-10 h-10 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center cursor-not-allowed mx-auto">
+                                        class="h-10 w-10 rounded-lg bg-slate-100 text-slate-400 inline-flex items-center justify-center cursor-not-allowed mx-auto">
                                         <i class="bi bi-slash-circle text-lg"></i>
+                                        <span class="teks-mobile">Belum Dikumpulkan</span>
                                     </button>
                                 @endif
                             </td>

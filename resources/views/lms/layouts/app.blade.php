@@ -277,67 +277,65 @@
                     <div
                         class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold">
                         <i class="bi bi-calendar3"></i>
-                        <span>T.A {{ $tahunAjaran }}@isset($semester)
-                            • Semester {{ $semester }}
-                        @endisset
-                    </span>
-                </div>
-            @endisset
+                        <span>T.A {{ $tahunAjaran }}@isset($semester) • Semester {{ $semester }}@endisset</span>
+                    </div>
+                @endisset
 
-            {{-- Notifikasi pengajuan PKL (hanya muncul kalau ada yang menunggu) --}}
-            @if ($pklMenunggu > 0)
-                <a href="{{ $r('pkl.masuk-lms') }}"
-                    class="relative inline-flex items-center justify-center w-9 h-9 rounded-xl border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
-                    title="{{ $pklMenunggu }} pengajuan PKL menunggu persetujuan Anda">
-                    <i class="bi bi-bell-fill text-base"></i>
-                    <span
-                        class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
-                        {{ $pklMenunggu }}
-                    </span>
-                </a>
+                {{-- Notifikasi pengajuan PKL (hanya muncul kalau ada yang menunggu) --}}
+                @if ($pklMenunggu > 0)
+                    <a href="{{ $r('pkl.masuk-lms') }}"
+                        class="relative inline-flex items-center justify-center w-9 h-9 rounded-xl border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+                        title="{{ $pklMenunggu }} pengajuan PKL menunggu persetujuan Anda">
+                        <i class="bi bi-bell-fill text-base"></i>
+                        <span
+                            class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+                            {{ $pklMenunggu }}
+                        </span>
+                    </a>
+                @endif
+
+                <div class="h-6 w-px bg-slate-200"></div>
+
+                <div class="flex items-center gap-2.5 pl-1">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-blue-50">
+                        {{ $inisial }}
+                    </div>
+                    <div class="hidden sm:block text-left">
+                        <div class="text-xs font-bold text-slate-800 leading-tight">{{ $namaUser }}</div>
+                        <div class="text-[11px] text-slate-500 font-medium">{{ $roleLabel }}</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-8">
+            @if (session('status'))
+                <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3">
+                    {{ session('status') }}
+                </div>
             @endif
 
-            <div class="h-6 w-px bg-slate-200"></div>
+            {{-- Konten halaman: HANYA SATU @yield('content') --}}
+            @yield('content')
 
-            <div class="flex items-center gap-2.5 pl-1">
-                <div
-                    class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-blue-50">
-                    {{ $inisial }}
-                </div>
-                <div class="hidden sm:block text-left">
-                    <div class="text-xs font-bold text-slate-800 leading-tight">{{ $namaUser }}</div>
-                    <div class="text-[11px] text-slate-500 font-medium">{{ $roleLabel }}</div>
-                </div>
-            </div>
-        </div>
-    </header>
+            {{-- Blok PKL khusus siswa (tampil di bawah konten halaman) --}}
+            @if ($isSiswa)
+                @include('lms.partials.pkl-siswa')
+            @endif
+        </main>
+    </div>
 
-    <main class="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-8">
-        @if (session('status'))
-            <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3">
-                {{ session('status') }}
-            </div>
-        @endif
-
-        @yield('content')
-        @if ($isSiswa)
-            @include('lms.partials.pkl-siswa')
-        @endif
-
-        @yield('content')
-    </main>
-</div>
-
-<script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('mainSidebar');
-        const backdrop = document.getElementById('sidebarBackdrop');
-        const tertutup = sidebar.classList.contains('-translate-x-full');
-        sidebar.classList.toggle('-translate-x-full', !tertutup);
-        backdrop.classList.toggle('hidden', !tertutup);
-    }
-</script>
-@stack('scripts')
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('mainSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const tertutup = sidebar.classList.contains('-translate-x-full');
+            sidebar.classList.toggle('-translate-x-full', !tertutup);
+            backdrop.classList.toggle('hidden', !tertutup);
+        }
+    </script>
+    @stack('scripts')
 </body>
 
 </html>

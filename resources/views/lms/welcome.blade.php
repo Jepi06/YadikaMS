@@ -80,176 +80,174 @@
     </div>
 </header>
     <!-- HERO SECTION -->
-    <section class="hero-section">
-        <!-- Atmospheric glows -->
-        <div class="ambient-glow-1"></div>
-        <div class="ambient-glow-2"></div>
-        <div class="container">
-            <div class="hero-grid">
-                <!-- Left: Copywriting & CTA -->
-                <div class="hero-left">
-                    <!-- Tag & Institution -->
-                    <div class="hero-badge">
-                        <span class="pulse-dot pulse-dot-sky"></span>
-                        SMK Yadika Soreang — Terakreditasi "A"
-                    </div>
-                    <!-- Main Headline -->
-                    <div class="hero-heading-box">
-                        <h1 class="hero-title">
-                            Learning Management<br>
-                            System<br>
-                            <span class="gradient-text-sky">
-                                Cerdas, Cepat &amp; Terintegrasi
-                            </span>
-                        </h1>
-                    </div>
-                    <!-- CTAs -->
-                    <div class="hero-cta-group">
-                        <a class="btn-hero-primary" href="{{ route('lms.login') }}">
-                            <span class="">Masuk ke LMS Sekarang</span>
-                            <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linecap="round"
-                                    stroke-linejoin="round" stroke-width="2.5"></path>
-                            </svg>
-                        </a>
-                    </div>
-                    <!-- Micro Credibility Indicators -->
-                    <div class="credibility-grid">
-                        <div class="credibility-card">
-                            <div class="stat-number">1.200+</div>
-                            <div class="stat-label">Siswa &amp; Taruna Aktif</div>
-                        </div>
-                        <div class="credibility-card">
-                            <div class="stat-number">60+</div>
-                            <div class="stat-label">Guru &amp; Mentor Ahli</div>
-                        </div>
-                        <div class="credibility-card">
-                            <div class="stat-number">100%</div>
-                            <div class="stat-label">Daring &amp; Real-Time</div>
-                        </div>
-                    </div>
+   <section class="hero-section">
+    <!-- Atmospheric glows -->
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
+
+    <div class="container">
+        <div class="hero-grid">
+
+            <!-- Kiri: Copywriting & CTA -->
+            <div class="hero-left">
+                <div class="hero-badge">
+                    <span class="pulse-dot pulse-dot-sky"></span>
+                    SMK Yadika Soreang — Terakreditasi "A"
                 </div>
-                <!-- Right: Modern Glassmorphic Dashboard Preview Mockup -->
-                <div class="mockup-wrapper">
-                    <div class="mockup-backglow"></div>
-                    <div class="mockup-panel">
-                        <!-- Mockup Top Bar -->
-                        <div class="mockup-top-bar">
-                            <div class="browser-dots">
-                                <div class="browser-dot dot-red"></div>
-                                <div class="browser-dot dot-amber"></div>
-                                <div class="browser-dot dot-emerald"></div>
-                                <span class="browser-url">lms.yadika-ms.my.id</span>
-                            </div>
-                            <span class="status-badge-online">
-                                <span class="dot-online"></span>
-                                Sistem Online
-                            </span>
-                        </div>
-                        <!-- School Portal Status Banner -->
-                        <div class="portal-banner">
-                            <div>
-                                <span class="banner-tag">Portal Terpadu Pembelajaran</span>
-                                <h4 class="portal-banner-title">LMS SMK Yadika Soreang</h4>
-                                <p class="portal-banner-desc">Pusat Akses Akademik, Modul Daring &amp; Presensi</p>
-                            </div>
-                            <div class="banner-icon">
-                                <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 14l9-5-9-5-9 5 9 5z" stroke-linecap="round" stroke-linejoin="round"
-                                        stroke-width="2"></path>
-                                    <path
-                                        d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                            </div>
-                        </div>
-                        <!-- Quick Service Hub Matrix -->
-                        <div class="mockup-hub-matrix">
-                            <div class="hub-matrix-card">
-                                <div class="hub-icon-round hub-icon-sky">
-                                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                    </svg>
-                                </div>
-                                <div class="hub-label">Modul Materi</div>
-                                <div class="hub-sub">Multi-format</div>
-                            </div>
-                            <div class="hub-matrix-card">
-                                <div class="hub-icon-round hub-icon-emerald">
-                                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                    </svg>
-                                </div>
-                                <div class="hub-label">QR Presensi</div>
-                                <div class="hub-sub">Real-Time GPS</div>
-                            </div>
-                            <div class="hub-matrix-card">
-                                <div class="hub-icon-round hub-icon-sky">
-                                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                    </svg>
-                                </div>
-                                <div class="hub-label">Rekap Nilai</div>
-                                <div class="hub-sub">Ekspor Otomatis</div>
-                            </div>
-                        </div>
-                        <!-- Barcode & Gate Scanner Mini Card -->
-                        <div class="barcode-mini-card">
-                            <div class="barcode-mini-head">
-                                <div class="barcode-title-row">
-                                    <span class="ping-dot"></span>
-                                    <span style="font-size: 0.75rem; font-weight: 600; color: #ffffff;"
-                                        class="">Pintu Presensi Digital Cepat</span>
-                                </div>
-                                <span class="badge-tervalidasi">Tervalidasi Aktif</span>
-                            </div>
-                            <div class="barcode-inner-content">
-                                <div class="qr-thumb-box">
-                                    <svg fill="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            d="M2 2h7v7H2V2zm2 2v3h3V4H4zm9-2h7v7h-7V2zm2 2v3h3V4h-3zM2 13h7v7H2v-7zm2 2v3h3v-3H4zm11 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm2-4h2v2h-2v-2zm-6 0h2v2h-2v-2zm4-6h2v2h-2V7zm-2 2h2v2h-2V9zm4 0h2v2h-2V9z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div style="font-size: 0.75rem; display: flex; flex-direction: column; gap: 0.25rem;">
-                                    <p style="font-weight: 500; color: var(--slate-200);" class="">Scan Barcode
-                                        melalui Smartphone Siswa</p>
-                                    <div
-                                        style="display: flex; align-items: center; gap: 0.375rem; font-size: 0.6875rem; color: #7dd3fc; font-weight: 600;">
-                                        <svg fill="none" stroke="currentColor"
-                                            style="width: 0.875rem; height: 0.875rem;" viewBox="0 0 24 24">
-                                            <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"
-                                                stroke-width="2"></path>
-                                        </svg>
-                                        <span class="">Terhubung ke Semua Konsentrasi Keahlian</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Bottom Status Footer -->
-                        <div class="mockup-footer">
-                            <span style="display: flex; align-items: center; gap: 0.375rem;" class="">
-                                <svg fill="none" stroke="currentColor"
-                                    style="width: 1rem; height: 1rem; color: var(--emerald-400);" viewBox="0 0 24 24">
-                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round"
-                                        stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                                Sinkronisasi Cloud Aktif
-                            </span>
-                            <span style="color: var(--sky-400); font-weight: 500;" class="">T.A
-                                2026/2027<br></span>
-                        </div>
+
+                <h1 class="hero-title">
+                    Learning Management System
+                    <span class="gradient-text-sky">Cerdas, Cepat &amp; Terintegrasi</span>
+                </h1>
+
+                <p class="hero-desc">
+                    Satu portal untuk materi daring, presensi QR berbasis GPS, dan rekap nilai
+                    otomatis, dirancang untuk siswa, guru, dan sekolah.
+                </p>
+
+                <div class="hero-cta-group">
+                    <a class="btn-hero-primary" href="{{ route('lms.login') }}">
+                        <span>Masuk ke LMS Sekarang</span>
+                        <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" stroke-linecap="round"
+                                stroke-linejoin="round" stroke-width="2.5"></path>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="credibility-grid">
+                    <div class="credibility-card">
+                        <div class="stat-number">1.200+</div>
+                        <div class="stat-label">Siswa &amp; Taruna Aktif</div>
+                    </div>
+                    <div class="credibility-card">
+                        <div class="stat-number">60+</div>
+                        <div class="stat-label">Guru &amp; Mentor Ahli</div>
+                    </div>
+                    <div class="credibility-card">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Daring &amp; Real-Time</div>
                     </div>
                 </div>
             </div>
+
+            <!-- Kanan: Mockup dashboard -->
+            <div class="mockup-wrapper">
+                <div class="mockup-backglow"></div>
+                <div class="mockup-panel">
+
+                    <div class="mockup-top-bar">
+                        <div class="browser-dots">
+                            <div class="browser-dot dot-red"></div>
+                            <div class="browser-dot dot-amber"></div>
+                            <div class="browser-dot dot-emerald"></div>
+                            <span class="browser-url">lms.yadika-ms.my.id</span>
+                        </div>
+                        <span class="status-badge-online">
+                            <span class="dot-online"></span>
+                            Sistem Online
+                        </span>
+                    </div>
+
+                    <div class="portal-banner">
+                        <div>
+                            <span class="banner-tag">Portal Terpadu Pembelajaran</span>
+                            <h4 class="portal-banner-title">LMS SMK Yadika Soreang</h4>
+                            <p class="portal-banner-desc">Pusat Akses Akademik, Modul Daring &amp; Presensi</p>
+                        </div>
+                        <div class="banner-icon">
+                            <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 14l9-5-9-5-9 5 9 5z" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2"></path>
+                                <path
+                                    d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="mockup-hub-matrix">
+                        <div class="hub-matrix-card">
+                            <div class="hub-icon-round hub-icon-sky">
+                                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                </svg>
+                            </div>
+                            <div class="hub-label">Modul Materi</div>
+                            <div class="hub-sub">Multi-format</div>
+                        </div>
+                        <div class="hub-matrix-card">
+                            <div class="hub-icon-round hub-icon-emerald">
+                                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                </svg>
+                            </div>
+                            <div class="hub-label">QR Presensi</div>
+                            <div class="hub-sub">Real-Time GPS</div>
+                        </div>
+                        <div class="hub-matrix-card">
+                            <div class="hub-icon-round hub-icon-sky">
+                                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                                </svg>
+                            </div>
+                            <div class="hub-label">Rekap Nilai</div>
+                            <div class="hub-sub">Ekspor Otomatis</div>
+                        </div>
+                    </div>
+
+                    <div class="barcode-mini-card">
+                        <div class="barcode-mini-head">
+                            <div class="barcode-title-row">
+                                <span class="ping-dot"></span>
+                                <span class="barcode-title-text">Pintu Presensi Digital Cepat</span>
+                            </div>
+                            <span class="badge-tervalidasi">Tervalidasi Aktif</span>
+                        </div>
+                        <div class="barcode-inner-content">
+                            <div class="qr-thumb-box">
+                                <svg fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M2 2h7v7H2V2zm2 2v3h3V4H4zm9-2h7v7h-7V2zm2 2v3h3V4h-3zM2 13h7v7H2v-7zm2 2v3h3v-3H4zm11 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 2h2v2h-2v-2zm2-4h2v2h-2v-2zm-6 0h2v2h-2v-2zm4-6h2v2h-2V7zm-2 2h2v2h-2V9zm4 0h2v2h-2V9z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div class="barcode-text">
+                                <p class="barcode-text-main">Scan Barcode melalui Smartphone Siswa</p>
+                                <div class="barcode-text-check">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"
+                                            stroke-width="2"></path>
+                                    </svg>
+                                    <span>Terhubung ke Semua Konsentrasi Keahlian</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mockup-footer">
+                        <span class="mockup-footer-sync">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                            Sinkronisasi Cloud Aktif
+                        </span>
+                        <span class="mockup-footer-year">T.A 2026/2027</span>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
-    </section>
+    </div>
+</section>
     <!-- HIGHLIGHT BANNER: KELEBIHAN UNTUK GURU & SISWA -->
     <section class="summary-banner-section">
         <div class="container">
