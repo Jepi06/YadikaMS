@@ -69,7 +69,7 @@
                 </nav>
                 <!-- CTA -->
                 <div class="nav-right">
-                    <a class="btn-login" href="#login">
+                    <a class="btn-login" href="{{ route('lms.login') }}">
                         <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
@@ -136,7 +136,7 @@
                         otomatis, dirancang untuk siswa, guru, dan sekolah.
                     </p>
                     <div class="hero-cta-group">
-                        <a class="btn-hero-primary" href="#login"
+                        <a class="btn-hero-primary" href="{{ route('lms.login') }}"
                             style="width: auto; max-width: min(100%, 22rem); margin: 0px auto; display: inline-flex;">
                             <span class="">Masuk ke LMS Sekarang</span>
                             <svg class="icon-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -576,7 +576,7 @@
                         daftar presensi.
                     </p>
                     <div style="padding-top: 0.5rem;">
-                        <a class="btn-cta-white" href="#login">
+                        <a class="btn-cta-white" href="{{ route('lms.login') }}">
                             <span class="">Masuk ke Akun LMS</span>
                             <svg class="icon-sm" fill="none" stroke="currentColor" style="color: var(--sky-600);"
                                 viewBox="0 0 24 24">
