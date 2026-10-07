@@ -1,5 +1,9 @@
 {{-- resources/views/lms/guru/wali-kelas-absensi.blade.php
-     Variabel dari WaliKelasController@absensi:
+     Dipakai oleh:
+       - WaliKelasController@absensi        (guru wali kelas)
+       - SuperAdmin\RekapAbsensiController  (admin, $modeAdmin = true, $layout = layout admin)
+
+     Variabel:
        $kelasDiwalikan, $kelas, $periodeList, $tahunAjaran, $semester,
        $hariMasukPerBulan  → Collection ['Y-m' => jumlah hari masuk]
        $totalHariMasuk
@@ -8,15 +12,11 @@
        $rekapKelasTotal    → [slot, hadir, izin, sakit, alpa, persen_*]
        $bulanDipilih, $tanggalList (Collection Y-m-d)
        $detailHarian       → [siswa_id][Y-m-d] = ['status' => 'Hadir', 'rincian' => 'Hadir 3, Alpa 1']
-     Semua relasi sudah di-load di controller (lazy loading dimatikan).
-
-     RESPONSIF:
-       - HP & tablet (< lg) : data tampil sebagai kartu per siswa / per bulan (tanpa scroll samping)
-       - PC (>= lg)         : tabel lengkap; kolom nama sticky hanya di PC, lebarnya dibatasi
+       $modeAdmin (opsional), $layout (opsional)
 --}}
 @extends($layout ?? 'lms.layouts.app')
 
-@section('title', 'Rekap Absensi Wali Kelas - LMS Yadika')
+@section('title', ($modeAdmin ?? false) ? 'Rekap Absensi Semua Kelas - LMS Yadika' : 'Rekap Absensi Wali Kelas - LMS Yadika')
 @section('breadcrumb', 'Rekap Absensi')
 
 @push('styles')
@@ -105,11 +105,14 @@
         $hariBulanDipilih = $bulanDipilih ? $hariMasukPerBulan[$bulanDipilih] ?? 0 : 0;
 
         $paramPeriode = ['kelas_id' => $kelas->id, 'tahun_ajaran' => $tahunAjaran, 'semester' => $semester];
+
+        // ── Mode admin vs wali kelas ──
         $modeAdmin = $modeAdmin ?? false;
         $formAction = $modeAdmin ? route('admin.rekap-absensi.index') : route('lms.guru.wali-kelas.absensi');
         $urlDashboard = $modeAdmin ? route('admin.dashboard') : route('lms.guru.dashboard');
         $urlNilai = $modeAdmin ? null : route('lms.guru.wali-kelas.index', $paramPeriode);
         $labelHeader = $modeAdmin ? 'Rekap Absensi — Semua Kelas' : 'Rekap Absensi — Wali Kelas';
+        $labelKelas = $modeAdmin ? 'Kelas' : 'Rombongan Belajar (Kelas)';
     @endphp
 
     {{-- HEADER --}}
@@ -128,27 +131,29 @@
                 <span class="text-slate-800 font-semibold hidden sm:inline">Rekap Absensi</span>
             </nav>
             <div class="flex flex-wrap items-center gap-x-3 gap-y-2 pt-0.5">
-                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Rekap Absensi — Wali Kelas</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{{ $labelHeader }}</h1>
                 <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
                     {{ $namaKelas }} • Semester {{ $semester }} {{ $tahunAjaran }}
                 </span>
             </div>
         </div>
-        <div class="flex items-center gap-2 shrink-0 w-full lg:w-auto">
-            <a href="{{ route('lms.guru.wali-kelas.index', $paramPeriode) }}"
-                class="inline-flex items-center justify-center gap-2 w-full lg:w-auto px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all">
-                <i class="bi bi-award"></i><span>Lihat Rekap Nilai</span>
-            </a>
-        </div>
+        @if ($urlNilai)
+            <div class="flex items-center gap-2 shrink-0 w-full lg:w-auto">
+                <a href="{{ $urlNilai }}"
+                    class="inline-flex items-center justify-center gap-2 w-full lg:w-auto px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all">
+                    <i class="bi bi-award"></i><span>Lihat Rekap Nilai</span>
+                </a>
+            </div>
+        @endif
     </section>
 
     {{-- FILTER --}}
     <section class="bg-white border border-slate-200/70 rounded-xl p-4 sm:p-5 shadow-sm">
-        <form id="filterAbsensi" method="GET" action="{{ route('lms.guru.wali-kelas.absensi') }}"
+        <form id="filterAbsensi" method="GET" action="{{ $formAction }}"
             class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div class="space-y-1.5 min-w-0">
                 <label for="fKelas" class="text-xs font-semibold text-slate-600 flex items-center gap-1.5"><i
-                        class="bi bi-people text-blue-600"></i>Rombongan Belajar (Kelas)</label>
+                        class="bi bi-people text-blue-600"></i>{{ $labelKelas }}</label>
                 {{-- text-base di HP supaya iOS tidak zoom otomatis saat fokus --}}
                 <select id="fKelas" name="kelas_id"
                     class="w-full h-11 sm:h-10 px-3 rounded-lg bg-slate-100 text-base sm:text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/40">
