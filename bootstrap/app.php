@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+         $middleware->trustProxies(at: '*');
         $middleware->alias([
             'auth.pkl' => \App\Http\Middleware\AuthenticatePkl::class,
             'auth.spmb' => \App\Http\Middleware\AuthenticateSpmb::class,

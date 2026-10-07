@@ -21,37 +21,51 @@
     } elseif (request()->routeIs('lms.guru.*')) {
         $isSiswa = false;
     } else {
-        $isSiswa = $user && $user->isSiswaLms() && ! $user->isGuruLms();
+        $isSiswa = $user && $user->isSiswaLms() && !$user->isGuruLms();
     }
 
-    $roleLabel      = $isSiswa ? 'Siswa' : 'Guru';
+    $roleLabel = $isSiswa ? 'Siswa' : 'Guru';
     $roleLabelPanjang = $isSiswa ? 'Siswa' : 'Guru Pengampu';
-    $dashboardUrl   = $isSiswa ? $r('lms.siswa.dashboard') : $r('lms.guru.dashboard');
+    $dashboardUrl = $isSiswa ? $r('lms.siswa.dashboard') : $r('lms.guru.dashboard');
     $breadcrumbDefault = $isSiswa ? 'Dashboard Siswa' : 'Dashboard Guru';
 
     $menuAktif = 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-semibold';
     $menuBiasa = 'text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium';
+
+    // Punya peran approval PKL? (wali kelas / guru BK / kesiswaan / kepala jurusan)
+    $punyaApprovalPkl = $user && !$isSiswa && $user->hasPklRole('wali_kelas', 'guru_bk', 'kesiswaan', 'kepala_jurusan');
+    $pklMenunggu = $pklMenunggu ?? 0;
 @endphp
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'LMS Yadika')</title>
 
-<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/style.css') }}">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         brand: {
-                            50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 500: '#3b82f6',
-                            600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a', 950: '#0f172a',
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#0f172a',
                         },
                     },
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                    },
                 },
             },
         }
@@ -59,16 +73,28 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <style>
-        * { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
     </style>
     @stack('styles')
 </head>
+
 <body class="bg-[#f1f5f9] text-slate-800 antialiased min-h-screen flex">
 
     {{-- Backdrop sidebar (mobile) --}}
@@ -81,7 +107,8 @@
         <div>
             <div class="px-6 py-6 flex items-center justify-between border-b border-slate-800/80">
                 <a href="{{ $dashboardUrl }}" class="flex items-center gap-3 group">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
                         <i class="bi bi-mortarboard-fill text-xl"></i>
                     </div>
                     <div>
@@ -99,7 +126,8 @@
                 @if ($isSiswa)
                     {{-- ===== MENU SISWA ===== --}}
                     <div>
-                        <div class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Menu Utama</div>
+                        <div class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Menu Utama
+                        </div>
                         <nav class="space-y-1">
                             <a href="{{ $r('lms.siswa.dashboard') }}"
                                 class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ request()->routeIs('lms.siswa.dashboard') ? $menuAktif : $menuBiasa }}">
@@ -113,7 +141,9 @@
                                 <span>Mata Pelajaran</span>
                                 @isset($tugasBelumDikumpulkan)
                                     @if ($tugasBelumDikumpulkan > 0)
-                                        <span class="ml-auto px-2 py-0.5 text-[11px] rounded-full bg-rose-500/15 text-rose-300 font-semibold border border-rose-500/30" title="Tugas belum dikumpulkan">{{ $tugasBelumDikumpulkan }}</span>
+                                        <span
+                                            class="ml-auto px-2 py-0.5 text-[11px] rounded-full bg-rose-500/15 text-rose-300 font-semibold border border-rose-500/30"
+                                            title="Tugas belum dikumpulkan">{{ $tugasBelumDikumpulkan }}</span>
                                     @endif
                                 @endisset
                             </a>
@@ -134,7 +164,8 @@
                 @else
                     {{-- ===== MENU GURU ===== --}}
                     <div>
-                        <div class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Menu Utama</div>
+                        <div class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Menu Utama
+                        </div>
                         <nav class="space-y-1">
                             {{-- Dashboard --}}
                             <a href="{{ $r('lms.guru.dashboard') }}"
@@ -149,7 +180,9 @@
                                 <i class="bi bi-door-open text-base"></i>
                                 <span>Kelas Saya</span>
                                 @isset($totalKelas)
-                                    <span class="ml-auto px-2 py-0.5 text-[11px] rounded-full bg-slate-800 text-slate-300 font-semibold border border-slate-700">{{ $totalKelas }} Kelas</span>
+                                    <span
+                                        class="ml-auto px-2 py-0.5 text-[11px] rounded-full bg-slate-800 text-slate-300 font-semibold border border-slate-700">{{ $totalKelas }}
+                                        Kelas</span>
                                 @endisset
                             </a>
 
@@ -166,13 +199,28 @@
                                 <i class="bi bi-person-badge text-base"></i>
                                 <span>Wali Kelas</span>
                             </a>
+
+                            {{-- Approval PKL: masuk ke sistem PKL tanpa login ulang --}}
+                            @if ($punyaApprovalPkl)
+                                <a href="{{ $r('pkl.masuk-lms') }}"
+                                    class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ $menuBiasa }}">
+                                    <i class="bi bi-check2-circle text-base"></i>
+                                    <span>Approval PKL</span>
+                                    @if ($pklMenunggu > 0)
+                                        <span
+                                            class="ml-auto px-2 py-0.5 text-[11px] rounded-full bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/30"
+                                            title="Pengajuan PKL menunggu persetujuan Anda">{{ $pklMenunggu }}</span>
+                                    @endif
+                                </a>
+                            @endif
                         </nav>
                     </div>
                 @endif
 
                 {{-- ===== Bersama (semua role) ===== --}}
                 <div>
-                    <div class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Pengaturan & Akun</div>
+                    <div class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Pengaturan &
+                        Akun</div>
                     <nav class="space-y-1">
                         <a href="{{ $r('lms.profil.edit') }}"
                             class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ request()->routeIs('lms.profil.*') ? $menuAktif : $menuBiasa }}">
@@ -188,7 +236,8 @@
         <div class="p-4 border-t border-slate-800/80 bg-slate-950/40">
             <div class="flex items-center justify-between p-2 rounded-xl bg-slate-800/50 border border-slate-800">
                 <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center font-bold text-white text-sm shadow-sm flex-shrink-0">
+                    <div
+                        class="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center font-bold text-white text-sm shadow-sm flex-shrink-0">
                         {{ $inisial }}
                     </div>
                     <div class="truncate">
@@ -209,9 +258,11 @@
 
     {{-- ========== KONTEN UTAMA ========== --}}
     <div class="flex-1 flex flex-col min-w-0 min-h-screen">
-        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <header
+            class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors">
+                <button onclick="toggleSidebar()"
+                    class="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors">
                     <i class="bi bi-list text-xl"></i>
                 </button>
                 <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
@@ -223,46 +274,70 @@
 
             <div class="flex items-center gap-3">
                 @isset($tahunAjaran)
-                    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold">
+                    <div
+                        class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold">
                         <i class="bi bi-calendar3"></i>
-                        <span>T.A {{ $tahunAjaran }}@isset($semester) • Semester {{ $semester }}@endisset</span>
-                    </div>
-                @endisset
-
-                <div class="h-6 w-px bg-slate-200"></div>
-
-                <div class="flex items-center gap-2.5 pl-1">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-blue-50">
-                        {{ $inisial }}
-                    </div>
-                    <div class="hidden sm:block text-left">
-                        <div class="text-xs font-bold text-slate-800 leading-tight">{{ $namaUser }}</div>
-                        <div class="text-[11px] text-slate-500 font-medium">{{ $roleLabel }}</div>
-                    </div>
+                        <span>T.A {{ $tahunAjaran }}@isset($semester)
+                            • Semester {{ $semester }}
+                        @endisset
+                    </span>
                 </div>
-            </div>
-        </header>
+            @endisset
 
-        <main class="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-8">
-            @if (session('status'))
-                <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3">
-                    {{ session('status') }}
-                </div>
+            {{-- Notifikasi pengajuan PKL (hanya muncul kalau ada yang menunggu) --}}
+            @if ($pklMenunggu > 0)
+                <a href="{{ $r('pkl.masuk-lms') }}"
+                    class="relative inline-flex items-center justify-center w-9 h-9 rounded-xl border border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100 transition-colors"
+                    title="{{ $pklMenunggu }} pengajuan PKL menunggu persetujuan Anda">
+                    <i class="bi bi-bell-fill text-base"></i>
+                    <span
+                        class="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+                        {{ $pklMenunggu }}
+                    </span>
+                </a>
             @endif
 
-            @yield('content')
-        </main>
-    </div>
+            <div class="h-6 w-px bg-slate-200"></div>
 
-    <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('mainSidebar');
-            const backdrop = document.getElementById('sidebarBackdrop');
-            const tertutup = sidebar.classList.contains('-translate-x-full');
-            sidebar.classList.toggle('-translate-x-full', !tertutup);
-            backdrop.classList.toggle('hidden', !tertutup);
-        }
-    </script>
-    @stack('scripts')
+            <div class="flex items-center gap-2.5 pl-1">
+                <div
+                    class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-blue-50">
+                    {{ $inisial }}
+                </div>
+                <div class="hidden sm:block text-left">
+                    <div class="text-xs font-bold text-slate-800 leading-tight">{{ $namaUser }}</div>
+                    <div class="text-[11px] text-slate-500 font-medium">{{ $roleLabel }}</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-8">
+        @if (session('status'))
+            <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        @yield('content')
+        @if ($isSiswa)
+            @include('lms.partials.pkl-siswa')
+        @endif
+
+        @yield('content')
+    </main>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        const tertutup = sidebar.classList.contains('-translate-x-full');
+        sidebar.classList.toggle('-translate-x-full', !tertutup);
+        backdrop.classList.toggle('hidden', !tertutup);
+    }
+</script>
+@stack('scripts')
 </body>
+
 </html>

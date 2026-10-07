@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Siswa;
 use App\Models\Kelas;
+use App\Models\Mapping\PengaturanPkl;
+use Illuminate\Support\Facades\Auth;
 class PenempatanPklController extends Controller
 {
     public function index(Request $request)
@@ -225,5 +227,17 @@ class PenempatanPklController extends Controller
         $namaFile = 'Surat-Rekomendasi-PKL-' . str($penempatan->siswa->nama)->slug() . '.pdf';
 
         return $pdf->download($namaFile);
+    }
+    public function togglePengajuan(Request $request)
+    {
+        $user = Auth::guard('pkl')->user();
+        abort_unless($user && $user->isAdminAtauHubin(), 403);
+
+        $dibuka = $request->boolean('dibuka');
+        PengaturanPkl::setPengajuanDibuka($dibuka);
+
+        return back()->with('success', $dibuka
+            ? 'Pengajuan PKL DIBUKA. Notifikasi muncul ke siswa kelas XII.'
+            : 'Pengajuan PKL DITUTUP.');
     }
 }

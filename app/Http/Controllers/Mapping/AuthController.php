@@ -87,4 +87,25 @@ class AuthController extends Controller
         return redirect()->route('pkl.login')
             ->with('success', 'Berhasil logout');
     }
+    public function masukDariLms(Request $request)
+    {
+        $user = Auth::guard('lms')->user();
+
+        if (! $user || ! $user->hasPklRole('wali_kelas', 'guru_bk', 'kesiswaan', 'kepala_jurusan')) {
+            abort(403, 'Anda tidak memiliki akses approval PKL.');
+        }
+
+        // Kalau di guard pkl masih login sebagai akun lain, ganti ke akun ini
+        $sedangLogin = Auth::guard('pkl')->user();
+        if ($sedangLogin && $sedangLogin->id !== $user->id) {
+            Auth::guard('pkl')->logout();
+        }
+
+        if (! Auth::guard('pkl')->check()) {
+            Auth::guard('pkl')->login($user);
+            $request->session()->regenerate();
+        }
+
+        return redirect()->route('approval.index');
+    }
 }
