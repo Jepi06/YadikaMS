@@ -5,13 +5,10 @@
 
      Variabel:
        $kelasDiwalikan, $kelas, $periodeList, $tahunAjaran, $semester,
-       $hariMasukPerBulan  → Collection ['Y-m' => jumlah hari masuk]
-       $totalHariMasuk
-       $rekap              → array of object {siswa, per_bulan[Y-m] = [hadir, hari_masuk, persen], total_hadir, total_hari_masuk, total_persen}
-       $rekapKelasPerBulan → ['Y-m' => [hari_aktif, slot, hadir, izin, sakit, alpa, persen_*]]
-       $rekapKelasTotal    → [slot, hadir, izin, sakit, alpa, persen_*]
-       $bulanDipilih, $tanggalList (Collection Y-m-d)
-       $detailHarian       → [siswa_id][Y-m-d] = ['status' => 'Hadir', 'rincian' => 'Hadir 3, Alpa 1']
+       $hariMasukPerBulan, $totalHariMasuk, $rekap, $rekapKelasPerBulan, $rekapKelasTotal,
+       $bulanDipilih, $tanggalList,
+       $detailHarian  → [siswa_id][Y-m-d] = ['status', 'rincian', 'catatan' => [[status, mapel, guru, jam]]]
+       $catatanHarian → list [siswa_id, tanggal, entries[]] : hari Hadir tapi ada Alpa/Izin/Sakit di mapel lain
        $modeAdmin (opsional), $layout (opsional)
 --}}
 @extends($layout ?? 'lms.layouts.app')
@@ -64,6 +61,11 @@
             'Sakit' => ['S', 'bg-amber-100 text-amber-800'],
             'Alpa' => ['A', 'bg-rose-100 text-rose-800'],
         ];
+        $statusBadge = [
+            'Izin' => 'bg-blue-100 text-blue-800',
+            'Sakit' => 'bg-amber-100 text-amber-800',
+            'Alpa' => 'bg-rose-100 text-rose-800',
+        ];
 
         $warnaPersen = fn($p) => $p >= 90 ? 'text-emerald-700' : ($p >= 75 ? 'text-amber-700' : 'text-rose-700');
         $warnaBar = fn($p) => $p >= 90 ? 'bg-emerald-500' : ($p >= 75 ? 'bg-amber-500' : 'bg-rose-500');
@@ -91,12 +93,39 @@
             return $c;
         };
 
+        // Teks tooltip: rincian + catatan (mapel, guru, jam) kalau Hadir tapi tidak penuh
+        $teksTooltip = function ($cell) {
+            if (!$cell) {
+                return '';
+            }
+            $t = $cell['rincian'] ?? ($cell['status'] ?? '');
+            if (!empty($cell['catatan'])) {
+                $t .=
+                    ' — ' .
+                    collect($cell['catatan'])
+                        ->map(
+                            fn($c) => $c['status'] .
+                                ' di ' .
+                                $c['mapel'] .
+                                ($c['jam'] ? ' (' . $c['jam'] . ')' : ''),
+                        )
+                        ->implode('; ');
+            }
+            return $t;
+        };
+
         // Carbon per tanggal dihitung sekali (dipakai header tabel & kalender HP)
         $tanggalInfo = $tanggalList->mapWithKeys(fn($t) => [$t => $C::parse($t)]);
 
         $rekapUrut = collect($rekap)->sortBy(fn($r) => strtolower($namaSiswa($r->siswa)))->values();
+        $siswaMap = $rekapUrut->mapWithKeys(fn($r) => [$r->siswa->id => $r->siswa]);
         $jumlahSiswa = $rekapUrut->count();
         $adaData = $hariMasukPerBulan->isNotEmpty();
+
+        // Catatan "Hadir tapi tidak penuh", diurutkan tanggal lalu nama siswa
+        $catatanUrut = collect($catatanHarian ?? [])
+            ->sortBy(fn($c) => $c['tanggal'] . '|' . strtolower($namaSiswa($siswaMap[$c['siswa_id']] ?? (object) [])))
+            ->values();
 
         $nKritis = $rekapUrut->filter(fn($r) => $r->total_hari_masuk > 0 && $r->total_persen < 75)->count();
         $nSempurna = $rekapUrut->filter(fn($r) => $r->total_hari_masuk > 0 && $r->total_persen >= 100)->count();
@@ -298,6 +327,9 @@
                     <span class="px-2 py-1 rounded bg-rose-50 text-rose-800 border border-rose-200">A Alpa</span>
                     <span class="px-2 py-1 rounded bg-slate-100 text-slate-600 border border-slate-200">– Tidak ada
                         data</span>
+                    <span
+                        class="px-2 py-1 rounded bg-emerald-50 text-emerald-800 ring-2 ring-amber-400">H Hadir, ada
+                        catatan</span>
                 </div>
             </div>
 
@@ -333,19 +365,21 @@
                             <i class="bi bi-chevron-down ikon-buka text-slate-400 shrink-0"></i>
                         </summary>
                         <div class="px-3 pb-3 pt-3 border-t border-slate-100">
-                            <p class="text-[11px] text-slate-400 mb-2">Angka kecil = tanggal, huruf = status presensi.</p>
+                            <p class="text-[11px] text-slate-400 mb-2">Angka kecil = tanggal, huruf = status presensi.
+                                Bingkai kuning = hadir tapi ada catatan (lihat bagian Catatan di bawah).</p>
                             <div class="grid grid-cols-7 gap-1.5">
                                 @foreach ($tanggalList as $tgl)
                                     @php
                                         $cell = $detailHarian[$sid][$tgl] ?? null;
                                         $st = $cell['status'] ?? null;
                                         [$huruf, $kls] = $statusStyle[$st] ?? [null, null];
+                                        $adaCatatan = !empty($cell['catatan']);
                                     @endphp
                                     <div class="text-center">
                                         <div class="text-[10px] text-slate-400 leading-none mb-0.5">
                                             {{ $tanggalInfo[$tgl]->format('d') }}</div>
                                         <span
-                                            class="block w-full py-1 rounded text-xs font-bold {{ $kls ?? 'text-slate-300 bg-slate-50' }}">{{ $huruf ?? '–' }}</span>
+                                            class="block w-full py-1 rounded text-xs font-bold {{ $kls ?? 'text-slate-300 bg-slate-50' }} {{ $adaCatatan ? 'ring-2 ring-amber-400' : '' }}">{{ $huruf ?? '–' }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -400,11 +434,12 @@
                                         $cell = $detailHarian[$sid][$tgl] ?? null;
                                         $st = $cell['status'] ?? null;
                                         [$huruf, $kls] = $statusStyle[$st] ?? [null, null];
+                                        $adaCatatan = !empty($cell['catatan']);
                                     @endphp
                                     <td class="p-1 text-center">
                                         @if ($huruf)
-                                            <span title="{{ $cell['rincian'] ?? $st }}"
-                                                class="inline-block w-6 py-0.5 rounded text-xs font-bold {{ $kls }}">{{ $huruf }}</span>
+                                            <span title="{{ $teksTooltip($cell) }}"
+                                                class="inline-block w-6 py-0.5 rounded text-xs font-bold {{ $kls }} {{ $adaCatatan ? 'ring-2 ring-amber-400' : '' }}">{{ $huruf }}</span>
                                         @else
                                             <span class="inline-block w-6 py-0.5 rounded text-xs text-slate-300">–</span>
                                         @endif
@@ -430,15 +465,68 @@
                 <i class="bi bi-info-circle text-blue-700 mt-0.5"></i>
                 <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
                     <span class="font-semibold text-slate-900">Aturan absensi harian:</span> jika dalam satu hari siswa
-                    punya status berbeda di beberapa mapel,
-                    status terberat yang ditampilkan (<span class="text-rose-700 font-semibold">Alpa</span> &gt; <span
-                        class="text-amber-700 font-semibold">Sakit</span> &gt;
-                    <span class="text-blue-700 font-semibold">Izin</span> &gt; <span
-                        class="text-emerald-700 font-semibold">Hadir</span>).
+                    tercatat <span class="text-emerald-700 font-semibold">Hadir</span> di salah satu mapel, hari itu
+                    dihitung <span class="text-emerald-700 font-semibold">Hadir</span>. Jika tidak ada yang Hadir, status
+                    terberat yang ditampilkan (<span class="text-rose-700 font-semibold">Alpa</span> &gt; <span
+                        class="text-amber-700 font-semibold">Sakit</span> &gt; <span
+                        class="text-blue-700 font-semibold">Izin</span>). Jika hari itu Hadir tetapi ada Alpa/Izin/Sakit
+                    di mapel lain, sel diberi bingkai kuning dan rinciannya (mapel, guru, jam) muncul di bagian Catatan.
                     <span class="hidden lg:inline">Arahkan kursor ke sel untuk melihat rincian per mapel.</span>
                 </p>
             </div>
         </section>
+
+        {{-- ================= CATATAN: HADIR TAPI TIDAK PENUH ================= --}}
+        @if ($catatanUrut->isNotEmpty())
+            <section class="bg-white border border-amber-200 rounded-xl shadow-sm p-4 sm:p-5 space-y-4">
+                <div class="flex items-center gap-3 pb-3 border-b border-amber-100">
+                    <div
+                        class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                        <i class="bi bi-journal-text text-xl"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h2 class="font-bold text-slate-900 text-base sm:text-lg">Catatan Kehadiran Tidak Penuh —
+                            {{ $bulanDipilih ? $bulanPanjang($bulanDipilih) : '-' }}</h2>
+                        <p class="text-xs sm:text-sm text-slate-500">Siswa tercatat hadir, tetapi di mapel tertentu
+                            statusnya Alpa/Izin/Sakit ({{ $catatanUrut->count() }} kejadian). Bisa jadi siswa keluar di
+                            tengah jam pelajaran.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5">
+                    @foreach ($catatanUrut as $c)
+                        @php
+                            $sw = $siswaMap[$c['siswa_id']] ?? null;
+                            $tglC = $C::parse($c['tanggal']);
+                        @endphp
+                        <div class="rounded-xl border border-slate-200 p-3 flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+                            <div class="sm:w-56 shrink-0">
+                                <div class="font-semibold text-sm text-slate-900 leading-tight break-words">
+                                    {{ $sw ? $namaSiswa($sw) : 'Siswa #' . $c['siswa_id'] }}</div>
+                                <div class="text-[11px] text-slate-500">{{ $tglC->translatedFormat('l, d F Y') }}</div>
+                            </div>
+                            <ul class="flex-1 space-y-1">
+                                @foreach ($c['entries'] as $e)
+                                    <li class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[11px] font-bold {{ $statusBadge[$e['status']] ?? 'bg-slate-100 text-slate-700' }}">{{ $e['status'] }}</span>
+                                        <span class="font-medium text-slate-800">{{ $e['mapel'] }}</span>
+                                        <span class="text-slate-500">({{ $e['guru'] }})</span>
+                                        @if ($e['jam'])
+                                            <span class="text-slate-500 font-mono"><i class="bi bi-clock"></i>
+                                                {{ $e['jam'] }}</span>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endforeach
+                </div>
+
+                <p class="text-[11px] text-slate-400">Jam yang tampil adalah waktu presensi tersebut dicatat di sistem
+                    (bukan jadwal jam pelajaran), jadi bisa berbeda dari jam siswa benar-benar keluar kelas.</p>
+            </section>
+        @endif
 
         {{-- ================= REKAP PERSENTASE PER SISWA ================= --}}
         <section class="bg-white border border-slate-200/70 rounded-xl shadow-sm p-4 sm:p-5 space-y-4">
@@ -766,7 +854,7 @@
             <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
                 <span class="font-semibold text-slate-900">Catatan perhitungan:</span>
                 persentase per siswa = <span class="font-mono text-slate-800">hari hadir ÷ hari masuk</span> (hari masuk =
-                tanggal unik yang punya presensi di mapel mana pun).
+                tanggal unik yang punya presensi di mapel mana pun; hari dihitung hadir jika hadir di salah satu mapel).
                 Persentase kelas = <span class="font-mono text-slate-800">total kejadian status ÷ (hari masuk × jumlah
                     siswa)</span>.
                 Data diambil dari presensi seluruh mapel di kelas ini pada periode terpilih.

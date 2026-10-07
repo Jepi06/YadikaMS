@@ -1,10 +1,4 @@
-{{-- resources/views/lms/guru/presensi-rekap.blade.php
-     Variabel dari controller (nama alternatif dikenali, lihat @php):
-       $pengampuMapel  → PengampuMapel
-       $rekap          → koleksi per siswa: siswa (model) + hadir/izin/sakit/alpa
-                         (atau $presensi = baris PresensiLms mentah, nanti dikelompokkan di sini)
-       $totalPertemuan → opsional (kalau tidak ada, dihitung dari data)
-       request('dari'), request('sampai') → filter tanggal (YYYY-MM-DD) --}}
+
 @extends('lms.layouts.app')
 
 @section('title', 'Rekap Presensi - LMS Yadika')

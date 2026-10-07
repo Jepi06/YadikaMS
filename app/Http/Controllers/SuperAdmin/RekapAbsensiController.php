@@ -29,7 +29,7 @@ class RekapAbsensiController extends Controller
             'kelasDiwalikan', 'kelas', 'periodeList', 'tahunAjaran', 'semester'
         ) + [
             'modeAdmin' => true,
-            'layout' => 'superadmin.layouts.app', // ← GANTI sesuai nama layout panel admin kamu
+            'layout' => 'admin.layouts.app', // ← GANTI sesuai nama layout panel admin kamu
         ]);
     }
 }

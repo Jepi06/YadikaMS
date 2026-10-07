@@ -4,9 +4,9 @@ namespace App\Services\Lms;
 
 use App\Models\Kelas;
 use App\Models\Lms\PengampuMapel;
-use App\Support\TahunAjaran;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class RekapAbsensiService
 {
@@ -23,24 +23,77 @@ class RekapAbsensiService
 
     /**
      * Susun semua data rekap absensi 1 kelas.
-     * Return array siap di-merge ke view (hariMasukPerBulan, rekap, dst).
+     *
+     * ATURAN HARIAN (banyak guru/mapel dalam 1 hari → dihitung 1):
+     *   - Hadir di salah satu mapel  → hari itu HADIR
+     *   - Tidak ada yang Hadir       → status terberat: Alpa > Sakit > Izin
+     *   - Kalau hari itu HADIR tapi di mapel lain Alpa/Izin/Sakit → dicatat di
+     *     $catatanHarian (mapel, guru, jam) supaya wali kelas tahu.
      */
     public static function susun(Kelas $kelas, $tahunAjaran, $semester, ?string $bulanReq = null): array
     {
         $kelas->loadMissing('siswa');
 
-        $pengampuIds = PengampuMapel::where('kelas_id', $kelas->id)
+        // Eager load relasi (lazy loading dimatikan di project ini)
+        $pengampuList = PengampuMapel::with('mataPelajaran', 'guru')
+            ->where('kelas_id', $kelas->id)
             ->where('tahun_ajaran', $tahunAjaran)
             ->where('semester', $semester)
-            ->pluck('id');
+            ->get()
+            ->keyBy('id');
 
-        $presensi = DB::table('presensi_lms')
+        $pengampuIds = $pengampuList->keys();
+
+        $namaMapel = function ($pid) use ($pengampuList) {
+            $m = $pengampuList[$pid]->mataPelajaran ?? null;
+            return $m->nama_mapel ?? ($m->nama ?? 'Mapel');
+        };
+        $namaGuru = function ($pid) use ($pengampuList) {
+            $g = $pengampuList[$pid]->guru ?? null;
+            return $g->nama ?? ($g->name ?? '-');
+        };
+
+        // Kolom waktu presensi: pakai kolom jam kalau ada, kalau tidak created_at.
+        $kolomWaktu = collect(['jam_presensi', 'waktu_presensi', 'jam', 'waktu', 'created_at'])
+            ->first(fn($c) => Schema::hasColumn('presensi_lms', $c));
+
+        $kolom = ['pengampu_mapel_id', 'siswa_id', 'tanggal', 'status'];
+        if ($kolomWaktu) {
+            $kolom[] = $kolomWaktu;
+        }
+
+        // Angka lebih besar = menang
+        $prioritas = ['Hadir' => 4, 'Alpa' => 3, 'Sakit' => 2, 'Izin' => 1];
+
+        // Data mentah (1 baris per mapel)
+        $presensiMentah = DB::table('presensi_lms')
             ->whereIn('pengampu_mapel_id', $pengampuIds)
-            ->get(['siswa_id', 'tanggal', 'status'])
-            ->map(function ($p) {
+            ->get($kolom)
+            ->map(function ($p) use ($kolomWaktu) {
                 $p->tanggal = Carbon::parse($p->tanggal)->format('Y-m-d');
+                $p->jam = null;
+                if ($kolomWaktu && !empty($p->{$kolomWaktu})) {
+                    try {
+                        $p->jam = Carbon::parse($p->{$kolomWaktu})->format('H:i');
+                    } catch (\Throwable $e) {
+                        $p->jam = null;
+                    }
+                }
                 return $p;
             });
+
+        // Data harian → 1 baris per siswa per tanggal
+        $presensi = $presensiMentah
+            ->groupBy(fn($p) => $p->siswa_id . '|' . $p->tanggal)
+            ->map(function ($grup) use ($prioritas) {
+                $p = $grup->sortByDesc(fn($x) => $prioritas[$x->status] ?? 0)->first();
+                return (object) [
+                    'siswa_id' => $p->siswa_id,
+                    'tanggal' => $p->tanggal,
+                    'status' => $p->status,
+                ];
+            })
+            ->values();
 
         $hariMasukPerBulan = $presensi
             ->groupBy(fn($p) => substr($p->tanggal, 0, 7))
@@ -92,7 +145,7 @@ class RekapAbsensiService
             foreach ($hariMasukPerBulan as $bulan => $hariMasuk) {
                 $hadirBulanIni = $presensiSiswa
                     ->filter(fn($p) => str_starts_with($p->tanggal, $bulan) && $p->status === 'Hadir')
-                    ->pluck('tanggal')->unique()->count();
+                    ->count();
 
                 $perBulan[$bulan] = [
                     'hadir' => $hadirBulanIni,
@@ -101,7 +154,7 @@ class RekapAbsensiService
                 ];
             }
 
-            $totalHadir = $presensiSiswa->where('status', 'Hadir')->pluck('tanggal')->unique()->count();
+            $totalHadir = $presensiSiswa->where('status', 'Hadir')->count();
 
             $rekap[] = (object) [
                 'siswa' => $siswa,
@@ -112,33 +165,61 @@ class RekapAbsensiService
             ];
         }
 
-        // Detail harian untuk 1 bulan
+        // Detail harian untuk 1 bulan + catatan "Hadir tapi tidak penuh"
         $bulanTersedia = $hariMasukPerBulan->keys();
         $bulanDipilih = $bulanTersedia->contains($bulanReq) ? $bulanReq : $bulanTersedia->last();
 
         $tanggalList = collect();
         $detailHarian = [];
+        $catatanHarian = []; // list: [siswa_id, tanggal, entries[[status, mapel, guru, jam]]]
 
         if ($bulanDipilih) {
-            $prioritas = ['Alpa' => 4, 'Sakit' => 3, 'Izin' => 2, 'Hadir' => 1];
-            $presensiBulan = $presensi->filter(fn($p) => str_starts_with($p->tanggal, $bulanDipilih));
+            $presensiBulan = $presensiMentah->filter(fn($p) => str_starts_with($p->tanggal, $bulanDipilih));
             $tanggalList = $presensiBulan->pluck('tanggal')->unique()->sort()->values();
 
             foreach ($presensiBulan->groupBy('siswa_id') as $siswaId => $barisSiswa) {
                 foreach ($barisSiswa->groupBy('tanggal') as $tgl => $barisHari) {
                     $statusList = $barisHari->pluck('status');
+                    $final = $statusList->sortByDesc(fn($st) => $prioritas[$st] ?? 0)->first();
+
+                    $catatan = [];
+                    if ($final === 'Hadir') {
+                        $catatan = $barisHari
+                            ->filter(fn($x) => $x->status !== 'Hadir')
+                            ->sortBy(fn($x) => $x->jam ?? '99:99')
+                            ->map(fn($x) => [
+                                'status' => $x->status,
+                                'mapel' => $namaMapel($x->pengampu_mapel_id),
+                                'guru' => $namaGuru($x->pengampu_mapel_id),
+                                'jam' => $x->jam,
+                            ])
+                            ->values()
+                            ->all();
+                    }
+
                     $detailHarian[$siswaId][$tgl] = [
-                        'status' => $statusList->sortByDesc(fn($st) => $prioritas[$st] ?? 0)->first(),
+                        'status' => $final,
                         'rincian' => $statusList->countBy()->map(fn($n, $st) => "$st $n")->implode(', '),
+                        'catatan' => $catatan,
                     ];
+
+                    if (!empty($catatan)) {
+                        $catatanHarian[] = [
+                            'siswa_id' => $siswaId,
+                            'tanggal' => $tgl,
+                            'entries' => $catatan,
+                        ];
+                    }
                 }
             }
+
+            usort($catatanHarian, fn($a, $b) => strcmp($a['tanggal'], $b['tanggal']));
         }
 
         return compact(
             'hariMasukPerBulan', 'totalHariMasuk', 'rekap',
             'rekapKelasPerBulan', 'rekapKelasTotal',
-            'bulanDipilih', 'tanggalList', 'detailHarian'
+            'bulanDipilih', 'tanggalList', 'detailHarian', 'catatanHarian'
         );
     }
 }

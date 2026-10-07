@@ -7,6 +7,48 @@
     <title>@yield('title', 'Panel Super Admin') - SMK Yadika Soreang</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+      <link rel="stylesheet" href="{{ asset('css/style.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#0f172a',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                    },
+                },
+            },
+        }
+    </script>
+
+    <style>
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+    </style>
+    @stack('styles')
     <style>
         .sidebar {
             width: 250px;
@@ -137,8 +179,8 @@
                 href="{{ route('admin.jadwal.index') }}">
                 <i class="bi bi-calendar-week me-2"></i> Jadwal Guru
             </a>
-            <a href="{{ route('admin.rekap-absensi.index') }}"
-                class="... {{ request()->routeIs('admin.rekap-absensi.*') ? 'active-class' : '' }}">
+            <a class="nav-link {{ request()->routeIs('admin.rekap-absensi.*') ? 'active' : '' }}"
+                href="{{ route('admin.rekap-absensi.index') }}">
                 <i class="bi bi-calendar-check"></i> Rekap Absensi
             </a>
             <a class="nav-link {{ request()->routeIs('admin.profil.*') ? 'active' : '' }}"
