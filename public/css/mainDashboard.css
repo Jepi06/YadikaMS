@@ -1270,6 +1270,7 @@ button {
     gap: 16px;
     align-items: center;
     justify-content: space-between;
+    text-align: center;
     font-size: 0.78rem;
     color: #64748b;
 }

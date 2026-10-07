@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" style="">
 
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>SMK Yadika Soreang – Sekolah Berkarakter &amp; Berprestasi</title>
+    <title>Portal SMK Yadika Soreang – Sekolah Berkarakter &amp; Berprestasi</title>
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link href="https://fonts.googleapis.com" rel="preconnect">
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&amp;display=swap"
         rel="stylesheet">
-    <link href="css/mainDashboard.css" rel="stylesheet">
+    <link href="/css/mainDashboard.css" rel="stylesheet">
 </head>
 
 <body>
@@ -21,9 +21,11 @@
             <div class="nav-inner nav-wrap">
                 <!-- Brand Logo -->
                 <a class="brand-logo" href="#home">
-                    <div class="brand-badge brand-logo-box">Y</div>
+                    <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA1ASJnCDgcfqAXgbNyf2n-lk9paB7EN4eGVpuxrnxs1onejKPDsl33C7UuI4HBG5MCN1sn5OukXDxreD6Lo3ifUPpt_dwg0ZrF8BYfYpSvcCSg-1rOQQSiH-izRPweF9mNR1Qxuf7IIjyxp9unMoNw13Iuu4SbQEW6XERSV2cZzikW1I8h-Ogrseqt56oOnTR-xjcCA_LIEu-kmW3neXkLhQpfqu53crDgzOkr-K7Ww1VeapXIhs1aA"
+                        alt="Logo SMK Yadika Soreang" class="w-auto h-10 md:h-11 object-contain flex-shrink-0"
+                        style="max-height: 44px; width: auto;">
                     <div>
-                        <span class="brand-title brand-name">SMK Yadika Soreang</span>
+                        <span class="brand-title brand-name">Portal SMK Yadika Soreang</span>
                         <span class="brand-tagline">Sekolah Berkarakter &amp; Berprestasi</span>
                     </div>
                 </a>
@@ -509,9 +511,11 @@
                 <!-- Col Brand -->
                 <div class="footer-brand">
                     <div class="brand-logo">
-                        <div class="brand-badge brand-logo-box">Y</div>
+                        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrJopurI1RG9822bFLofR4zYj9IjZk3c8ItB9l0JLM6RL9qH6-bq1pV-WRQXjOsbl1VAG5RqinpvbF2NOxBByAN1ylQYz0D0Mu4c6y6cHHq7dJZf7NIyWveXqvtNhQI_aVUeEIuq4xB4Tb28mCcekECZ1c9k41WKqvuiN3vjR0KMgbr0-mkCQZxIOvjzOxJWt7RWgjSyVQG1uUSacYLL7Ssn-Lz9vUuIYu-_Fvht3bM1Nqxh9DFDz9Ng"
+                            alt="Logo SMK Yadika Soreang" class="w-auto h-10 md:h-11 object-contain flex-shrink-0"
+                            style="max-height: 44px; width: auto;">
                         <div>
-                            <span class="brand-title brand-name" style="color: var(--white);">SMK Yadika
+                            <span class="brand-title brand-name" style="color: var(--white);">Portal SMK Yadika
                                 Soreang</span>
                             <span class="brand-tagline">Sekolah Berkarakter &amp; Berprestasi</span>
                         </div>
