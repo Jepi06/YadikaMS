@@ -198,7 +198,7 @@
                     </div>
 
                     {{-- Toggle: khusus kelas ini / global --}}
-                    <label
+                    {{-- <label
                         class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition">
                         <div class="relative w-11 h-6 shrink-0 mt-0.5">
                             <input type="checkbox" name="is_global" value="1" class="peer sr-only"
@@ -216,7 +216,7 @@
                                 Aktif: siswa di kelas lain yang belajar mata pelajaran yang sama juga bisa membukanya.
                             </p>
                         </div>
-                    </label>
+                    </label> --}}
                 </div>
             </div>
 

@@ -5,14 +5,16 @@ namespace App\Http\Controllers\Lms;
 use App\Http\Controllers\Concerns\UpdatesSharedProfile;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 class ProfileController extends Controller
 {
     use UpdatesSharedProfile;
 
     public function edit()
     {
-        return view('lms.profile');
+        return view('lms.profile', [
+            'lmsUser' => Auth::guard('lms')->user(),
+        ]);
     }
 
     public function update(Request $request)

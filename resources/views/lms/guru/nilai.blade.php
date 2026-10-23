@@ -1,161 +1,383 @@
-@extends('lms.layouts.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekap Nilai Siswa - LMS SMK Yadika Soreang</title>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons Font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-@section('title', 'Rekap Nilai - ' . ($pengampuMapel->mataPelajaran->nama ?? ''))
+      <link href="/css/nilaiGuruLms.css" rel="stylesheet">
+</head>
+<body>
 
-@section('content')
-    <div class="page-header d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-        <div>
-            <h4 class="fw-bold mb-0">{{ $pengampuMapel->mataPelajaran->nama ?? '-' }}</h4>
-            <p class="text-muted mb-0">{{ $pengampuMapel->kelas->nama_kelas ?? '-' }} &middot; Rekap Nilai</p>
-        </div>
-        <a href="{{ route('lms.guru.dashboard') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Kembali
-        </a>
-    </div>
-
-    @if (session('status'))
-        <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>{{ session('status') }}</div>
-    @endif
-    @if ($errors->any())
-        <div class="alert alert-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ $errors->first() }}</div>
-    @endif
-
-    {{-- Bobot Penilaian --}}
-    <div class="card mb-4">
-        <div class="card-header"><i class="bi bi-sliders me-1 text-primary"></i> Bobot Penilaian</div>
-        <div class="card-body">
-            <form method="POST" action="{{ route('lms.guru.nilai.bobot', $pengampuMapel) }}" id="formBobot">
-                @csrf
-                <div class="row g-3 align-items-end">
-                    <div class="col-6 col-md-2">
-                        <label class="form-label small">Tugas (%)</label>
-                        <input type="number" name="bobot_tugas" class="form-control bobot-input" value="{{ $bobot->bobot_tugas }}" min="0" max="100" required>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="site-header">
+        <div class="container">
+            <div class="navbar">
+                <div class="brand-group">
+                    <div class="brand-icon">
+                        <i class="bi bi-mortarboard-fill"></i>
                     </div>
-                    <div class="col-6 col-md-2">
-                        <label class="form-label small">STS (%)</label>
-                        <input type="number" name="bobot_sts" class="form-control bobot-input" value="{{ $bobot->bobot_sts }}" min="0" max="100" required>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <label class="form-label small">SAS (%)</label>
-                        <input type="number" name="bobot_sas" class="form-control bobot-input" value="{{ $bobot->bobot_sas }}" min="0" max="100" required>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <label class="form-label small">Sikap (%)</label>
-                        <input type="number" name="bobot_sikap" class="form-control bobot-input" value="{{ $bobot->bobot_sikap }}" min="0" max="100" required>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <span class="small text-muted">Total:</span>
-                        <div id="totalBobot" class="fw-bold fs-5">100%</div>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <button type="submit" class="btn btn-dark w-100">
-                            <i class="bi bi-save me-1"></i> Simpan
-                        </button>
+                    <div class="brand-text">
+                        <div class="name">LMS Yadika</div>
+                        <div class="sub">Portal Guru & Nilai Akademik</div>
                     </div>
                 </div>
-                <p class="small text-muted mt-2 mb-0">Total keempat bobot harus persis 100%.</p>
-            </form>
+
+                <div class="teacher-profile-chip">
+                    <div class="teacher-avatar">G</div>
+                    <div class="teacher-meta">
+                        <span class="teacher-name">Guru Pengampu</span>
+                        <span class="teacher-role">SMK Yadika Soreang</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </header>
 
-    <div class="d-flex justify-content-end mb-3">
-        <a href="{{ route('lms.guru.nilai.export', $pengampuMapel) }}" class="btn btn-success">
-            <i class="bi bi-file-earmark-excel me-1"></i> Export ke Excel
-        </a>
-    </div>
+    <!-- HERO HEADER: MATA PELAJARAN & KELAS -->
+    <section class="page-banner">
+        <div class="container">
+            <div class="banner-flex">
+                <div class="mapel-info-group">
+                    <div class="mapel-icon-large">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <div>
+                        <h1 class="banner-title">{{ $pengampuMapel->mataPelajaran->nama ?? 'Pemrograman Web & Perangkat Bergerak' }}</h1>
+                        <div class="banner-breadcrumbs">
+                            <span class="class-pill">{{ $pengampuMapel->kelas->nama_kelas ?? 'XII PPLG 1' }}</span>
+                            <span>•</span>
+                            <span>Rekapitulasi Nilai Akademik Siswa</span>
+                        </div>
+                    </div>
+                </div>
 
-    {{-- Rekap Nilai --}}
-    <form method="POST" action="{{ route('lms.guru.nilai.sikap', $pengampuMapel) }}">
-        @csrf
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-table me-1 text-primary"></i> Rekap Nilai Siswa</span>
-                <span class="small text-muted">Nilai Akhir dihitung otomatis dari bobot di atas</span>
+                <div class="banner-actions">
+                    <a href="{{ route('lms.guru.dashboard') }}" class="btn-back">
+                        <i class="bi bi-arrow-left"></i>
+                        <span>Kembali ke Dasbor</span>
+                    </a>
+                    <a href="{{ route('lms.guru.nilai.export', $pengampuMapel) }}" class="btn-export-excel">
+                        <i class="bi bi-file-earmark-excel-fill"></i>
+                        <span>Export ke Excel</span>
+                    </a>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Siswa</th>
-                            <th style="width:100px">Rata Tugas</th>
-                            <th style="width:100px">STS</th>
-                            <th style="width:100px">SAS</th>
-                            <th style="width:160px">Sikap</th>
-                            <th>Catatan Sikap</th>
-                            <th style="width:110px">Nilai Akhir</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($rekapSiswa as $siswaId => $r)
-                            <tr>
-                                <td>
-                                    <span class="fw-semibold">{{ $r->siswa->nama }}</span>
-                                    @unless ($r->lengkap)
-                                        <span class="badge bg-warning-subtle text-warning-emphasis ms-1">Belum Lengkap</span>
-                                    @endunless
-                                </td>
-                                <td>
-                                    @if ($r->rata_tugas !== null)
-                                        <span class="badge bg-primary-subtle text-primary">{{ number_format($r->rata_tugas, 1) }}</span>
-                                        <div class="small text-muted">{{ $r->jumlah_tugas_dinilai }} tugas</div>
-                                    @else
-                                        <span class="text-muted small">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <input type="number" name="ujian[{{ $siswaId }}][sts]" class="form-control form-control-sm"
-                                           value="{{ $r->nilai_sts }}" min="0" max="100" step="0.1">
-                                </td>
-                                <td>
-                                    <input type="number" name="ujian[{{ $siswaId }}][sas]" class="form-control form-control-sm"
-                                           value="{{ $r->nilai_sas }}" min="0" max="100" step="0.1">
-                                </td>
-                                <td>
-                                    <select name="sikap[{{ $siswaId }}][predikat]" class="form-select form-select-sm">
-                                        @foreach (['Sangat Baik', 'Baik', 'Cukup', 'Kurang'] as $predikat)
-                                            <option value="{{ $predikat }}" @selected(($r->sikap_predikat ?? 'Baik') === $predikat)>{{ $predikat }}</option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="text" name="sikap[{{ $siswaId }}][catatan]"
-                                           value="{{ $r->sikap_catatan }}" class="form-control form-control-sm" placeholder="Opsional">
-                                </td>
-                                <td>
-                                    <span class="badge bg-dark fs-6">{{ $r->nilai_akhir }}</span>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="7" class="empty-state">Belum ada siswa di kelas ini.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if ($rekapSiswa->count())
-                <div class="p-3 border-top d-flex align-items-center gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-1"></i> Simpan STS, SAS &amp; Sikap
-                    </button>
-                    <span class="small text-muted">
-                        Nilai Akhir langsung ter-update otomatis begitu disimpan.
-                    </span>
+        </div>
+    </section>
+
+    <!-- MAIN BODY SECTION -->
+    <main class="main-content">
+        <div class="container">
+
+            <!-- Flash Session Alerts -->
+            @if (session('status'))
+                <div class="alert-status-success">
+                    <i class="bi bi-check-circle-fill" style="font-size: 1.15rem;"></i>
+                    <span>{{ session('status') }}</span>
                 </div>
             @endif
-        </div>
-    </form>
-@endsection
 
-@push('scripts')
-<script>
-    function hitungTotalBobot() {
-        const inputs = document.querySelectorAll('.bobot-input');
-        let total = 0;
-        inputs.forEach(el => total += Number(el.value || 0));
-        const el = document.getElementById('totalBobot');
-        el.textContent = total + '%';
-        el.className = 'fw-bold fs-5 ' + (total === 100 ? 'text-success' : 'text-danger');
-    }
-    document.querySelectorAll('.bobot-input').forEach(el => el.addEventListener('input', hitungTotalBobot));
-    hitungTotalBobot();
-</script>
-@endpush
+            @if ($errors->any())
+                <div class="alert-status-error">
+                    <i class="bi bi-exclamation-circle-fill" style="font-size: 1.15rem;"></i>
+                    <span>{{ $errors->first() }}</span>
+                </div>
+            @endif
+
+            <!-- CARD 1: BOBOT PENILAIAN -->
+            <div class="card-bobot">
+                <div class="card-header-styled">
+                    <div class="header-title-flex">
+                        <div class="header-icon-pill">
+                            <i class="bi bi-sliders"></i>
+                        </div>
+                        <span>Konfigurasi Bobot Penilaian</span>
+                    </div>
+                    <span class="header-hint">Digunakan dalam kalkulasi otomatis Nilai Akhir</span>
+                </div>
+
+                <div class="card-body-styled">
+                    <form method="POST" action="{{ route('lms.guru.nilai.bobot', $pengampuMapel) }}" id="formBobot">
+                        @csrf
+                        <div class="bobot-grid">
+                            <!-- Input Bobot Tugas -->
+                            <div class="input-control-box">
+                                <label class="label-custom">
+                                    <span>Tugas Harian</span>
+                                    <span style="color: var(--ocean-blue);">(%)</span>
+                                </label>
+                                <input type="number" 
+                                       name="bobot_tugas" 
+                                       class="field-input-number bobot-input" 
+                                       value="{{ $bobot->bobot_tugas ?? 30 }}" 
+                                       min="0" 
+                                       max="100" 
+                                       required>
+                            </div>
+
+                            <!-- Input Bobot STS -->
+                            <div class="input-control-box">
+                                <label class="label-custom">
+                                    <span>STS (Tengah Sem.)</span>
+                                    <span style="color: var(--ocean-blue);">(%)</span>
+                                </label>
+                                <input type="number" 
+                                       name="bobot_sts" 
+                                       class="field-input-number bobot-input" 
+                                       value="{{ $bobot->bobot_sts ?? 25 }}" 
+                                       min="0" 
+                                       max="100" 
+                                       required>
+                            </div>
+
+                            <!-- Input Bobot SAS -->
+                            <div class="input-control-box">
+                                <label class="label-custom">
+                                    <span>SAS (Akhir Sem.)</span>
+                                    <span style="color: var(--ocean-blue);">(%)</span>
+                                </label>
+                                <input type="number" 
+                                       name="bobot_sas" 
+                                       class="field-input-number bobot-input" 
+                                       value="{{ $bobot->bobot_sas ?? 30 }}" 
+                                       min="0" 
+                                       max="100" 
+                                       required>
+                            </div>
+
+                            <!-- Input Bobot Sikap -->
+                            <div class="input-control-box">
+                                <label class="label-custom">
+                                    <span>Sikap & Keaktifan</span>
+                                    <span style="color: var(--ocean-blue);">(%)</span>
+                                </label>
+                                <input type="number" 
+                                       name="bobot_sikap" 
+                                       class="field-input-number bobot-input" 
+                                       value="{{ $bobot->bobot_sikap ?? 15 }}" 
+                                       min="0" 
+                                       max="100" 
+                                       required>
+                            </div>
+
+                            <!-- Indikator Total Bobot -->
+                            <div class="input-control-box">
+                                <div class="total-counter-box">
+                                    <span class="total-counter-title">Total Bobot</span>
+                                    <div id="totalBobot" class="total-display-value total-valid">100%</div>
+                                </div>
+                            </div>
+
+                            <!-- Tombol Simpan Bobot -->
+                            <div class="input-control-box">
+                                <button type="submit" class="btn-save-dark" id="btnSimpanBobot">
+                                    <i class="bi bi-check2-circle"></i>
+                                    <span>Simpan Bobot</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="rule-note">
+                            <i class="bi bi-info-circle-fill" style="color: var(--ocean-blue);"></i>
+                            <span>Ketentuan: Akumulasi total keempat persentase bobot harus <strong>persis 100%</strong>.</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- CARD 2: TABEL REKAP NILAI SISWA -->
+            <form method="POST" action="{{ route('lms.guru.nilai.sikap', $pengampuMapel) }}">
+                @csrf
+                <div class="card-table-wrap">
+                    <div class="card-header-styled">
+                        <div class="header-title-flex">
+                            <div class="header-icon-pill">
+                                <i class="bi bi-table"></i>
+                            </div>
+                            <span>Rekap Nilai Siswa</span>
+                        </div>
+                        <span class="header-hint">
+                            <i class="bi bi-lightning-charge-fill" style="color: #f59e0b;"></i>
+                            Nilai Akhir dihitung otomatis berdasarkan persentase bobot
+                        </span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 220px;">Siswa</th>
+                                    <th style="width: 120px;">Rata-rata Tugas</th>
+                                    <th style="width: 110px;">STS</th>
+                                    <th style="width: 110px;">SAS</th>
+                                    <th style="width: 160px;">Predikat Sikap</th>
+                                    <th style="min-width: 200px;">Catatan Perkembangan Sikap</th>
+                                    <th style="width: 120px; text-align: center;">Nilai Akhir</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($rekapSiswa as $siswaId => $r)
+                                    <tr>
+                                        <td>
+                                            <div class="student-cell">
+                                                <div class="student-avatar">
+                                                    {{ strtoupper(substr($r->siswa->nama ?? 'S', 0, 1)) }}
+                                                </div>
+                                                <div>
+                                                    <span class="student-name-text">{{ $r->siswa->nama }}</span>
+                                                    @unless ($r->lengkap)
+                                                        <span class="badge-warning-custom">Belum Lengkap</span>
+                                                    @endunless
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if ($r->rata_tugas !== null)
+                                                <div class="badge-tugas">
+                                                    <span>{{ number_format($r->rata_tugas, 1) }}</span>
+                                                </div>
+                                                <div class="tugas-count-sub">{{ $r->jumlah_tugas_dinilai }} tugas dinilai</div>
+                                            @else
+                                                <span style="color: var(--slate-400); font-size: 0.85rem;">-</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <input type="number" 
+                                                   name="ujian[{{ $siswaId }}][sts]" 
+                                                   class="table-input-number"
+                                                   value="{{ $r->nilai_sts }}" 
+                                                   min="0" 
+                                                   max="100" 
+                                                   step="0.1"
+                                                   placeholder="0.0">
+                                        </td>
+                                        <td>
+                                            <input type="number" 
+                                                   name="ujian[{{ $siswaId }}][sas]" 
+                                                   class="table-input-number"
+                                                   value="{{ $r->nilai_sas }}" 
+                                                   min="0" 
+                                                   max="100" 
+                                                   step="0.1"
+                                                   placeholder="0.0">
+                                        </td>
+                                        <td>
+                                            <select name="sikap[{{ $siswaId }}][predikat]" class="table-select-custom">
+                                                @foreach (['Sangat Baik', 'Baik', 'Cukup', 'Kurang'] as $predikat)
+                                                    <option value="{{ $predikat }}" @selected(($r->sikap_predikat ?? 'Baik') === $predikat)>
+                                                        {{ $predikat }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" 
+                                                   name="sikap[{{ $siswaId }}][catatan]"
+                                                   value="{{ $r->sikap_catatan }}" 
+                                                   class="table-input-text" 
+                                                   placeholder="Catatan guru (opsional)...">
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <span class="score-pill-final {{ ($r->nilai_akhir ?? 0) >= 85 ? 'score-high' : 'score-mid' }}">
+                                                {{ $r->nilai_akhir ?? '-' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="empty-state-row">
+                                            <i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 8px; color: var(--slate-300);"></i>
+                                            Belum ada data siswa di kelas ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if ($rekapSiswa->count())
+                        <div class="table-action-footer">
+                            <div class="footer-left-action">
+                                <button type="submit" class="btn-submit-primary">
+                                    <i class="bi bi-save2-fill"></i>
+                                    <span>Simpan STS, SAS &amp; Sikap</span>
+                                </button>
+                                <div class="footer-update-note">
+                                    <i class="bi bi-shield-check" style="color: var(--emerald-text);"></i>
+                                    <span>Nilai Akhir langsung ter-update otomatis begitu disimpan.</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.775rem; color: var(--slate-400);">
+                                Total {{ $rekapSiswa->count() }} siswa terdaftar
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </form>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-flex">
+                <div class="footer-brand">
+                    <div class="footer-badge-icon">Y</div>
+                    <strong style="color: var(--slate-900);">SMK Yadika Soreang</strong>
+                    <span>|</span>
+                    <span>Learning Management System — Modul Guru Pengampu</span>
+                </div>
+                <div>
+                    &copy; 2025 SMK Yadika Soreang. Hak Cipta Dilindungi.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPT VANILLA JS (Perhitungan Otomatis Bobot) -->
+    <script>
+        (function() {
+            function hitungTotalBobot() {
+                const inputs = document.querySelectorAll('.bobot-input');
+                let total = 0;
+                inputs.forEach(el => total += Number(el.value || 0));
+                
+                const displayEl = document.getElementById('totalBobot');
+                const btnSubmit = document.getElementById('btnSimpanBobot');
+                
+                if (displayEl) {
+                    displayEl.textContent = total + '%';
+                    if (total === 100) {
+                        displayEl.className = 'total-display-value total-valid';
+                        if (btnSubmit) {
+                            btnSubmit.disabled = false;
+                            btnSubmit.style.opacity = '1';
+                        }
+                    } else {
+                        displayEl.className = 'total-display-value total-invalid';
+                        if (btnSubmit) {
+                            btnSubmit.disabled = true;
+                            btnSubmit.style.opacity = '0.6';
+                        }
+                    }
+                }
+            }
+
+            document.querySelectorAll('.bobot-input').forEach(el => {
+                el.addEventListener('input', hitungTotalBobot);
+            });
+
+            // Jalankan saat load awal
+            hitungTotalBobot();
+        })();
+    </script>
+</body>
+</html>

@@ -103,7 +103,7 @@
 
     {{-- ========== SIDEBAR ========== --}}
     <aside id="mainSidebar"
-        class="fixed lg:sticky top-0 left-0 h-screen w-72 bg-[#0f172a] text-slate-300 z-50 flex flex-col justify-between transition-transform duration-300 -translate-x-full lg:translate-x-0 border-r border-slate-800 shadow-2xl">
+        class="fixed lg:sticky top-0 left-0 h-screen w-72 bg-[#0f172a] text-slate-300 z-50 flex flex-col lg:justify-between transition-transform duration-300 -translate-x-full lg:translate-x-0 border-r border-slate-800 shadow-2xl">
         <div>
             <div class="px-6 py-6 flex items-center justify-between border-b border-slate-800/80">
                 <a href="{{ $dashboardUrl }}" class="flex items-center gap-3 group">
@@ -233,7 +233,7 @@
         </div>
 
         {{-- Profil + logout --}}
-        <div class="p-4 border-t border-slate-800/80 bg-slate-950/40">
+        <div class="p-4 border-t border-slate-800/80 bg-s   late-950/40">
             <div class="flex items-center justify-between p-2 rounded-xl bg-slate-800/50 border border-slate-800">
                 <div class="flex items-center gap-3 min-w-0">
                     <div

@@ -3,7 +3,7 @@
 @section('page-title', 'Penempatan PKL')
 
 @section('content')
-    {{-- Saklar buka/tutup pengajuan PKL oleh siswa --}}
+    {{-- Saklar buka/tutup pengajuan PKL oleh siswa
     @php $pengajuanDibuka = \App\Models\Mapping\PengaturanPkl::pengajuanDibuka(); @endphp
     <div class="card shadow-sm mb-3">
         <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -29,7 +29,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> --}}
 
     <div class="card">
         <div class="card-header py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
