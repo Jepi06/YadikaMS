@@ -35,25 +35,30 @@ class Materi extends Model
     /**
      * Materi yang boleh dilihat pada sebuah pengampu mapel (kelas):
      * milik kelas itu sendiri + materi global dari kelas lain
-     * dengan mata pelajaran & tahun ajaran yang sama.
+     * dengan mata pelajaran, tahun ajaran, dan TINGKAT (X/XI/XII) yang sama.
      *
      * Pemakaian: Materi::terlihatUntuk($pengampuMapel)->orderBy('urutan')->get();
      */
     public function scopeTerlihatUntuk($query, PengampuMapel $pm)
     {
-        return $query->where(function ($q) use ($pm) {
+        $pm->loadMissing('kelas');
+        $tingkat = $pm->kelas->tingkat ?? null;
+
+        return $query->where(function ($q) use ($pm, $tingkat) {
             $q->where('pengampu_mapel_id', $pm->id)
-                ->orWhere(function ($q) use ($pm) {
+                ->orWhere(function ($q) use ($pm, $tingkat) {
                     $q->where('is_global', true)
                         ->whereHas('pengampuMapel', fn ($p) => $p
                             ->where('mata_pelajaran_id', $pm->mata_pelajaran_id)
-                            ->where('tahun_ajaran', $pm->tahun_ajaran));
+                            ->where('tahun_ajaran', $pm->tahun_ajaran)
+                            ->whereHas('kelas', fn ($k) => $k->where('tingkat', $tingkat)));
                 });
         });
     }
 
     /**
-     * Apakah siswa ini boleh mengakses materi (milik kelasnya, atau global untuk mapel yang sama).
+     * Apakah siswa ini boleh mengakses materi (milik kelasnya, atau global untuk mapel yang sama
+     * pada tingkat yang sama).
      * Dipakai untuk pengecekan izin unduh file (route lms.file.materi).
      */
     public function bisaDiaksesSiswa(?\App\Models\Siswa $siswa): bool
@@ -72,11 +77,16 @@ class Materi extends Model
             return true;
         }
 
-        // Global: siswa harus punya pengampu mapel yang sama (mapel + tahun ajaran) di kelasnya
+        // Global: siswa harus punya pengampu mapel yang sama (mapel + tahun ajaran)
+        // di kelasnya, dan tingkat kelasnya sama dengan tingkat kelas pemilik materi.
         if ($this->is_global && isset($siswa->kelas_id)) {
+            $pm->loadMissing('kelas');
+            $tingkat = $pm->kelas->tingkat ?? null;
+
             return PengampuMapel::where('kelas_id', $siswa->kelas_id)
                 ->where('mata_pelajaran_id', $pm->mata_pelajaran_id)
                 ->where('tahun_ajaran', $pm->tahun_ajaran)
+                ->whereHas('kelas', fn ($k) => $k->where('tingkat', $tingkat))
                 ->exists();
         }
 

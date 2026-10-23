@@ -27,12 +27,16 @@ class MateriController extends Controller
         $pengampuMapel->load('mataPelajaran', 'kelas');
         $materi = $pengampuMapel->materi()->orderBy('urutan')->orderBy('created_at')->get();
 
-        // Materi global milik kelas lain (mapel & tahun ajaran sama) — ditampilkan read-only
+        // Materi global milik kelas lain — ditampilkan read-only.
+        // Syarat: mapel sama, tahun ajaran sama, dan TINGKAT kelas sama (X/XI/XII).
+        $tingkat = $pengampuMapel->kelas->tingkat ?? null;
+
         $materiGlobal = Materi::where('is_global', true)
             ->where('pengampu_mapel_id', '!=', $pengampuMapel->id)
             ->whereHas('pengampuMapel', fn ($p) => $p
                 ->where('mata_pelajaran_id', $pengampuMapel->mata_pelajaran_id)
-                ->where('tahun_ajaran', $pengampuMapel->tahun_ajaran))
+                ->where('tahun_ajaran', $pengampuMapel->tahun_ajaran)
+                ->whereHas('kelas', fn ($k) => $k->where('tingkat', $tingkat)))
             ->with('pengampuMapel.kelas')
             ->orderBy('urutan')
             ->orderBy('created_at')
