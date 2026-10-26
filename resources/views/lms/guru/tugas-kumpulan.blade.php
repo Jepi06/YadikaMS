@@ -1,7 +1,12 @@
 {{-- resources/views/lms/guru/tugas-kumpulan.blade.php
        $tugas       → Tugas (punya pengampuMapel, judul, batas_waktu, deskripsi)
        $pengumpulan → koleksi pengumpulan tugas ini (siswa_id, dikumpulkan_at, nilai, catatan_guru, file_jawaban, link_jawaban, catatan_siswa)
-       $pengampuMapel (opsional) → default: $tugas->pengampuMapel --}}
+       $pengampuMapel (opsional) → default: $tugas->pengampuMapel
+
+       PENYIMPANAN NILAI:
+       Semua input nilai & catatan memakai satu form (#formMassal) dengan nama nilai[ID_PENGUMPULAN][nilai|catatan].
+       - Tombol "Simpan Semua Nilai" (bar di atas tabel) → simpan semua baris.
+       - Tombol centang di tiap baris (name="hanya") → hanya baris itu yang diproses controller. --}}
 @extends('lms.layouts.app')
 
 @section('title', 'Penilaian Tugas - LMS Yadika')
@@ -13,6 +18,7 @@
         .kolom-nilai { min-width: 9.5rem; }
         .input-nilai { font-size: 1rem; } /* 16px: mencegah auto-zoom di iOS & angka tidak terpotong */
         .teks-mobile { display: none; }
+        .sudah-diubah { box-shadow: 0 0 0 2px #fbbf24 !important; background-color: #fffbeb !important; }
 
         @media (max-width: 1023px) {
             .tabel-nilai,
@@ -143,6 +149,12 @@
         </div>
     </section>
 
+    @if (session('status'))
+        <div class="rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm px-4 py-3 flex items-start gap-2">
+            <i class="bi bi-check-circle mt-0.5"></i><span>{{ session('status') }}</span>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-sm px-4 py-3 space-y-1">
             @foreach ($errors->all() as $error)
@@ -223,6 +235,29 @@
         </div>
     </section>
 
+    {{-- FORM TUNGGAL: semua input & tombol simpan di tabel terhubung lewat atribut form="formMassal" --}}
+    <form id="formMassal" method="POST" action="{{ route('lms.guru.tugas.nilai-massal', $tugas) }}">
+        @csrf
+    </form>
+
+    {{-- BAR AKSI: harus SEBELUM tabel supaya tombol Enter di input memicu "Simpan Semua", bukan simpan satu baris --}}
+    <section class="sticky top-2 z-10 bg-white/95 backdrop-blur border border-slate-200 rounded-xl p-3 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-sm">
+            <i class="bi bi-pencil-square text-blue-600"></i>
+            <span id="infoUbah" class="font-medium text-slate-400">Belum ada perubahan.</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button type="button" id="btnIsiKosong"
+                class="px-3.5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors">
+                <i class="bi bi-magic mr-1"></i>Isi Nilai Kosong
+            </button>
+            <button type="submit" form="formMassal" id="btnSimpanSemua"
+                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition-all flex-1 sm:flex-none">
+                <i class="bi bi-save2-fill"></i><span>Simpan Semua Nilai</span>
+            </button>
+        </div>
+    </section>
+
     {{-- TABEL PENILAIAN (desktop) / KARTU (mobile) --}}
     <section class="bg-white border border-slate-200/70 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto custom-scrollbar">
@@ -241,7 +276,6 @@
                     @forelse ($baris as $b)
                         @php
                             $p = $b->p;
-                            $formId = 'nilai-' . $b->s->id;
                             // NOTE: nama kolom disamakan dengan model PengumpulanTugas (lihat tugas.blade.php lama & route lms.file.jawaban)
                             $fileJawaban = $p?->file_jawaban;
                             $linkJawaban = $p?->link_jawaban;
@@ -317,11 +351,13 @@
 
                             <td class="py-4 px-4 align-top kolom-nilai" data-label="Nilai (0-100)">
                                 <div class="relative flex items-center">
-                                    <input form="{{ $formId }}" name="nilai" type="number" inputmode="decimal"
+                                    <input form="formMassal"
+                                        @if ($p) name="nilai[{{ $p->id }}][nilai]" @endif
+                                        type="number" inputmode="decimal"
                                         min="0" max="100" step="0.01"
                                         value="{{ $nilaiTampil }}" placeholder="{{ $p ? 'Nilai...' : '-' }}"
                                         {{ $p ? '' : 'disabled' }}
-                                        class="input-nilai w-full h-11 pl-3 pr-12 rounded-lg font-mono font-bold focus:ring-2 focus:ring-blue-500/40 focus:outline-none
+                                        class="input-nilai input-edit w-full h-11 pl-3 pr-12 rounded-lg font-mono font-bold focus:ring-2 focus:ring-blue-500/40 focus:outline-none
                                             {{ $p ? 'bg-slate-100 focus:bg-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed' }}
                                             {{ $p ? ($dibawahKKM ? 'text-rose-600' : 'text-slate-900') : '' }}">
                                     <span class="absolute right-3 text-slate-400 text-xs font-mono pointer-events-none">/100</span>
@@ -333,9 +369,9 @@
 
                             <td class="py-4 px-4 align-top" data-label="Catatan untuk Siswa">
                                 @if ($p)
-                                    <textarea form="{{ $formId }}" name="catatan_guru" rows="2"
+                                    <textarea form="formMassal" name="nilai[{{ $p->id }}][catatan]" rows="2" maxlength="500"
                                         placeholder="Beri catatan atau umpan balik..."
-                                        class="w-full p-2.5 rounded-lg bg-slate-100 text-slate-800 placeholder:text-slate-400 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/40 focus:outline-none resize-none">{{ $feedback }}</textarea>
+                                        class="input-edit w-full p-2.5 rounded-lg bg-slate-100 text-slate-800 placeholder:text-slate-400 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/40 focus:outline-none resize-none">{{ $feedback }}</textarea>
                                 @else
                                     <div class="py-2.5 text-xs italic text-slate-400">Menunggu siswa mengumpulkan tugas.</div>
                                 @endif
@@ -343,12 +379,10 @@
 
                             <td class="py-4 px-4 align-top text-center kolom-aksi">
                                 @if ($p)
-                                    <form id="{{ $formId }}" method="POST" action="{{ route('lms.guru.tugas.kumpulan.nilai', $p) }}">
-                                        @csrf
-                                    </form>
-                                    <button type="submit" form="{{ $formId }}"
+                                    {{-- Simpan SATUAN tetap ada: controller hanya memproses baris dengan id ini --}}
+                                    <button type="submit" form="formMassal" name="hanya" value="{{ $p->id }}"
                                         title="{{ $b->status === 'graded' ? 'Perbarui Nilai' : 'Simpan Penilaian' }}"
-                                        class="h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center justify-center transition-all shadow-sm mx-auto">
+                                        class="btn-simpan-baris h-10 w-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white inline-flex items-center justify-center transition-all shadow-sm mx-auto">
                                         <i class="bi bi-check-lg text-xl"></i>
                                         <span class="teks-mobile">{{ $b->status === 'graded' ? 'Perbarui Nilai' : 'Simpan Penilaian' }}</span>
                                     </button>
@@ -374,7 +408,7 @@
 
         <div class="p-4 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-500">
             <div>Menampilkan <span id="jumlahTampil" class="font-semibold text-slate-900">{{ $totalSiswa }}</span> dari {{ $totalSiswa }} siswa{{ $namaKelas ? ' kelas ' . $namaKelas : '' }}</div>
-            <div class="text-xs">Nilai tersimpan per siswa lewat tombol <i class="bi bi-check-lg text-blue-600"></i> di tiap baris.</div>
+            <div class="text-xs">Simpan sekaligus lewat <strong class="text-slate-700">Simpan Semua Nilai</strong>, atau satu per satu lewat tombol <i class="bi bi-check-lg text-blue-600"></i> di tiap baris.</div>
         </div>
     </section>
 
@@ -424,5 +458,69 @@
             filterAktif = b.dataset.filter;
             terapkan();
         }));
+
+        // ====== Simpan massal: penanda perubahan, peringatan, isi cepat ======
+        (function () {
+            const form = document.getElementById('formMassal');
+            const info = document.getElementById('infoUbah');
+            const semuaInput = () => document.querySelectorAll('#tbodyNilai .input-edit:not([disabled])');
+            let adaPerubahan = false;
+            let sedangKirim = false;
+
+            function jumlahBerubah() {
+                let n = 0;
+                semuaInput().forEach(i => {
+                    const ubah = i.value !== i.defaultValue;
+                    i.classList.toggle('sudah-diubah', ubah);
+                    if (ubah) n++;
+                });
+                return n;
+            }
+
+            function perbarui() {
+                const n = jumlahBerubah();
+                adaPerubahan = n > 0;
+                info.textContent = n > 0 ? n + ' kolom diubah, belum disimpan.' : 'Belum ada perubahan.';
+                info.classList.toggle('text-amber-600', n > 0);
+                info.classList.toggle('text-slate-400', n === 0);
+            }
+
+            document.getElementById('tbodyNilai')?.addEventListener('input', e => {
+                if (e.target.classList.contains('input-edit')) perbarui();
+            });
+
+            // Isi cepat semua kolom nilai yang masih kosong
+            document.getElementById('btnIsiKosong')?.addEventListener('click', () => {
+                const v = prompt('Isi semua kolom nilai yang MASIH KOSONG dengan nilai (0–100):');
+                if (v === null || v.trim() === '') return;
+                const angka = Number(v.replace(',', '.'));
+                if (isNaN(angka) || angka < 0 || angka > 100) { alert('Nilai harus berupa angka 0–100.'); return; }
+                document.querySelectorAll('#tbodyNilai input[type="number"]:not([disabled])').forEach(i => {
+                    if (i.value === '') i.value = angka;
+                });
+                perbarui();
+            });
+
+            form.addEventListener('submit', e => {
+                // Simpan satuan hanya menyimpan 1 baris → beri tahu kalau ada perubahan di baris lain
+                const tombol = e.submitter;
+                if (tombol && tombol.name === 'hanya') {
+                    const baris = tombol.closest('tr');
+                    let lain = 0;
+                    semuaInput().forEach(i => {
+                        if (i.value !== i.defaultValue && i.closest('tr') !== baris) lain++;
+                    });
+                    if (lain > 0 && !confirm(lain + ' kolom di baris lain juga berubah dan TIDAK ikut tersimpan. Lanjut simpan baris ini saja?')) {
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                sedangKirim = true;
+            });
+
+            window.addEventListener('beforeunload', e => {
+                if (adaPerubahan && !sedangKirim) { e.preventDefault(); e.returnValue = ''; }
+            });
+        })();
     </script>
 @endpush

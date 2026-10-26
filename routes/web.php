@@ -352,6 +352,8 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('materi.akses');
         Route::get('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'index'])
             ->name('tugas.index');
+        Route::post('/tugas/{tugas}/nilai-massal', [LmsGuruTugasController::class, 'simpanNilaiMassal'])
+            ->name('tugas.nilai-massal');
         Route::post('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'store'])
             ->name('tugas.store');
         Route::put('/tugas/{tugas}', [LmsGuruTugasController::class, 'update'])

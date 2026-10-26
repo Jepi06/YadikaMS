@@ -8,6 +8,7 @@ use App\Models\Lms\PengumpulanTugas;
 use App\Models\Lms\Tugas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class TugasController extends Controller
@@ -156,6 +157,7 @@ class TugasController extends Controller
         return view('lms.guru.tugas-kumpulan', compact('tugas', 'pengumpulan', 'urlDaftar'));
     }
 
+    /** Simpan nilai SATU pengumpulan (route lama, dipertahankan). */
     public function simpanNilai(Request $request, PengumpulanTugas $pengumpulan)
     {
         $pengumpulan->loadMissing('tugas.pengampuMapel', 'siswa');
@@ -184,5 +186,96 @@ class TugasController extends Controller
         }
 
         return back()->with('status', 'Nilai tersimpan untuk ' . $pengumpulan->siswa->nama . ($pengumpulan->tugas_kelompok_id ? ' (dan sekelompoknya).' : '.'));
+    }
+
+    /**
+     * Simpan nilai BANYAK pengumpulan sekaligus (form #formMassal di tugas-kumpulan.blade.php).
+     *
+     * - Tombol "Simpan Semua Nilai" → semua baris yang berubah diproses.
+     * - Tombol centang per baris    → kirim `hanya` = id pengumpulan, hanya baris itu diproses.
+     * - Kolom nilai kosong TIDAK menghapus nilai yang sudah ada.
+     * - Tugas kelompok: nilai & catatan disamakan ke seluruh anggota kelompok (sama seperti simpanNilai).
+     */
+    public function simpanNilaiMassal(Request $request, Tugas $tugas)
+    {
+        $this->authorizeTugas($tugas);
+
+        $data = $request->validate([
+            'nilai' => ['required', 'array'],
+            'nilai.*.nilai' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'nilai.*.catatan' => ['nullable', 'string', 'max:500'],
+            'hanya' => ['nullable', 'integer'],
+        ]);
+
+        $rows = $data['nilai'];
+
+        if (! empty($data['hanya'])) {
+            $rows = array_intersect_key($rows, [(int) $data['hanya'] => true]);
+        }
+
+        $tersimpan = 0;
+        $kelompokSelesai = [];
+
+        DB::transaction(function () use ($rows, $tugas, &$tersimpan, &$kelompokSelesai) {
+            // Dimuat SEKALI di awal: dipakai sebagai "nilai sebelum diubah" untuk mendeteksi baris yang berubah.
+            // (Penting untuk tugas kelompok: update massal ke anggota lain tidak mengubah salinan ini,
+            //  sehingga baris anggota yang tidak diedit tidak ikut menimpa balik.)
+            $pengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)
+                ->whereIn('id', array_keys($rows))
+                ->get()
+                ->keyBy('id');
+
+            foreach ($rows as $id => $row) {
+                $p = $pengumpulan->get((int) $id);
+                if (! $p) {
+                    continue; // id bukan milik tugas ini
+                }
+
+                $nilaiInput = $row['nilai'] ?? null;
+                if ($nilaiInput === null || $nilaiInput === '') {
+                    continue; // kosong = jangan timpa / hapus
+                }
+
+                $nilaiBaru = (float) $nilaiInput;
+                $catatanBaru = ($row['catatan'] ?? '') !== '' ? $row['catatan'] : null;
+
+                // Lewati baris yang tidak berubah supaya dinilai_at tidak ter-reset
+                $tidakBerubah = $p->dinilai_at !== null
+                    && (float) $p->nilai === $nilaiBaru
+                    && ($p->catatan_guru ?: null) === $catatanBaru;
+                if ($tidakBerubah) {
+                    continue;
+                }
+
+                // Kelompok yang sudah disimpan di request ini tidak diproses ulang
+                if ($p->tugas_kelompok_id && in_array($p->tugas_kelompok_id, $kelompokSelesai, true)) {
+                    continue;
+                }
+
+                $payload = [
+                    'nilai' => $nilaiBaru,
+                    'catatan_guru' => $catatanBaru,
+                    'dinilai_at' => now(),
+                ];
+
+                $p->update($payload);
+
+                if ($p->tugas_kelompok_id) {
+                    PengumpulanTugas::where('tugas_kelompok_id', $p->tugas_kelompok_id)
+                        ->where('id', '!=', $p->id)
+                        ->update($payload);
+
+                    $kelompokSelesai[] = $p->tugas_kelompok_id;
+                }
+
+                $tersimpan++;
+            }
+        });
+
+        $pesan = $tersimpan > 0
+            ? "{$tersimpan} nilai berhasil disimpan."
+            : 'Tidak ada perubahan nilai yang perlu disimpan.';
+
+        return back()->with('status', $pesan);
     }
 }
