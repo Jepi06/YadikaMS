@@ -146,7 +146,7 @@
                             </div>
                         </div>
                         <div class="service-row-list">
-                            <a class="service-row-card portal-item" href="#spmb">
+                            <a class="service-row-card portal-item" href="/spmb">
                                 <div class="service-icon-wrap portal-icon icon-blue">🎓</div>
                                 <div class="service-info">
                                     <div class="service-name">
@@ -157,7 +157,7 @@
                                             2025</span></div>
                                 </div>
                             </a>
-                            <a class="service-row-card portal-item" href="#pkl">
+                            <a class="service-row-card portal-item" href="/pkl">
                                 <div class="service-icon-wrap portal-icon icon-green">🏭</div>
                                 <div class="service-info">
                                     <div class="service-name">
@@ -276,7 +276,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <a class="btn-card-action btn-act-blue" href="#spmb">
+                        <a class="btn-card-action btn-act-blue" href="/spmb">
                             <span class="">Daftar SPMB Sekarang</span>
                             <span class="">→</span>
                         </a>
@@ -326,7 +326,7 @@
                         </div>
                     </div>
                     <div class="card-footer">
-                        <a class="btn-card-action btn-act-green" href="#pkl">
+                        <a class="btn-card-action btn-act-green" href="/pkl">
                             <span class="">Ajukan Penempatan PKL</span>
                             <span class="">→</span>
                         </a>
@@ -484,7 +484,7 @@
                 generasi vokasi unggulan.
             </p>
             <div class="cta-buttons cta-btn-group">
-                <a class="btn-gold" href="#spmb">
+                <a class="btn-gold" href="/spmb">
                     <svg fill="currentColor" height="18" viewBox="0 0 24 24" width="18">
                         <path
                             d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zm0 8.82L4.2 9 12 4.77 19.8 9 12 11.82zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z">
@@ -535,8 +535,8 @@
                 <div class="footer-col">
                     <h5 class="">Layanan</h5>
                     <ul>
-                        <li class=""><a class="" href="#spmb">Portal SPMB Online</a></li>
-                        <li class=""><a class="" href="#pkl">Sistem PKL &amp; Magang</a></li>
+                        <li class=""><a class="" href="/spmb">Portal SPMB Online</a></li>
+                        <li class=""><a class="" href="/pkl">Sistem PKL &amp; Magang</a></li>
                         <li class=""><a class="" href="/lms">LMS EduCore</a></li>
                         <li class=""><a class="" href="#">E-Rapor Vokasi</a></li>
                         <li class=""><a class="" href="#">Layanan Pengaduan</a></li>
