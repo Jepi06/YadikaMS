@@ -26,7 +26,8 @@ class AuthenticateSpmb
             return redirect()->route('spmb.login')
                 ->with('error', 'Akun Anda tidak memiliki akses ke sistem SPMB.');
         }
-        if ($user->must_change_password && ! $request->routeIs('spmb.profil.*')) {
+
+        if ($user->must_change_password && ! $request->routeIs('spmb.admin.profil.*')) {
             return redirect()->route('spmb.admin.profil.edit')
                 ->withErrors(['password' => 'Harap ganti password default sebelum melanjutkan.']);
         }

@@ -242,6 +242,7 @@
 </head>
 
 <body>
+    @php $superAdmin = request()->attributes->get('superAdminUser'); @endphp
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
@@ -374,7 +375,6 @@
             </div>
 
             <!-- Topbar Kanan: Profile & Badge -->
-            @php $superAdmin = request()->attributes->get('superAdminUser'); @endphp
             <div class="d-flex align-items-center gap-2 sm:gap-3">
                 <!-- Quick indicator -->
                 <div
@@ -596,6 +596,14 @@
         });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {{-- Popup wajib ganti password --}}
+    @include('partials.wajib-ganti-password', [
+        'user' => $superAdmin,
+        'profilUrl' => route('admin.profil.edit'),
+        'sedangDiProfil' => request()->routeIs('admin.profil.*'),
+    ])
+
     @stack('scripts')
 </body>
 

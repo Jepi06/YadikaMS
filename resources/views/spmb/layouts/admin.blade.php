@@ -43,6 +43,8 @@
 </head>
 
 <body>
+    @php $spmbUser = auth('spmb')->user(); @endphp
+
     <div class="d-flex">
         {{-- Sidebar --}}
         <nav class="sidebar p-3" style="width:260px;flex-shrink:0;">
@@ -104,7 +106,6 @@
         <div class="flex-grow-1 d-flex flex-column">
             {{-- Topbar --}}
             <div class="bg-white border-bottom px-4 py-2 d-flex align-items-center justify-content-end">
-                @php $spmbUser = auth('spmb')->user(); @endphp
                 <a href="{{ route('spmb.admin.profil.edit') }}"
                     class="d-flex align-items-center text-decoration-none me-3">
                     @if ($spmbUser?->avatar)
@@ -129,6 +130,13 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 @endif
+                {{-- BARU: pesan 'status' (dipakai ganti profil/password/avatar) --}}
+                @if (session('status'))
+                    <div class="alert alert-success alert-dismissible fade show">
+                        {{ session('status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                @endif
                 @if (session('error'))
                     <div class="alert alert-danger alert-dismissible fade show">
                         {{ session('error') }}
@@ -142,6 +150,14 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    {{-- Popup wajib ganti password --}}
+    @include('partials.wajib-ganti-password', [
+        'user' => $spmbUser,
+        'profilUrl' => route('spmb.admin.profil.edit'),
+        'sedangDiProfil' => request()->routeIs('spmb.admin.profil.*'),
+    ])
+
     @stack('scripts')
 </body>
 
