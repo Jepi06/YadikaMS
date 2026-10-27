@@ -33,10 +33,12 @@
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         @forelse ($mapelDiKelas as $i => $pm)
             @php $c = $warna[$i % count($warna)]; @endphp
-            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col justify-between group">
+            <div
+                class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col justify-between group">
                 <div class="flex items-start justify-between gap-3 mb-3">
                     <div class="min-w-0">
-                        <span class="text-[11px] font-bold uppercase tracking-wider text-{{ $c }}-600 bg-{{ $c }}-50 px-2 py-0.5 rounded-md">
+                        <span
+                            class="text-[11px] font-bold uppercase tracking-wider text-{{ $c }}-600 bg-{{ $c }}-50 px-2 py-0.5 rounded-md">
                             {{ $namaKelas ?? '-' }}
                         </span>
                         <h3 class="font-bold text-slate-900 text-base mt-2 group-hover:text-blue-600 transition-colors">
@@ -45,11 +47,12 @@
                         <p class="text-xs text-slate-500 flex items-center gap-2 mt-1">
                             <span class="font-medium text-slate-700 flex items-center gap-1">
                                 <i class="bi bi-person-badge text-slate-400"></i>
-                                {{ $pm->guru->nama ?? ($pm->guru->user->name ?? '-') }}
+                                {{ $pm->guru->name ?? ($pm->guru->nama ?? '-') }}
                             </span>
                         </p>
                     </div>
-                    <div class="w-10 h-10 rounded-xl bg-{{ $c }}-50 text-{{ $c }}-600 flex items-center justify-center text-lg flex-shrink-0 group-hover:bg-{{ $c }}-600 group-hover:text-white transition-colors">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-{{ $c }}-50 text-{{ $c }}-600 flex items-center justify-center text-lg flex-shrink-0 group-hover:bg-{{ $c }}-600 group-hover:text-white transition-colors">
                         <i class="bi bi-book-half"></i>
                     </div>
                 </div>
@@ -70,7 +73,8 @@
                 </div>
             </div>
         @empty
-            <div class="col-span-full bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center text-slate-400 text-sm">
+            <div
+                class="col-span-full bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center text-slate-400 text-sm">
                 Belum ada mata pelajaran untuk kelas Anda.
             </div>
         @endforelse
