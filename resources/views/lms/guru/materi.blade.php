@@ -153,6 +153,13 @@
                         <textarea name="deskripsi" rows="4" placeholder="Poin capaian pembelajaran atau instruksi praktikum..."
                             class="mt-1 w-full p-4 rounded-xl bg-white border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500">{{ old('deskripsi') }}</textarea>
                     </div>
+                    <div>
+                        <label class="text-sm font-semibold text-slate-700">Pengantar Materi
+                            <span class="text-xs font-normal text-slate-400">(popup untuk siswa, opsional)</span></label>
+                        <textarea name="pengantar" rows="3"
+                            placeholder="Gambaran singkat materi dan apa yang perlu disiapkan sebelum belajar..."
+                            class="mt-1 w-full p-4 rounded-xl bg-white border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500">{{ old('pengantar') }}</textarea>
+                    </div>
                 </div>
 
                 {{-- Kanan --}}
@@ -318,6 +325,26 @@
                                             class="flex-1 h-9 px-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30">
                                         <button
                                             class="px-3 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">Simpan</button>
+                                    </form>
+                                </details>
+                            @endif
+
+                            {{-- Ubah pengantar popup (PUT lms.guru.materi.pengantar) --}}
+                            @if (Route::has('lms.guru.materi.pengantar'))
+                                <details class="text-sm">
+                                    <summary
+                                        class="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold list-none inline-flex items-center gap-1">
+                                        <i class="bi bi-chat-square-text"></i>
+                                        {{ filled($m->pengantar) ? 'Ubah pengantar' : 'Tambah pengantar' }}
+                                    </summary>
+                                    <form method="POST" action="{{ route('lms.guru.materi.pengantar', $m) }}"
+                                        class="mt-2 space-y-2 max-w-xl">
+                                        @csrf @method('PUT')
+                                        <textarea name="pengantar" rows="4" placeholder="Pengantar yang muncul sebagai popup untuk siswa..."
+                                            class="w-full p-3 rounded-lg border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30">{{ $m->pengantar }}</textarea>
+                                        <button
+                                            class="px-3 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">Simpan
+                                            pengantar</button>
                                     </form>
                                 </details>
                             @endif

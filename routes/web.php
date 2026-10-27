@@ -340,6 +340,7 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('presensi.rekap');
         Route::put('materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
             ->name('lms.guru.materi.link');
+            Route::put('materi/{materi}/pengantar', [LmsGuruMateriController::class, 'updatePengantar'])->name('lms.guru.materi.pengantar');
         Route::get('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'index'])
             ->name('materi.index');
         Route::post('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'store'])

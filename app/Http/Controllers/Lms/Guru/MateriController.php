@@ -52,6 +52,7 @@ class MateriController extends Controller
         $data = $request->validate([
             'judul' => ['required', 'string', 'max:255'],
             'deskripsi' => ['nullable', 'string'],
+            'pengantar' => ['nullable', 'string', 'max:5000'],
             'file' => ['nullable', 'file', 'max:10240'], // 10MB
             'link_url' => ['nullable', 'url:http,https', 'max:2048'],
             'mode_akses' => ['required', 'in:bebas,berurutan,manual,tanggal'],
@@ -65,6 +66,7 @@ class MateriController extends Controller
             'pengampu_mapel_id' => $pengampuMapel->id,
             'judul' => $data['judul'],
             'deskripsi' => $data['deskripsi'] ?? null,
+            'pengantar' => $data['pengantar'] ?? null,
             'file_path' => $request->hasFile('file')
                 ? $request->file('file')->store('materi', 'public')
                 : null,
@@ -126,6 +128,20 @@ class MateriController extends Controller
         $materi->update(['link_url' => $data['link_url'] ?? null]);
 
         return back()->with('status', 'Link materi diperbarui.');
+    }
+
+    /** Ubah pengantar (popup) materi. */
+    public function updatePengantar(Request $request, Materi $materi)
+    {
+        $this->authorizePengampu($materi->pengampuMapel);
+
+        $data = $request->validate([
+            'pengantar' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $materi->update(['pengantar' => $data['pengantar'] ?? null]);
+
+        return back()->with('status', 'Pengantar materi diperbarui.');
     }
 
     /** Ganti mode akses materi yang sudah ada. */

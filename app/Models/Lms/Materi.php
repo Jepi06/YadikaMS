@@ -19,6 +19,7 @@ class Materi extends Model
         'dibuka_manual',
         'buka_pada',
         'is_global',
+        'pengantar',
     ];
 
     protected $casts = [
