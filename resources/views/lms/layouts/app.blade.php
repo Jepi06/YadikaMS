@@ -233,7 +233,7 @@
         </div>
 
         {{-- Profil + logout --}}
-        <div class="p-4 border-t border-slate-800/80 bg-s   late-950/40">
+        <div class="p-4 border-t border-slate-800/80 bg-slate-950/40">
             <div class="flex items-center justify-between p-2 rounded-xl bg-slate-800/50 border border-slate-800">
                 <div class="flex items-center gap-3 min-w-0">
                     <div
@@ -335,6 +335,14 @@
             backdrop.classList.toggle('hidden', !tertutup);
         }
     </script>
+
+    {{-- Popup wajib ganti password (muncul di SEMUA halaman LMS selama flag masih true) --}}
+    @include('partials.wajib-ganti-password', [
+        'user' => $user,
+        'profilUrl' => $r('lms.profil.edit'),
+        'sedangDiProfil' => request()->routeIs('lms.profil.*'),
+    ])
+
     @stack('scripts')
 </body>
 
