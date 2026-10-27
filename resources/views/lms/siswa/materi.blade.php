@@ -1,7 +1,7 @@
 {{-- resources/views/lms/siswa/materi.blade.php
      Variabel dari Siswa\MateriController@index:
        $pengampuMapel → PengampuMapel (mataPelajaran & guru HARUS sudah di-load, lazy loading dimatikan)
-       $materi        → koleksi Materi terurut (kolom: judul, deskripsi, file_path, link_url)
+       $materi        → koleksi Materi terurut (kolom: judul, deskripsi, pengantar, file_path, link_url)
        $selesaiIds    → array id materi yang sudah ditandai selesai oleh siswa
        $statusAkses   → [materi_id => null (terbuka) | string alasan terkunci] --}}
 @extends('lms.layouts.app')
@@ -125,6 +125,7 @@
             @php
                 $judul = $m->judul ?? ($m->nama ?? 'Materi ' . ($i + 1));
                 $deskripsi = $m->deskripsi ?? null;
+                $adaPengantar = filled($m->pengantar ?? null);
                 // NOTE: nama kolom disamakan dengan versi lama (file_path, link_url)
                 $file = $m->file_path ?? null;
                 $link = $m->link_url ?? null;
@@ -160,6 +161,10 @@
             @else
                 <div
                     class="relative rounded-xl bg-white border border-slate-200/70 shadow-sm p-5 space-y-4 overflow-hidden {{ $aktif ? 'ring-1 ring-blue-200' : '' }}">
+                    @if ($adaPengantar)
+                        {{-- Sumber teks popup pengantar (tidak tampil) --}}
+                        <div id="pengantar-{{ $m->id }}" data-judul="{{ $judul }}" class="hidden">{{ $m->pengantar }}</div>
+                    @endif
                     @if ($aktif)
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600"></div>
                     @endif
@@ -202,21 +207,44 @@
                             <span
                                 class="text-[11px] uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-1"><i
                                     class="bi bi-paperclip"></i>Lampiran:</span>
-                            @if ($file)
-                                <a href="{{ route('lms.file.materi', $m) }}" target="_blank" rel="noopener"
+                            @if ($adaPengantar)
+                                {{-- Ada pengantar: lampiran dipindah ke dalam popup --}}
+                                <button type="button" data-buka-pengantar="{{ $m->id }}"
                                     class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white text-blue-700 hover:bg-blue-600 hover:text-white text-xs font-semibold shadow-sm transition-all">
-                                    <i class="bi bi-download"></i><span>Buka / Unduh</span>
-                                </a>
-                            @endif
-                            @if ($link)
-                                <a href="{{ $link }}" target="_blank" rel="noopener noreferrer"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold shadow-sm transition-colors max-w-xs">
-                                    <i class="bi bi-box-arrow-up-right"></i><span
-                                        class="truncate">{{ preg_replace('#^https?://#', '', $link) }}</span>
-                                </a>
-                            @endif
-                            @if (!$file && !$link)
-                                <span class="text-xs italic text-slate-400">Tidak ada berkas atau tautan.</span>
+                                    <i class="bi bi-info-circle"></i><span>{{ $file || $link ? 'Buka Materi' : 'Lihat Pengantar' }}</span>
+                                </button>
+                                <template id="lampiran-{{ $m->id }}">
+                                    @if ($file)
+                                    <a href="{{ route('lms.file.materi', $m) }}" target="_blank" rel="noopener"
+                                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 text-blue-700 hover:bg-blue-600 hover:text-white text-xs font-semibold shadow-sm transition-all">
+                                        <i class="bi bi-download"></i><span>Buka / Unduh</span>
+                                    </a>
+                                    @endif
+                                    @if ($link)
+                                    <a href="{{ $link }}" target="_blank" rel="noopener noreferrer"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-semibold shadow-sm transition-colors max-w-full">
+                                        <i class="bi bi-box-arrow-up-right"></i><span
+                                            class="truncate">{{ preg_replace('#^https?://#', '', $link) }}</span>
+                                    </a>
+                                    @endif
+                                </template>
+                            @else
+                                @if ($file)
+                                    <a href="{{ route('lms.file.materi', $m) }}" target="_blank" rel="noopener"
+                                        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-white text-blue-700 hover:bg-blue-600 hover:text-white text-xs font-semibold shadow-sm transition-all">
+                                        <i class="bi bi-download"></i><span>Buka / Unduh</span>
+                                    </a>
+                                @endif
+                                @if ($link)
+                                    <a href="{{ $link }}" target="_blank" rel="noopener noreferrer"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-slate-700 hover:bg-slate-100 text-xs font-semibold shadow-sm transition-colors max-w-xs">
+                                        <i class="bi bi-box-arrow-up-right"></i><span
+                                            class="truncate">{{ preg_replace('#^https?://#', '', $link) }}</span>
+                                    </a>
+                                @endif
+                                @if (!$file && !$link)
+                                    <span class="text-xs italic text-slate-400">Tidak ada berkas atau tautan.</span>
+                                @endif
                             @endif
                         </div>
 
@@ -241,4 +269,65 @@
                 </div>
             @endforelse
         </section>
+
+        {{-- POPUP PENGANTAR --}}
+        <dialog id="dlgPengantar" class="rounded-2xl p-0 w-[calc(100%-2rem)] max-w-lg shadow-xl backdrop:bg-slate-900/50">
+            <div class="p-6 space-y-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg shrink-0">
+                        <i class="bi bi-info-circle"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs text-slate-500">Sebelum mulai belajar</p>
+                        <h2 data-judul class="font-bold text-slate-900 text-lg leading-snug"></h2>
+                    </div>
+                </div>
+                <p data-isi class="text-sm text-slate-600 leading-relaxed whitespace-pre-line"></p>
+                <div data-box-lampiran class="hidden space-y-2 pt-3 border-t border-slate-100">
+                    <p class="text-xs font-semibold text-slate-500 flex items-center gap-1"><i class="bi bi-paperclip"></i>Lampiran materi</p>
+                    <div data-lampiran class="flex flex-wrap items-center gap-2"></div>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" data-tutup
+                        class="px-5 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold transition-colors">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </dialog>
     @endsection
+
+    @push('scripts')
+        <script>
+            (function () {
+                const dlg = document.getElementById('dlgPengantar');
+                if (!dlg) return;
+                const judul = dlg.querySelector('[data-judul]');
+                const isi = dlg.querySelector('[data-isi]');
+                const boxLampiran = dlg.querySelector('[data-box-lampiran]');
+                const wadah = dlg.querySelector('[data-lampiran]');
+
+                function buka(id) {
+                    const sumber = document.getElementById('pengantar-' + id);
+                    if (!sumber) return;
+                    judul.textContent = sumber.dataset.judul;
+                    isi.textContent = sumber.textContent.trim();
+
+                    wadah.replaceChildren();
+                    const tpl = document.getElementById('lampiran-' + id);
+                    if (tpl) wadah.append(tpl.content.cloneNode(true));
+                    boxLampiran.classList.toggle('hidden', wadah.children.length === 0);
+
+                    dlg.showModal();
+                }
+
+                document.querySelectorAll('[data-buka-pengantar]').forEach(b =>
+                    b.addEventListener('click', () => buka(b.dataset.bukaPengantar)));
+
+                dlg.querySelector('[data-tutup]').addEventListener('click', () => dlg.close());
+
+                // Klik di luar kotak popup menutupnya
+                dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+            })();
+        </script>
+    @endpush
