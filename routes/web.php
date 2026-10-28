@@ -338,8 +338,8 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('presensi.manual');
         Route::get('/kelas/{pengampuMapel}/presensi/rekap', [LmsGuruPresensiController::class, 'rekap'])
             ->name('presensi.rekap');
-        Route::put('materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
-            ->name('lms.guru.materi.link');
+        Route::put('/materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
+            ->name('materi.link');
         Route::get('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'index'])
             ->name('materi.index');
         Route::post('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'store'])
@@ -350,6 +350,10 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('materi.toggle');
         Route::put('/materi/{materi}/akses', [LmsGuruMateriController::class, 'updateAkses'])
             ->name('materi.akses');
+        Route::put('/materi/{materi}/pengantar', [LmsGuruMateriController::class, 'updatePengantar'])
+            ->name('materi.pengantar');;
+        Route::put('/materi/{materi}/cakupan', [LmsGuruMateriController::class, 'updateCakupan'])
+            ->name('materi.cakupan');
         Route::get('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'index'])
             ->name('tugas.index');
         Route::post('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'store'])

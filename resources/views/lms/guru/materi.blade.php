@@ -45,6 +45,10 @@
         $jadwalOf = fn($m) => $m->buka_pada;
         $isGlobal = fn($m) => (bool) ($m->is_global ?? false);
 
+        $kelasPilihan = $kelasPilihan ?? collect();
+        $kelasTujuan = $kelasTujuan ?? collect();
+        $tingkatKelas = $pengampuMapel->kelas->tingkat ?? null;
+
         $total = $daftar->count();
         $terjadwal = $daftar->filter(fn($m) => $modeOf($m) === 'tanggal')->count();
         $manual = $daftar->filter(fn($m) => $modeOf($m) === 'manual')->count();
@@ -153,6 +157,13 @@
                         <textarea name="deskripsi" rows="4" placeholder="Poin capaian pembelajaran atau instruksi praktikum..."
                             class="mt-1 w-full p-4 rounded-xl bg-white border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500">{{ old('deskripsi') }}</textarea>
                     </div>
+                    <div>
+                        <label class="text-sm font-semibold text-slate-700">Pengantar Materi
+                            <span class="text-xs font-normal text-slate-400">(popup untuk siswa, opsional)</span></label>
+                        <textarea name="pengantar" rows="3"
+                            placeholder="Gambaran singkat materi dan apa yang perlu disiapkan sebelum belajar..."
+                            class="mt-1 w-full p-4 rounded-xl bg-white border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500">{{ old('pengantar') }}</textarea>
+                    </div>
                 </div>
 
                 {{-- Kanan --}}
@@ -247,6 +258,11 @@
                 $jadwal = $jadwalOf($m);
                 $terbuka = (bool) $m->dibuka_manual;
                 $global = $isGlobal($m);
+                $cakupan = $m->cakupan_global ?? 'angkatan';
+                $kelasDipilih = $kelasTujuan->get($m->id, collect());
+                $labelCakupan = $cakupan === 'kelas'
+                    ? 'Global · ' . ($kelasDipilih->isNotEmpty() ? $kelasDipilih->pluck('nama_kelas')->implode(', ') : 'belum ada kelas dipilih')
+                    : 'Global · Satu angkatan' . ($tingkatKelas ? ' ' . $tingkatKelas : '');
             @endphp
 
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition p-5">
@@ -271,8 +287,8 @@
                                 @if ($global)
                                     <span
                                         class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100"
-                                        title="Siswa kelas lain dengan mata pelajaran yang sama bisa membuka materi ini">
-                                        <i class="bi bi-globe2"></i> Global
+                                        title="{{ $cakupan === 'kelas' ? 'Hanya kelas yang dipilih yang bisa membuka materi ini' : 'Semua kelas satu angkatan yang Anda ampu untuk mata pelajaran ini bisa membuka materi ini' }}">
+                                        <i class="bi bi-globe2"></i> {{ $labelCakupan }}
                                     </span>
                                 @else
                                     <span
@@ -304,7 +320,6 @@
                             </div>
 
                             {{-- Ubah tautan (PUT lms.guru.materi.link) --}}
-                            @if (Route::has('lms.guru.materi.link'))
                                 <details class="text-sm">
                                     <summary
                                         class="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold list-none inline-flex items-center gap-1">
@@ -320,27 +335,84 @@
                                             class="px-3 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">Simpan</button>
                                     </form>
                                 </details>
-                            @endif
+
+                            {{-- Ubah pengantar popup (PUT lms.guru.materi.pengantar) --}}
+                                <details class="text-sm">
+                                    <summary
+                                        class="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold list-none inline-flex items-center gap-1">
+                                        <i class="bi bi-chat-square-text"></i>
+                                        {{ filled($m->pengantar) ? 'Ubah pengantar' : 'Tambah pengantar' }}
+                                    </summary>
+                                    <form method="POST" action="{{ route('lms.guru.materi.pengantar', $m) }}"
+                                        class="mt-2 space-y-2 max-w-xl">
+                                        @csrf @method('PUT')
+                                        <textarea name="pengantar" rows="4" placeholder="Pengantar yang muncul sebagai popup untuk siswa..."
+                                            class="w-full p-3 rounded-lg border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30">{{ $m->pengantar }}</textarea>
+                                        <button
+                                            class="px-3 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">Simpan
+                                            pengantar</button>
+                                    </form>
+                                </details>
+
+                            {{-- Cakupan kelas (PUT lms.guru.materi.cakupan) --}}
+                                <details class="text-sm">
+                                    <summary
+                                        class="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold list-none inline-flex items-center gap-1">
+                                        <i class="bi bi-globe2"></i> Atur cakupan kelas
+                                    </summary>
+                                    <form method="POST" action="{{ route('lms.guru.materi.cakupan', $m) }}"
+                                        class="mt-2 space-y-3 max-w-xl p-4 rounded-xl bg-slate-50 border border-slate-200">
+                                        @csrf @method('PUT')
+
+                                        <label class="flex items-start gap-2.5 cursor-pointer">
+                                            <input type="radio" name="cakupan" value="khusus" onchange="cakupanBerubah(this)"
+                                                class="mt-1 accent-blue-600" @checked(!$global)>
+                                            <span>
+                                                <span class="block font-semibold text-slate-800">Khusus kelas ini</span>
+                                                <span class="block text-xs text-slate-500">Hanya {{ $pengampuMapel->kelas->nama_kelas ?? 'kelas ini' }}.</span>
+                                            </span>
+                                        </label>
+
+                                        <label class="flex items-start gap-2.5 cursor-pointer">
+                                            <input type="radio" name="cakupan" value="angkatan" onchange="cakupanBerubah(this)"
+                                                class="mt-1 accent-blue-600" @checked($global && $cakupan === 'angkatan')>
+                                            <span>
+                                                <span class="block font-semibold text-slate-800">Satu angkatan{{ $tingkatKelas ? ' (Kelas ' . $tingkatKelas . ')' : '' }}</span>
+                                                <span class="block text-xs text-slate-500">Semua kelas satu tingkat yang Anda ampu untuk mata pelajaran ini, pada tahun ajaran yang sama.</span>
+                                            </span>
+                                        </label>
+
+                                        <label class="flex items-start gap-2.5 cursor-pointer">
+                                            <input type="radio" name="cakupan" value="kelas" onchange="cakupanBerubah(this)"
+                                                class="mt-1 accent-blue-600" @checked($global && $cakupan === 'kelas')>
+                                            <span>
+                                                <span class="block font-semibold text-slate-800">Kelas pilihan</span>
+                                                <span class="block text-xs text-slate-500">Pilih dari kelas lain yang Anda ampu untuk mata pelajaran ini.</span>
+                                            </span>
+                                        </label>
+
+                                        <div class="box-kelas pl-6 space-y-1.5 {{ $global && $cakupan === 'kelas' ? '' : 'hidden' }}">
+                                            @forelse ($kelasPilihan as $k)
+                                                <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                                    <input type="checkbox" name="kelas_ids[]" value="{{ $k->id }}"
+                                                        class="accent-blue-600" @checked($kelasDipilih->contains('kelas_id', $k->id))>
+                                                    {{ $k->nama_kelas }}
+                                                </label>
+                                            @empty
+                                                <p class="text-xs text-amber-700">Anda belum mengampu mata pelajaran ini di kelas lain pada tahun ajaran yang sama.</p>
+                                            @endforelse
+                                        </div>
+
+                                        <button type="submit"
+                                            class="px-3 h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold">Simpan
+                                            cakupan</button>
+                                    </form>
+                                </details>
                         </div>
                     </div>
 
                     {{-- Aksi --}}
                     <div class="flex flex-wrap items-center gap-2 shrink-0 self-end lg:self-start">
-                        {{-- Toggle global / khusus kelas (POST lms.guru.materi.global) --}}
-                        @if (Route::has('lms.guru.materi.global'))
-                            <form method="POST" action="{{ route('lms.guru.materi.global', $m) }}">
-                                @csrf
-                                <button type="submit"
-                                    title="{{ $global ? 'Klik untuk jadikan khusus kelas ini' : 'Klik untuk bagikan ke kelas lain' }}"
-                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition {{ $global ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50' }}">
-                                    <span class="relative inline-block w-7 h-4 rounded-full {{ $global ? 'bg-indigo-600' : 'bg-slate-300' }}">
-                                        <span class="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all {{ $global ? 'left-3.5' : 'left-0.5' }}"></span>
-                                    </span>
-                                    {{ $global ? 'Global' : 'Khusus Kelas' }}
-                                </button>
-                            </form>
-                        @endif
-
                         @if ($mode === 'manual')
                             <form method="POST" action="{{ route('lms.guru.materi.toggle', $m) }}">
                                 @csrf
@@ -447,6 +519,11 @@
 
 @push('scripts')
     <script>
+        // Panel cakupan: tampilkan daftar kelas hanya untuk "Kelas pilihan"
+        function cakupanBerubah(radio) {
+            radio.closest('form').querySelector('.box-kelas')?.classList.toggle('hidden', radio.value !== 'kelas');
+        }
+
         // Form tambah: tampilkan input jadwal hanya untuk mode "terjadwal"
         function toggleJadwalBaru() {
             const mode = document.querySelector('input[name="mode_akses"]:checked')?.value;
