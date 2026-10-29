@@ -1,70 +1,87 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| LMS – Controllers
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Lms\Admin\DashboardController as LmsAdminDashboardController;
-use App\Http\Controllers\Lms\Auth\AuthController as LmsAuthController; // pindah ke atas
+use App\Http\Controllers\Lms\Auth\AuthController as LmsAuthController;
 use App\Http\Controllers\Lms\DashboardPublicController as LmsDashboardPublicController;
 use App\Http\Controllers\Lms\FileController as LmsFileController;
-use App\Http\Controllers\Lms\Guru\DashboardController as LmsGuruDashboardController;
+use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
 // LMS Guru
+use App\Http\Controllers\Lms\Guru\DashboardController as LmsGuruDashboardController;
 use App\Http\Controllers\Lms\Guru\KelasController as LmsGuruKelasController;
 use App\Http\Controllers\Lms\Guru\MateriController as LmsGuruMateriController;
 use App\Http\Controllers\Lms\Guru\ModulAjarController as LmsGuruModulAjarController;
 use App\Http\Controllers\Lms\Guru\NilaiController as LmsGuruNilaiController;
+use App\Http\Controllers\Lms\Guru\PelanggaranController as LmsGuruPelanggaranController;
+use App\Http\Controllers\Lms\Guru\PiketMonitoringController as LmsPiketMonitoringController;
 use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
 use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
 use App\Http\Controllers\Lms\Guru\WaliKelasController as LmsGuruWaliKelasController;
-use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
 // LMS Siswa
 use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
 use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
+use App\Http\Controllers\Lms\Siswa\LaporanController as LmsSiswaLaporanController;
 use App\Http\Controllers\Lms\Siswa\MateriController as LmsSiswaMateriController;
 use App\Http\Controllers\Lms\Siswa\PresensiController as LmsSiswaPresensiController;
-use App\Http\Controllers\Lms\Siswa\TugasController as LmsSiswaTugasController; // ← tambahan baru
+use App\Http\Controllers\Lms\Siswa\TugasController as LmsSiswaTugasController;
+
+
 /*
 |--------------------------------------------------------------------------
-| SPMB – Controllers
-| (sebelumnya bernama PPDB; namespace & guard sudah diganti ke "spmb")
+| PKL – Controllers (namespace Mapping)
 |--------------------------------------------------------------------------
 */
-// LMS
-
 use App\Http\Controllers\Mapping\ApprovalController;
 use App\Http\Controllers\Mapping\AuthController;
 use App\Http\Controllers\Mapping\DashboardController;
 use App\Http\Controllers\Mapping\DashboardPublicController as PklDashboardPublicController;
 use App\Http\Controllers\Mapping\GuruPembimbingController;
+use App\Http\Controllers\Mapping\MouPublicController;
 use App\Http\Controllers\Mapping\PenempatanPklController;
 use App\Http\Controllers\Mapping\PengajuanPklPublicController;
 use App\Http\Controllers\Mapping\ProfileController as PklProfileController;
 use App\Http\Controllers\Mapping\SiswaController;
 use App\Http\Controllers\Mapping\SIswaPklController;
 use App\Http\Controllers\Mapping\TempatPklController;
-// SPMB
+
+/*
+|--------------------------------------------------------------------------
+| SPMB – Controllers
+| (sebelumnya bernama PPDB; namespace & guard sudah diganti ke "spmb")
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Spmb\Admin\PendaftarController as SpmbPendaftarController;
 use App\Http\Controllers\Spmb\Auth\AuthController as SpmbAuthController;
 use App\Http\Controllers\Spmb\DashboardPublicController as SpmbDashboardPublicController;
 use App\Http\Controllers\Spmb\PengajuanSpmbPublicController;
 use App\Http\Controllers\Spmb\ProfileController as SpmbProfileController;
-// super admin
+
+/*
+|--------------------------------------------------------------------------
+| Super Admin – Controllers
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\GuruController as SuperAdminGuruController;
+use App\Http\Controllers\SuperAdmin\JadwalController;
+use App\Http\Controllers\SuperAdmin\JadwalImportController;
 use App\Http\Controllers\SuperAdmin\KelasController as SuperAdminKelasController;
 use App\Http\Controllers\SuperAdmin\KenaikanKelasController;
 use App\Http\Controllers\SuperAdmin\MataPelajaranController;
 use App\Http\Controllers\SuperAdmin\ModulAjarController as SuperAdminModulAjarController;
+use App\Http\Controllers\SuperAdmin\MonitoringPresensiController;
+use App\Http\Controllers\SuperAdmin\PengaturanJamController;
 use App\Http\Controllers\SuperAdmin\PenggunaController as SuperAdminPenggunaController;
 use App\Http\Controllers\SuperAdmin\ProfilController;
-use App\Http\Controllers\SuperAdmin\SiswaController as SuperAdminSiswaController;
-use App\Http\Controllers\SuperAdmin\MonitoringPresensiController;
-use App\Http\Controllers\SuperAdmin\JadwalController;
-use App\Http\Controllers\SuperAdmin\JadwalImportController;
-use App\Http\Controllers\SuperAdmin\PengaturanJamController;
 use App\Http\Controllers\SuperAdmin\RekapAbsensiController;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Mapping\ProfileController;
-
-use App\Http\Controllers\Mapping\MouPublicController;
+use App\Http\Controllers\SuperAdmin\SiswaController as SuperAdminSiswaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -95,6 +112,7 @@ Route::prefix('pkl')->group(function () {
         ->name('pkl.pengajuan.api.kelas.siswa');
     Route::get('/mitra-mou', [MouPublicController::class, 'index'])->name('pkl.mou.public');
     Route::get('/mitra-mou/berkas/{mou}', [MouPublicController::class, 'berkas'])->name('pkl.mou.public.berkas');
+
     Route::middleware('guest:pkl')->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('pkl.login');
         Route::post('/login', [AuthController::class, 'login'])->name('pkl.login.process');
@@ -107,6 +125,7 @@ Route::post('/pkl/logout', [AuthController::class, 'logout'])
 Route::get('/pkl/masuk-dari-lms', [AuthController::class, 'masukDariLms'])
     ->middleware('auth.lms')
     ->name('pkl.masuk-lms');
+
 /*
 |==========================================================================
 | PKL – PROTECTED
@@ -117,31 +136,45 @@ Route::prefix('pkl')->middleware('auth.pkl')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('pkl.dashboard');
     Route::put('/pengaturan/pengajuan', [PenempatanPklController::class, 'togglePengajuan'])
         ->name('pengaturan.pengajuan');
+
+    // Siswa
     Route::get('/siswa', [SiswaController::class, 'index'])->name('siswa.index');
     Route::post('/siswa', [SiswaController::class, 'store'])->name('siswa.store');
+    Route::get('/siswa/belum-mengajukan', [SiswaController::class, 'belumMengajukan'])
+        ->name('siswa.belum-mengajukan');
     Route::put('/siswa/{siswa}', [SiswaController::class, 'update'])->name('siswa.update');
     Route::delete('/siswa/{siswa}', [SiswaController::class, 'destroy'])->name('siswa.destroy');
 
+    // Guru pembimbing
     Route::get('/guru', [GuruPembimbingController::class, 'index'])->name('guru.index');
     Route::post('/guru', [GuruPembimbingController::class, 'store'])->name('guru.store');
     Route::put('/guru/{guru}', [GuruPembimbingController::class, 'update'])->name('guru.update');
     Route::delete('/guru/{guru}', [GuruPembimbingController::class, 'destroy'])->name('guru.destroy');
 
+    // Tempat PKL + MoU
     Route::get('/tempat-pkl', [TempatPklController::class, 'index'])->name('tempat.index');
     Route::post('/tempat-pkl', [TempatPklController::class, 'store'])->name('tempat.store');
+    Route::get('/tempat-pkl/{tempat}', [TempatPklController::class, 'show'])->name('tempat.show');
     Route::put('/tempat-pkl/{tempat}', [TempatPklController::class, 'update'])->name('tempat.update');
     Route::delete('/tempat-pkl/{tempat}', [TempatPklController::class, 'destroy'])->name('tempat.destroy');
+    Route::post('/tempat-pkl/{tempat}/mou', [TempatPklController::class, 'storeMou'])->name('tempat.mou.store');
+    Route::patch('/mou/{mou}/publik', [TempatPklController::class, 'toggleMouPublik'])->name('tempat.mou.publik');
+    Route::delete('/mou/{mou}', [TempatPklController::class, 'destroyMou'])->name('tempat.mou.destroy');
+    Route::get('/mou/{mou}/berkas', [TempatPklController::class, 'berkasMou'])->name('tempat.mou.berkas');
 
+    // Penempatan
     Route::get('/penempatan', [PenempatanPklController::class, 'index'])->name('penempatan.index');
     Route::post('/penempatan', [PenempatanPklController::class, 'store'])->name('penempatan.store');
     Route::get('/penempatan/{penempatan}', [PenempatanPklController::class, 'show'])->name('penempatan.show');
     Route::put('/penempatan/{penempatan}', [PenempatanPklController::class, 'update'])->name('penempatan.update');
     Route::delete('/penempatan/{penempatan}', [PenempatanPklController::class, 'destroy'])->name('penempatan.destroy');
     Route::post('/penempatan/{penempatan}/ajukan', [PenempatanPklController::class, 'ajukan'])->name('penempatan.ajukan');
-
     Route::patch('/penempatan/{penempatan}/lengkapi', [PenempatanPklController::class, 'lengkapi'])
         ->name('penempatan.lengkapi');
+    Route::get('/penempatan/{penempatan}/surat-rekomendasi', [PenempatanPklController::class, 'cetakSuratRekomendasi'])
+        ->name('penempatan.surat-rekomendasi');
 
+    // Approval
     Route::middleware('role:wali_kelas,guru_bk,kesiswaan,kepala_jurusan')->group(function () {
         Route::get('/approval', [ApprovalController::class, 'index'])->name('approval.index');
         Route::post('/approval/{penempatan}/approve', [ApprovalController::class, 'approve'])->name('approval.approve');
@@ -152,28 +185,19 @@ Route::prefix('pkl')->middleware('auth.pkl')->group(function () {
         Route::get('/kelas/{kelas}/siswa', [SiswaController::class, 'byKelas'])->name('api.kelas.siswa');
     });
 
-    Route::get('/penempatan/{penempatan}/surat-rekomendasi', [PenempatanPklController::class, 'cetakSuratRekomendasi'])
-        ->name('penempatan.surat-rekomendasi');
-
-    Route::get('/siswa/belum-mengajukan', [SiswaController::class, 'belumMengajukan'])
-        ->name('siswa.belum-mengajukan');
-
+    // Pengajuan oleh siswa login
     Route::middleware('role:siswa')->prefix('siswa-pkl')->name('siswa.pkl.')->group(function () {
         Route::get('/status', [SIswaPklController::class, 'status'])->name('status');
         Route::get('/ajukan', [SIswaPklController::class, 'create'])->name('create');
         Route::post('/ajukan', [SIswaPklController::class, 'store'])->name('store');
     });
+
+    // Profil
     Route::get('/profil', [PklProfileController::class, 'edit'])->name('pkl.profil.edit');
     Route::put('/profil', [PklProfileController::class, 'update'])->name('pkl.profil.update');
     Route::put('/profil/password', [PklProfileController::class, 'updatePassword'])->name('pkl.profil.password');
-    Route::post('/pkl/profil/avatar', [ProfileController::class, 'updateAvatar'])->name('pkl.profil.avatar');
-    Route::delete('/pkl/profil/avatar', [ProfileController::class, 'deleteAvatar'])->name('pkl.profil.avatar.delete');
-
-    Route::get('/tempat-pkl/{tempat}', [TempatPklController::class, 'show'])->name('tempat.show');
-    Route::post('/tempat-pkl/{tempat}/mou', [TempatPklController::class, 'storeMou'])->name('tempat.mou.store');
-    Route::patch('/mou/{mou}/publik', [TempatPklController::class, 'toggleMouPublik'])->name('tempat.mou.publik');
-    Route::delete('/mou/{mou}', [TempatPklController::class, 'destroyMou'])->name('tempat.mou.destroy');
-    Route::get('/mou/{mou}/berkas', [TempatPklController::class, 'berkasMou'])->name('tempat.mou.berkas');
+    Route::post('/profil/avatar', [PklProfileController::class, 'updateAvatar'])->name('pkl.profil.avatar');
+    Route::delete('/profil/avatar', [PklProfileController::class, 'deleteAvatar'])->name('pkl.profil.avatar.delete');
 });
 
 /*
@@ -245,16 +269,16 @@ Route::prefix('spmb/admin')->name('spmb.admin.')->middleware('auth.spmb')->group
 
     // Export
     Route::get('/export/pdf', [SpmbPendaftarController::class, 'exportPdf'])->name('export.pdf');
-    // Export
     Route::get('/export/excel', [SpmbPendaftarController::class, 'exportExcel'])->name('export.excel');
     Route::get('/export/excel/jurusan/{jurusan}', [SpmbPendaftarController::class, 'exportExcelPerJurusan'])
-        ->name('export.excel.per-jurusan'); // ← tambahan baru
-    Route::get('/export/pdf', [SpmbPendaftarController::class, 'exportPdf'])->name('export.pdf');
+        ->name('export.excel.per-jurusan');
+
+    // Profil
     Route::get('/profil', [SpmbProfileController::class, 'edit'])->name('profil.edit');
     Route::put('/profil', [SpmbProfileController::class, 'update'])->name('profil.update');
     Route::put('/profil/password', [SpmbProfileController::class, 'updatePassword'])->name('profil.password');
-    Route::post('/spmb/profil/avatar', [SpmbProfileController::class, 'updateAvatar'])->name('spmb.profil.avatar');
-    Route::delete('/spmb/profil/avatar', [SpmbProfileController::class, 'deleteAvatar'])->name('spmb.profil.avatar.delete');
+    Route::post('/profil/avatar', [SpmbProfileController::class, 'updateAvatar'])->name('profil.avatar');
+    Route::delete('/profil/avatar', [SpmbProfileController::class, 'deleteAvatar'])->name('profil.avatar.delete');
 });
 
 /*
@@ -306,6 +330,7 @@ Route::prefix('lms/profil')->name('lms.profil.')
         Route::post('/avatar', [LmsProfileController::class, 'updateAvatar'])->name('avatar');
         Route::delete('/avatar', [LmsProfileController::class, 'deleteAvatar'])->name('avatar.delete');
     });
+
 /*
 |==========================================================================
 | LMS – ADMIN
@@ -328,6 +353,7 @@ Route::prefix('lms/guru')->name('lms.guru.')
         Route::get('/dashboard', [LmsGuruDashboardController::class, 'index'])->name('dashboard');
         Route::get('/kelas', [LmsGuruKelasController::class, 'index'])->name('kelas.index');
 
+        // Presensi
         Route::get('/kelas/{pengampuMapel}/presensi', [LmsGuruPresensiController::class, 'index'])
             ->name('presensi.index');
         Route::post('/kelas/{pengampuMapel}/presensi/buka', [LmsGuruPresensiController::class, 'buka'])
@@ -338,8 +364,10 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('presensi.manual');
         Route::get('/kelas/{pengampuMapel}/presensi/rekap', [LmsGuruPresensiController::class, 'rekap'])
             ->name('presensi.rekap');
-        Route::put('materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
-            ->name('lms.guru.materi.link');
+        Route::get('/kelas/{pengampuMapel}/presensi/qr', [LmsGuruPresensiController::class, 'qr'])
+            ->name('presensi.qr');
+
+        // Materi
         Route::get('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'index'])
             ->name('materi.index');
         Route::post('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'store'])
@@ -350,6 +378,11 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('materi.toggle');
         Route::put('/materi/{materi}/akses', [LmsGuruMateriController::class, 'updateAkses'])
             ->name('materi.akses');
+        // Nama sebelumnya 'lms.guru.materi.link' → jadi 'lms.guru.lms.guru.materi.link' (dobel prefix)
+        Route::put('/materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
+            ->name('materi.link');
+
+        // Tugas
         Route::get('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'index'])
             ->name('tugas.index');
         Route::post('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'store'])
@@ -366,27 +399,45 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('tugas.kumpulan');
         Route::post('/pengumpulan/{pengumpulan}/nilai', [LmsGuruTugasController::class, 'simpanNilai'])
             ->name('tugas.kumpulan.nilai');
+
+        // Nilai
         Route::get('/kelas/{pengampuMapel}/nilai', [LmsGuruNilaiController::class, 'index'])
             ->name('nilai.index');
         Route::post('/kelas/{pengampuMapel}/nilai/sikap', [LmsGuruNilaiController::class, 'simpanSikap'])
             ->name('nilai.sikap');
+        Route::post('/kelas/{pengampuMapel}/nilai/bobot', [LmsGuruNilaiController::class, 'simpanBobot'])
+            ->name('nilai.bobot');
+        Route::get('/kelas/{pengampuMapel}/nilai/export', [LmsGuruNilaiController::class, 'exportExcel'])
+            ->name('nilai.export');
 
+        // Modul ajar
         Route::get('/kelas/{pengampuMapel}/modul-ajar', [LmsGuruModulAjarController::class, 'index'])
             ->name('modul-ajar.index');
         Route::post('/kelas/{pengampuMapel}/modul-ajar', [LmsGuruModulAjarController::class, 'store'])
             ->name('modul-ajar.store');
         Route::delete('/modul-ajar/{modulAjar}', [LmsGuruModulAjarController::class, 'destroy'])
             ->name('modul-ajar.destroy');
-        Route::get('/kelas/{pengampuMapel}/nilai/export', [LmsGuruNilaiController::class, 'exportExcel'])
-            ->name('nilai.export');
-        Route::post('/kelas/{pengampuMapel}/nilai/bobot', [LmsGuruNilaiController::class, 'simpanBobot'])
-            ->name('nilai.bobot');
+
+        // Wali kelas
         Route::get('/wali-kelas', [LmsGuruWaliKelasController::class, 'index'])
             ->name('wali-kelas.index');
         Route::get('/wali-kelas/absensi', [LmsGuruWaliKelasController::class, 'absensi'])
             ->name('wali-kelas.absensi');
-        Route::get('/kelas/{pengampuMapel}/presensi/qr', [LmsGuruPresensiController::class, 'qr'])
-            ->name('presensi.qr');
+
+        // Poin pelanggaran (Wali Kelas, BK, Kesiswaan, Guru Piket — dicek di controller)
+        Route::prefix('pelanggaran')->name('pelanggaran.')->group(function () {
+            Route::get('/', [LmsGuruPelanggaranController::class, 'index'])->name('index');
+            Route::get('/catat', [LmsGuruPelanggaranController::class, 'create'])->name('create');
+            Route::post('/', [LmsGuruPelanggaranController::class, 'store'])->name('store');
+            Route::get('/kelas/{kelas}/siswa', [LmsGuruPelanggaranController::class, 'siswaByKelas'])->name('siswa');
+            Route::delete('/{pelanggaran}', [LmsGuruPelanggaranController::class, 'destroy'])->name('destroy');
+        });
+
+        // Guru piket
+        Route::prefix('piket')->name('piket.')->group(function () {
+            Route::get('/monitoring', [LmsPiketMonitoringController::class, 'index'])->name('monitoring');
+            Route::get('/monitoring/{pengampuMapel}', [LmsPiketMonitoringController::class, 'detail'])->name('monitoring.detail');
+        });
     });
 
 /*
@@ -400,6 +451,7 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
         Route::get('/dashboard', [LmsSiswaDashboardController::class, 'index'])->name('dashboard');
         Route::get('/kelas', [LmsSiswaKelasController::class, 'index'])->name('kelas.index');
 
+        // Presensi
         Route::get('/presensi/scan/{token}', [LmsSiswaPresensiController::class, 'scan'])
             ->name('presensi.scan');
         Route::get('/presensi/kamera', [LmsSiswaPresensiController::class, 'kamera'])
@@ -407,6 +459,7 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
         Route::get('/presensi', [LmsSiswaPresensiController::class, 'riwayat'])
             ->name('presensi.riwayat');
 
+        // Materi & tugas
         Route::get('/kelas/{pengampuMapel}/materi', [LmsSiswaMateriController::class, 'index'])
             ->name('materi.index');
         Route::post('/materi/{materi}/selesai', [LmsSiswaMateriController::class, 'tandaiSelesai'])
@@ -419,6 +472,10 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
             ->name('tugas.kumpul');
         Route::post('/tugas/{tugas}/kelompok', [LmsSiswaTugasController::class, 'buatKelompok'])
             ->name('tugas.kelompok.buat');
+
+        // Laporan
+        Route::get('/laporan', [LmsSiswaLaporanController::class, 'index'])->name('laporan.index');
+        Route::get('/laporan/pdf', [LmsSiswaLaporanController::class, 'pdf'])->name('laporan.pdf');
     });
 
 /*
@@ -431,13 +488,22 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
 Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(function () {
     Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])->name('dashboard');
 
+    // Pengguna
     Route::get('/pengguna', [SuperAdminPenggunaController::class, 'index'])->name('pengguna.index');
     Route::get('/pengguna/{user}/akses', [SuperAdminPenggunaController::class, 'akses'])->name('pengguna.akses');
     Route::put('/pengguna/{user}/akses', [SuperAdminPenggunaController::class, 'updateAkses'])->name('pengguna.akses.update');
+
+    // Modul ajar
     Route::get('/modul-ajar', [SuperAdminModulAjarController::class, 'index'])->name('modul-ajar.index');
     Route::get('/modul-ajar/{modulAjar}/file', [SuperAdminModulAjarController::class, 'file'])->name('modul-ajar.file');
+
+    // Siswa
     Route::prefix('siswa')->name('siswa.')->group(function () {
+        // Import — HARUS di atas /{siswa} agar tidak konflik
         Route::get('/import/form', [SuperAdminSiswaController::class, 'importForm'])->name('import.form');
+        Route::post('/import/proses', [SuperAdminSiswaController::class, 'import'])->name('import.proses');
+        Route::get('/import/template', [SuperAdminSiswaController::class, 'downloadTemplate'])->name('import.template');
+
         Route::get('/', [SuperAdminSiswaController::class, 'index'])->name('index');
         Route::get('/tambah', [SuperAdminSiswaController::class, 'create'])->name('create');
         Route::post('/', [SuperAdminSiswaController::class, 'store'])->name('store');
@@ -446,13 +512,15 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
         Route::put('/{siswa}', [SuperAdminSiswaController::class, 'update'])->name('update');
         Route::delete('/{siswa}', [SuperAdminSiswaController::class, 'destroy'])->name('destroy');
         Route::patch('/{siswa}/reset-password', [SuperAdminSiswaController::class, 'resetPassword'])->name('reset-password');
-        // Import Excel
-        Route::post('/import/proses', [SuperAdminSiswaController::class, 'import'])->name('import.proses');
-        Route::get('/import/template', [SuperAdminSiswaController::class, 'downloadTemplate'])->name('import.template');
     });
+
+    // Guru
     Route::get('/guru', [SuperAdminGuruController::class, 'index'])->name('guru.index');
     Route::get('/guru/tambah', [SuperAdminGuruController::class, 'create'])->name('guru.create');
     Route::post('/guru', [SuperAdminGuruController::class, 'store'])->name('guru.store');
+    Route::get('/guru/import', [SuperAdminGuruController::class, 'importForm'])->name('guru.import.form');
+    Route::post('/guru/import', [SuperAdminGuruController::class, 'importProcess'])->name('guru.import.process');
+    Route::get('/guru/import/template', [SuperAdminGuruController::class, 'downloadTemplate'])->name('guru.import.template');
     Route::get('/guru/{guru}/edit', [SuperAdminGuruController::class, 'editAccount'])->name('guru.edit');
     Route::put('/guru/{guru}', [SuperAdminGuruController::class, 'updateAccount'])->name('guru.update');
     Route::delete('/guru/{guru}', [SuperAdminGuruController::class, 'destroy'])->name('guru.destroy');
@@ -461,19 +529,21 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
     Route::delete('/guru/mengajar/{pengampuMapel}', [SuperAdminGuruController::class, 'destroyMengajar'])->name('guru.mengajar.destroy');
     Route::post('/guru/{guru}/wali-kelas', [SuperAdminGuruController::class, 'storeWaliKelas'])->name('guru.wali-kelas.store');
     Route::delete('/guru/wali-kelas/{waliKelasPeriode}', [SuperAdminGuruController::class, 'destroyWaliKelas'])->name('guru.wali-kelas.destroy');
-    Route::get('/guru/import', [SuperAdminGuruController::class, 'importForm'])->name('guru.import.form');
-    Route::post('/guru/import', [SuperAdminGuruController::class, 'importProcess'])->name('guru.import.process');
-    Route::get('/guru/import/template', [SuperAdminGuruController::class, 'downloadTemplate'])->name('guru.import.template');
-    Route::put('guru/{guru}/kepala-jurusan', [SuperAdminGuruController::class, 'updateKepalaJurusan'])
+    Route::put('/guru/{guru}/kepala-jurusan', [SuperAdminGuruController::class, 'updateKepalaJurusan'])
         ->name('guru.kepala-jurusan.update');
     Route::put('/guru/{guru}/kesiswaan', [SuperAdminGuruController::class, 'updateKesiswaan'])
         ->name('guru.kesiswaan.update');
+    Route::patch('/guru/{guru}/reset-password', [SuperAdminGuruController::class, 'resetPassword'])->name('guru.reset-password');
+
+    // Kenaikan kelas
     Route::prefix('kenaikan-kelas')->name('kenaikan-kelas.')->group(function () {
         Route::get('/', [KenaikanKelasController::class, 'index'])->name('index');
         Route::get('/template', [KenaikanKelasController::class, 'downloadTemplate'])->name('template');
         Route::post('/preview', [KenaikanKelasController::class, 'preview'])->name('preview');
         Route::post('/eksekusi', [KenaikanKelasController::class, 'eksekusi'])->name('eksekusi');
     });
+
+    // Mata pelajaran
     Route::prefix('mata-pelajaran')->name('mata-pelajaran.')->group(function () {
         // Import — HARUS di atas /{mataPelajaran} agar tidak konflik
         Route::get('/import/form', [MataPelajaranController::class, 'importForm'])->name('import.form');
@@ -488,7 +558,11 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
         Route::put('/{mataPelajaran}', [MataPelajaranController::class, 'update'])->name('update');
         Route::delete('/{mataPelajaran}', [MataPelajaranController::class, 'destroy'])->name('destroy');
     });
+
+    // Kelas
     Route::resource('kelas', SuperAdminKelasController::class);
+
+    // Profil
     Route::prefix('profil')->name('profil.')->group(function () {
         Route::get('/', [ProfilController::class, 'edit'])->name('edit');
         Route::put('/', [ProfilController::class, 'update'])->name('update');
@@ -496,18 +570,17 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
         Route::post('/avatar', [ProfilController::class, 'updateAvatar'])->name('avatar');
         Route::delete('/avatar', [ProfilController::class, 'deleteAvatar'])->name('avatar.delete');
     });
-    Route::patch('/guru/{guru}/reset-password', [SuperAdminGuruController::class, 'resetPassword'])->name('guru.reset-password');
-    Route::get('/monitoring-presensi', [MonitoringPresensiController::class, 'index'])
-        ->name('monitoring-presensi.index');
+
+    // Jadwal
     Route::get('/jadwal/pengaturan-jam', [PengaturanJamController::class, 'edit'])->name('jadwal.pengaturan-jam');
     Route::put('/jadwal/pengaturan-jam', [PengaturanJamController::class, 'update'])->name('jadwal.pengaturan-jam.update');
-
     Route::get('/jadwal/import', [JadwalImportController::class, 'form'])->name('jadwal.import');
     Route::get('/jadwal/import/template', [JadwalImportController::class, 'template'])->name('jadwal.import.template');
     Route::get('/jadwal/export', [JadwalImportController::class, 'export'])->name('jadwal.export');
     Route::post('/jadwal/import', [JadwalImportController::class, 'proses'])->name('jadwal.import.proses');
     Route::resource('jadwal', JadwalController::class)->except('show');
 
+    // Monitoring & rekap presensi
     Route::get('/monitoring-presensi', [MonitoringPresensiController::class, 'index'])
         ->name('monitoring-presensi.index');
     Route::get('/monitoring-presensi/{pengampuMapel}', [MonitoringPresensiController::class, 'detail'])
@@ -515,6 +588,7 @@ Route::prefix('admin')->name('admin.')->middleware('super.admin')->group(functio
     Route::get('/rekap-absensi', [RekapAbsensiController::class, 'index'])
         ->name('rekap-absensi.index');
 });
+
 Route::post('/admin/logout', function () {
     // Logout dari semua guard yang mungkin aktif
     foreach (['web', 'pkl', 'lms', 'spmb'] as $guard) {

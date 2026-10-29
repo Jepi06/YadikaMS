@@ -1,0 +1,7 @@
+{{-- resources/views/admin/layouts/app.blade.php
+     Tempel SESUDAH link "Mata Pelajaran" (blok Manajemen Akademik), sebelum <div class="nav-section-title mt-2">Aktivitas & Kurikulum --}}
+            <a class="nav-link {{ request()->routeIs('admin.poin.*') ? 'active' : '' }}"
+                href="{{ route('admin.poin.index') }}">
+                <i class="bi bi-award-fill"></i>
+                <span>Poin Siswa</span>
+            </a>
