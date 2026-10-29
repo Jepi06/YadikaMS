@@ -1,0 +1,14 @@
+// ── 1) use di bagian atas routes/web.php (blok "Super Admin – Controllers") ──
+use App\Http\Controllers\SuperAdmin\JenisPoinController;
+
+// ── 2) di DALAM group Route::prefix('admin')->name('admin.')->middleware('super.admin') ──
+    // Pengaturan poin siswa (jenis pelanggaran & prestasi)
+    Route::prefix('poin-siswa')->name('poin.')->group(function () {
+        Route::get('/', [JenisPoinController::class, 'index'])->name('index');
+        Route::get('/tambah', [JenisPoinController::class, 'create'])->name('create');
+        Route::post('/', [JenisPoinController::class, 'store'])->name('store');
+        Route::get('/{jenis}/edit', [JenisPoinController::class, 'edit'])->name('edit');
+        Route::put('/{jenis}', [JenisPoinController::class, 'update'])->name('update');
+        Route::patch('/{jenis}/aktif', [JenisPoinController::class, 'toggle'])->name('toggle');
+        Route::delete('/{jenis}', [JenisPoinController::class, 'destroy'])->name('destroy');
+    });

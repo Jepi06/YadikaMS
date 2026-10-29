@@ -35,6 +35,9 @@
     // Punya peran approval PKL? (wali kelas / guru BK / kesiswaan / kepala jurusan)
     $punyaApprovalPkl = $user && !$isSiswa && $user->hasPklRole('wali_kelas', 'guru_bk', 'kesiswaan', 'kepala_jurusan');
     $pklMenunggu = $pklMenunggu ?? 0;
+
+    // Monitoring piket: Guru Piket, BK, Kesiswaan, Super Admin
+    $bisaMonitoringPiket = $user && !$isSiswa && \App\Services\Lms\PelanggaranAkses::bolehMonitoring($user);
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -159,6 +162,13 @@
                                 <i class="bi bi-clock-history text-base"></i>
                                 <span>Riwayat Presensi</span>
                             </a>
+
+                            {{-- Laporan kehadiran + poin kedisiplinan (unduh PDF) --}}
+                            <a href="{{ $r('lms.siswa.laporan.index') }}"
+                                class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ request()->routeIs('lms.siswa.laporan.*') ? $menuAktif : $menuBiasa }}">
+                                <i class="bi bi-file-earmark-pdf text-base"></i>
+                                <span>Laporan & Poin</span>
+                            </a>
                         </nav>
                     </div>
                 @else
@@ -199,6 +209,22 @@
                                 <i class="bi bi-person-badge text-base"></i>
                                 <span>Wali Kelas</span>
                             </a>
+
+                            {{-- Poin Siswa: semua guru bisa menambah/mengurangi poin (pelanggaran / prestasi) --}}
+                            <a href="{{ $r('lms.guru.pelanggaran.index') }}"
+                                class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ request()->routeIs('lms.guru.pelanggaran.*') ? $menuAktif : $menuBiasa }}">
+                                <i class="bi bi-award text-base"></i>
+                                <span>Poin Siswa</span>
+                            </a>
+
+                            {{-- Monitoring Piket (Guru Piket / BK / Kesiswaan) --}}
+                            @if ($bisaMonitoringPiket)
+                                <a href="{{ $r('lms.guru.piket.monitoring') }}"
+                                    class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ request()->routeIs('lms.guru.piket.*') ? $menuAktif : $menuBiasa }}">
+                                    <i class="bi bi-binoculars text-base"></i>
+                                    <span>Monitoring Piket</span>
+                                </a>
+                            @endif
 
                             {{-- Approval PKL: masuk ke sistem PKL tanpa login ulang --}}
                             @if ($punyaApprovalPkl)

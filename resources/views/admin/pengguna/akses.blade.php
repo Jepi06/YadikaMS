@@ -20,7 +20,7 @@
         <div class="row g-3">
             @foreach ($modules as $m)
                 <div class="col-md-4">
-                    <div class="card border-0 shadow-sm h-100">
+                    <div class="card border-0 shadow-sm h-100" data-module="{{ $m->kode }}">
                         <div class="card-header bg-white fw-semibold">
                             {{ $m->nama }} <code class="small text-muted">{{ $m->kode }}</code>
                         </div>
@@ -28,10 +28,16 @@
                             @forelse ($m->roles as $role)
                                 <div class="form-check mb-2">
                                     <input type="checkbox" name="role_ids[]" value="{{ $role->id }}"
-                                           class="form-check-input" id="role{{ $role->id }}"
+                                           class="form-check-input role-cb" id="role{{ $role->id }}"
+                                           data-kode="{{ $role->kode }}"
                                            @checked(in_array($role->id, $roleIdsUser))>
                                     <label for="role{{ $role->id }}" class="form-check-label">
                                         {{ $role->nama }}
+                                        @if ($m->kode === 'lms' && $role->kode === 'guru_piket')
+                                            <div class="small text-muted fw-normal">
+                                                Akses menu Monitoring Piket. Otomatis ikut role Guru.
+                                            </div>
+                                        @endif
                                     </label>
                                 </div>
                             @empty
@@ -68,3 +74,20 @@
         </button>
     </form>
 @endsection
+
+@push('scripts')
+    <script>
+        // Guru Piket (LMS) selalu butuh role Guru: centang piket → centang guru;
+        // cabut guru → piket ikut dicabut.
+        (function () {
+            const card = document.querySelector('[data-module="lms"]');
+            if (!card) return;
+            const guru = card.querySelector('.role-cb[data-kode="guru"]');
+            const piket = card.querySelector('.role-cb[data-kode="guru_piket"]');
+            if (!guru || !piket) return;
+
+            piket.addEventListener('change', () => { if (piket.checked) guru.checked = true; });
+            guru.addEventListener('change', () => { if (!guru.checked) piket.checked = false; });
+        })();
+    </script>
+@endpush
