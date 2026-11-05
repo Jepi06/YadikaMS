@@ -19,6 +19,7 @@ use App\Http\Controllers\Lms\Guru\KelasController as LmsGuruKelasController;
 use App\Http\Controllers\Lms\Guru\MateriController as LmsGuruMateriController;
 use App\Http\Controllers\Lms\Guru\ModulAjarController as LmsGuruModulAjarController;
 use App\Http\Controllers\Lms\Guru\NilaiController as LmsGuruNilaiController;
+use App\Http\Controllers\Lms\Guru\PraktikController as LmsGuruPraktikController;
 use App\Http\Controllers\Lms\Guru\PelanggaranController as LmsGuruPelanggaranController;
 use App\Http\Controllers\Lms\Guru\PiketMonitoringController as LmsPiketMonitoringController;
 use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
@@ -409,7 +410,18 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('nilai.bobot');
         Route::get('/kelas/{pengampuMapel}/nilai/export', [LmsGuruNilaiController::class, 'exportExcel'])
             ->name('nilai.export');
+        Route::get('/kelas/{pengampuMapel}/nilai/export', [LmsGuruNilaiController::class, 'exportExcel'])
+            ->name('nilai.export');
 
+        // Nilai praktik
+        Route::get('/kelas/{pengampuMapel}/nilai/praktik', [LmsGuruPraktikController::class, 'index'])
+            ->name('nilai.praktik.index');
+        Route::post('/kelas/{pengampuMapel}/nilai/praktik', [LmsGuruPraktikController::class, 'store'])
+            ->name('nilai.praktik.store');
+        Route::post('/kelas/{pengampuMapel}/nilai/praktik/simpan', [LmsGuruPraktikController::class, 'simpan'])
+            ->name('nilai.praktik.simpan');
+        Route::delete('/kelas/{pengampuMapel}/nilai/praktik/{praktik}', [LmsGuruPraktikController::class, 'destroy'])
+            ->name('nilai.praktik.destroy');
         // Modul ajar
         Route::get('/kelas/{pengampuMapel}/modul-ajar', [LmsGuruModulAjarController::class, 'index'])
             ->name('modul-ajar.index');

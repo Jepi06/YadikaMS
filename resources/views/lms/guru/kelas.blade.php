@@ -80,8 +80,14 @@
                         class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition-all flex items-center justify-center gap-1">
                         <i class="bi bi-archive text-slate-500"></i> Modul
                     </a>
+                    <a href="{{ $link('lms.guru.nilai.praktik.index', $pm) }}"
+                        style="grid-column: span 2 / span 2;"
+                        class="{{ $btnMenu }}">
+                        <i class="bi bi-tools text-slate-400"></i> Nilai Praktik
+                    </a>
                     <a href="{{ $link('lms.guru.presensi.index', $pm) }}"
-                        class="col-span-2 px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5">
+                        style="grid-column: 1 / -1;"
+                        class="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5">
                         <i class="bi bi-qr-code-scan"></i> Buka Presensi
                     </a>
                 </div>
