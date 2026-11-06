@@ -1,4 +1,3 @@
-
 @extends('lms.layouts.app')
 
 @section('title', 'Rekap Presensi - LMS Yadika')
@@ -6,8 +5,6 @@
 
 @section('content')
     @php
-        use Illuminate\Support\Carbon;
-
         $batasKehadiran = 75; // minimal % kehadiran (aturan sekolah)
 
         $mp = $pengampuMapel->mataPelajaran ?? null;
@@ -16,19 +13,8 @@
         $namaKelas = $kelasModel->nama_kelas ?? ($kelasModel->nama ?? null);
         $semester = $pengampuMapel->semester ?? null;
 
-        // --- normalisasi data rekap ---
-        $sumber = $rekap ?? ($rekapSiswa ?? null);
-        if ($sumber === null && isset($presensi)) {
-            $sumber = collect($presensi)->groupBy('siswa_id')->map(function ($g) {
-                $cnt = fn($st) => $g->filter(fn($x) => strtolower((string) $x->status) === $st)->count();
-                return [
-                    'siswa' => $g->first()->siswa ?? null,
-                    'hadir' => $cnt('hadir'), 'izin' => $cnt('izin'), 'sakit' => $cnt('sakit'), 'alpa' => $cnt('alpa'),
-                ];
-            });
-        }
-
-        $baris = collect($sumber ?? [])->map(function ($r) use ($batasKehadiran) {
+        // --- data rekap dari controller (sudah difilter tanggal) ---
+        $baris = collect($rekap ?? [])->map(function ($r) use ($batasKehadiran) {
             $hadir = (int) data_get($r, 'hadir', 0);
             $izin  = (int) data_get($r, 'izin', 0);
             $sakit = (int) data_get($r, 'sakit', 0);
@@ -177,6 +163,9 @@
                 <span>Tercatat: <strong class="text-slate-900">{{ $pertemuan }} Sesi</strong></span>
             </div>
         </form>
+
+        @error('dari')<p class="text-xs text-rose-600">{{ $message }}</p>@enderror
+        @error('sampai')<p class="text-xs text-rose-600">{{ $message }}</p>@enderror
 
         <div class="flex flex-wrap items-center gap-2">
             <span class="text-xs font-semibold text-slate-500 mr-1">Rentang Cepat:</span>
