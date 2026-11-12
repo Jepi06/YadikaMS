@@ -25,6 +25,7 @@ use App\Http\Controllers\Lms\Guru\PiketMonitoringController as LmsPiketMonitorin
 use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
 use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
 use App\Http\Controllers\Lms\Guru\WaliKelasController as LmsGuruWaliKelasController;
+use App\Http\Controllers\Lms\Guru\KoreksiAbsensiController;
 // LMS Siswa
 use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
 use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
@@ -435,7 +436,10 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('wali-kelas.index');
         Route::get('/wali-kelas/absensi', [LmsGuruWaliKelasController::class, 'absensi'])
             ->name('wali-kelas.absensi');
-
+        Route::post('wali-kelas/absensi/koreksi', [KoreksiAbsensiController::class, 'store'])
+            ->name('wali-kelas.absensi.koreksi.store');
+        Route::delete('wali-kelas/absensi/koreksi/{id}', [KoreksiAbsensiController::class, 'destroy'])
+            ->name('wali-kelas.absensi.koreksi.destroy');
         // Poin pelanggaran (Wali Kelas, BK, Kesiswaan, Guru Piket — dicek di controller)
         Route::prefix('pelanggaran')->name('pelanggaran.')->group(function () {
             Route::get('/', [LmsGuruPelanggaranController::class, 'index'])->name('index');
