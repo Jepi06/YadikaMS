@@ -14,6 +14,7 @@ use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiControlle
 use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
 use App\Http\Controllers\Lms\Guru\WaliKelasController as LmsGuruWaliKelasController;
 use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
+use App\Http\Controllers\Lms\Guru\KoreksiAbsensiController;
 // LMS Siswa
 use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
 use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
@@ -387,6 +388,12 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('wali-kelas.absensi');
         Route::get('/kelas/{pengampuMapel}/presensi/qr', [LmsGuruPresensiController::class, 'qr'])
             ->name('presensi.qr');
+
+        Route::post('wali-kelas/absensi/koreksi', [KoreksiAbsensiController::class, 'store'])
+            ->name('wali-kelas.absensi.koreksi.store');
+
+        Route::delete('wali-kelas/absensi/koreksi/{id}', [KoreksiAbsensiController::class, 'destroy'])
+            ->name('wali-kelas.absensi.koreksi.destroy');
     });
 
 /*
