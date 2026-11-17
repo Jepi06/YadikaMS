@@ -197,7 +197,7 @@
                     <input id="lampiran" name="lampiran" type="file" class="sr-only">
                 </div>
 
-                <div class="p-4 rounded-xl bg-slate-100">
+                {{-- <div class="p-4 rounded-xl bg-slate-100">
                     <div class="flex items-start justify-between gap-4">
                         <div class="space-y-0.5">
                             <span class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
@@ -213,7 +213,7 @@
                                 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                         </label>
                     </div>
-                </div>
+                </div> --}}
             </div>
 
             <div class="flex justify-end pt-1">
