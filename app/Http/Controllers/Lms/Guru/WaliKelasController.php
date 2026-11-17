@@ -77,27 +77,36 @@ class WaliKelasController extends Controller
 public function absensi(Request $request)
 {
     $user = Auth::guard('lms')->user();
-
+ 
     $penugasanWali = WaliKelasPeriode::where('user_id', $user->id)
         ->with('kelas')
         ->orderByDesc('tahun_ajaran')
         ->orderByDesc('semester')
         ->get();
-
+ 
     abort_if($penugasanWali->isEmpty(), 403, 'Anda bukan wali kelas manapun.');
-
+ 
     $kelasDiwalikan = $penugasanWali->pluck('kelas')->unique('id')->values();
     $kelasId = (int) $request->query('kelas_id', $kelasDiwalikan->first()->id);
     $kelas = $kelasDiwalikan->firstWhere('id', $kelasId) ?? $kelasDiwalikan->first();
-
+ 
     $periodeList = RekapAbsensiService::periodeList($kelas);
     $tahunAjaran = $request->query('tahun_ajaran', $periodeList->first()->tahun_ajaran ?? TahunAjaran::sekarang());
     $semester = $request->query('semester', $periodeList->first()->semester ?? TahunAjaran::semesterSekarang());
-
+ 
     $data = RekapAbsensiService::susun($kelas, $tahunAjaran, $semester, $request->query('bulan'));
-
+ 
+    // Tombol koreksi hanya muncul kalau user memang wali kelas di periode yang sedang dilihat
+    $bolehKoreksi = WaliKelasPeriode::where('user_id', $user->id)
+        ->where('kelas_id', $kelas->id)
+        ->where('tahun_ajaran', $tahunAjaran)
+        ->where('semester', $semester)
+        ->exists();
+    $batasKoreksi = now()->subDays(KoreksiAbsensiController::BATAS_HARI)->toDateString();
+ 
     return view('lms.guru.wali-kelas-absensi', $data + compact(
-        'kelasDiwalikan', 'kelas', 'periodeList', 'tahunAjaran', 'semester'
+        'kelasDiwalikan', 'kelas', 'periodeList', 'tahunAjaran', 'semester',
+        'bolehKoreksi', 'batasKoreksi'
     ));
 }
 }
