@@ -7,8 +7,11 @@
        $kelasDiwalikan, $kelas, $periodeList, $tahunAjaran, $semester,
        $hariMasukPerBulan, $totalHariMasuk, $rekap, $rekapKelasPerBulan, $rekapKelasTotal,
        $bulanDipilih, $tanggalList,
-       $detailHarian  → [siswa_id][Y-m-d] = ['status', 'rincian', 'catatan' => [[status, mapel, guru, jam]]]
+       $detailHarian  → [siswa_id][Y-m-d] = ['status', 'status_sistem', 'dikoreksi', 'koreksi', 'rincian',
+                                             'catatan' => [[status, mapel, guru, jam, jenis]]]
        $catatanHarian → list [siswa_id, tanggal, entries[]] : hari Hadir tapi ada Alpa/Izin/Sakit di mapel lain
+       $koreksiBulan  → list koreksi wali kelas pada bulan terpilih
+       $bolehKoreksi, $batasKoreksi (opsional; hanya diisi untuk wali kelas)
        $modeAdmin (opsional), $layout (opsional)
 --}}
 @extends($layout ?? 'lms.layouts.app')
@@ -33,6 +36,20 @@
 
         .ikon-buka {
             transition: transform .2s ease;
+        }
+
+        /* Sel status yang bisa dikoreksi */
+        [data-koreksi] {
+            cursor: pointer;
+        }
+
+        [data-koreksi]:hover {
+            filter: brightness(.95);
+            transform: scale(1.1);
+        }
+
+        dialog#modalKoreksi::backdrop {
+            background: rgba(15, 23, 42, .5);
         }
     </style>
 @endpush
@@ -67,6 +84,13 @@
             'Alpa' => 'bg-rose-100 text-rose-800',
         ];
 
+        // Jenis catatan "hadir tapi tidak penuh"
+        $labelJenis = [
+            'terlambat' => ['Terlambat / tidak ada di jam awal', 'bg-orange-100 text-orange-800'],
+            'keluar' => ['Keluar di tengah jam', 'bg-amber-100 text-amber-800'],
+            'lainnya' => ['Tidak penuh', 'bg-slate-100 text-slate-700'],
+        ];
+
         $warnaPersen = fn($p) => $p >= 90 ? 'text-emerald-700' : ($p >= 75 ? 'text-amber-700' : 'text-rose-700');
         $warnaBar = fn($p) => $p >= 90 ? 'bg-emerald-500' : ($p >= 75 ? 'bg-amber-500' : 'bg-rose-500');
         $labelPersen = function ($p) {
@@ -93,8 +117,8 @@
             return $c;
         };
 
-        // Teks tooltip: rincian + catatan (mapel, guru, jam) kalau Hadir tapi tidak penuh
-        $teksTooltip = function ($cell) {
+        // Teks tooltip: rincian + catatan (jenis, mapel, jam) + info koreksi
+        $teksTooltip = function ($cell) use ($labelJenis) {
             if (!$cell) {
                 return '';
             }
@@ -104,12 +128,27 @@
                     ' — ' .
                     collect($cell['catatan'])
                         ->map(
-                            fn($c) => $c['status'] .
+                            fn($c) => ($labelJenis[$c['jenis'] ?? 'lainnya'][0] ?? '') .
+                                ': ' .
+                                $c['status'] .
                                 ' di ' .
                                 $c['mapel'] .
                                 ($c['jam'] ? ' (' . $c['jam'] . ')' : ''),
                         )
                         ->implode('; ');
+            }
+            if (!empty($cell['dikoreksi'])) {
+                $k = $cell['koreksi'];
+                $t .=
+                    ' | DIKOREKSI: sistem ' .
+                    $cell['status_sistem'] .
+                    ' → ' .
+                    $cell['status'] .
+                    ' oleh ' .
+                    $k['oleh'] .
+                    ' (' .
+                    $k['alasan'] .
+                    ')';
             }
             return $t;
         };
@@ -142,6 +181,25 @@
         $urlNilai = $modeAdmin ? null : route('lms.guru.wali-kelas.index', $paramPeriode);
         $labelHeader = $modeAdmin ? 'Rekap Absensi — Semua Kelas' : 'Rekap Absensi — Wali Kelas';
         $labelKelas = $modeAdmin ? 'Kelas' : 'Rombongan Belajar (Kelas)';
+
+        // ── Koreksi wali kelas (hanya wali kelas, bukan admin) ──
+        $bolehKoreksi = ($bolehKoreksi ?? false) && !$modeAdmin;
+        $batasKoreksi = $batasKoreksi ?? null;
+        $batasHariKoreksi = \App\Http\Controllers\Lms\Guru\KoreksiAbsensiController::BATAS_HARI;
+
+        // Atribut sel yang bisa diklik untuk koreksi (kosong jika tidak boleh)
+        $attrKoreksi = function ($sid, $nama, $tgl, $cell) use ($bolehKoreksi, $batasKoreksi) {
+            if (!$bolehKoreksi || !$cell || ($batasKoreksi && $tgl < $batasKoreksi)) {
+                return '';
+            }
+            return 'data-koreksi="1" role="button" tabindex="0"' .
+                ' data-siswa="' . e($sid) . '"' .
+                ' data-nama="' . e($nama) . '"' .
+                ' data-tanggal="' . e($tgl) . '"' .
+                ' data-sistem="' . e($cell['status_sistem'] ?? '') . '"' .
+                ' data-status="' . e($cell['status'] ?? '') . '"' .
+                ' data-alasan="' . e($cell['koreksi']['alasan'] ?? '') . '"';
+        };
     @endphp
 
     {{-- HEADER --}}
@@ -175,6 +233,16 @@
             </div>
         @endif
     </section>
+
+    {{-- NOTIFIKASI KOREKSI --}}
+    @if (session('success'))
+        <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+            {{ session('success') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="p-3 rounded-lg bg-rose-50 border border-rose-200 text-sm text-rose-800">{{ $errors->first() }}
+        </div>
+    @endif
 
     {{-- FILTER --}}
     <section class="bg-white border border-slate-200/70 rounded-xl p-4 sm:p-5 shadow-sm">
@@ -330,6 +398,8 @@
                     <span
                         class="px-2 py-1 rounded bg-emerald-50 text-emerald-800 ring-2 ring-amber-400">H Hadir, ada
                         catatan</span>
+                    <span class="px-2 py-1 rounded bg-slate-50 text-slate-700 ring-2 ring-blue-500">Dikoreksi wali
+                        kelas</span>
                 </div>
             </div>
 
@@ -366,7 +436,11 @@
                         </summary>
                         <div class="px-3 pb-3 pt-3 border-t border-slate-100">
                             <p class="text-[11px] text-slate-400 mb-2">Angka kecil = tanggal, huruf = status presensi.
-                                Bingkai kuning = hadir tapi ada catatan (lihat bagian Catatan di bawah).</p>
+                                Bingkai kuning = hadir tapi ada catatan, bingkai biru = dikoreksi wali kelas.
+                                @if ($bolehKoreksi)
+                                    Ketuk huruf status untuk mengoreksi.
+                                @endif
+                            </p>
                             <div class="grid grid-cols-7 gap-1.5">
                                 @foreach ($tanggalList as $tgl)
                                     @php
@@ -374,12 +448,14 @@
                                         $st = $cell['status'] ?? null;
                                         [$huruf, $kls] = $statusStyle[$st] ?? [null, null];
                                         $adaCatatan = !empty($cell['catatan']);
+                                        $adaKoreksi = !empty($cell['dikoreksi']);
                                     @endphp
                                     <div class="text-center">
                                         <div class="text-[10px] text-slate-400 leading-none mb-0.5">
                                             {{ $tanggalInfo[$tgl]->format('d') }}</div>
-                                        <span
-                                            class="block w-full py-1 rounded text-xs font-bold {{ $kls ?? 'text-slate-300 bg-slate-50' }} {{ $adaCatatan ? 'ring-2 ring-amber-400' : '' }}">{{ $huruf ?? '–' }}</span>
+                                        <span {!! $attrKoreksi($sid, $nama, $tgl, $cell) !!}
+                                            title="{{ $teksTooltip($cell) }}"
+                                            class="block w-full py-1 rounded text-xs font-bold {{ $kls ?? 'text-slate-300 bg-slate-50' }} {{ $adaKoreksi ? 'ring-2 ring-blue-500' : ($adaCatatan ? 'ring-2 ring-amber-400' : '') }}">{{ $huruf ?? '–' }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -435,11 +511,13 @@
                                         $st = $cell['status'] ?? null;
                                         [$huruf, $kls] = $statusStyle[$st] ?? [null, null];
                                         $adaCatatan = !empty($cell['catatan']);
+                                        $adaKoreksi = !empty($cell['dikoreksi']);
                                     @endphp
                                     <td class="p-1 text-center">
                                         @if ($huruf)
-                                            <span title="{{ $teksTooltip($cell) }}"
-                                                class="inline-block w-6 py-0.5 rounded text-xs font-bold {{ $kls }} {{ $adaCatatan ? 'ring-2 ring-amber-400' : '' }}">{{ $huruf }}</span>
+                                            <span {!! $attrKoreksi($sid, $nama, $tgl, $cell) !!}
+                                                title="{{ $teksTooltip($cell) }}"
+                                                class="inline-block w-6 py-0.5 rounded text-xs font-bold {{ $kls }} {{ $adaKoreksi ? 'ring-2 ring-blue-500' : ($adaCatatan ? 'ring-2 ring-amber-400' : '') }}">{{ $huruf }}</span>
                                         @else
                                             <span class="inline-block w-6 py-0.5 rounded text-xs text-slate-300">–</span>
                                         @endif
@@ -466,11 +544,18 @@
                 <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
                     <span class="font-semibold text-slate-900">Aturan absensi harian:</span> jika dalam satu hari siswa
                     tercatat <span class="text-emerald-700 font-semibold">Hadir</span> di salah satu mapel, hari itu
-                    dihitung <span class="text-emerald-700 font-semibold">Hadir</span>. Jika tidak ada yang Hadir, status
-                    terberat yang ditampilkan (<span class="text-rose-700 font-semibold">Alpa</span> &gt; <span
+                    dihitung <span class="text-emerald-700 font-semibold">Hadir</span> (termasuk siswa yang terlambat).
+                    Jika ada Alpa/Izin/Sakit di mapel lain, sel diberi bingkai kuning dan rinciannya muncul di bagian
+                    Catatan, dibedakan antara <b>terlambat</b> (tidak hadir sebelum presensi Hadir pertama) dan
+                    <b>keluar di tengah jam</b>. Jika tidak ada yang Hadir, status terberat yang ditampilkan
+                    (<span class="text-rose-700 font-semibold">Alpa</span> &gt; <span
                         class="text-amber-700 font-semibold">Sakit</span> &gt; <span
-                        class="text-blue-700 font-semibold">Izin</span>). Jika hari itu Hadir tetapi ada Alpa/Izin/Sakit
-                    di mapel lain, sel diberi bingkai kuning dan rinciannya (mapel, guru, jam) muncul di bagian Catatan.
+                        class="text-blue-700 font-semibold">Izin</span>). Bingkai biru = status sudah dikoreksi wali
+                    kelas.
+                    @if ($bolehKoreksi)
+                        <span class="font-semibold text-slate-900">Klik sel status</span> untuk mengoreksi (maksimal
+                        {{ $batasHariKoreksi }} hari setelah tanggal presensi, alasan wajib).
+                    @endif
                     <span class="hidden lg:inline">Arahkan kursor ke sel untuk melihat rincian per mapel.</span>
                 </p>
             </div>
@@ -488,8 +573,8 @@
                         <h2 class="font-bold text-slate-900 text-base sm:text-lg">Catatan Kehadiran Tidak Penuh —
                             {{ $bulanDipilih ? $bulanPanjang($bulanDipilih) : '-' }}</h2>
                         <p class="text-xs sm:text-sm text-slate-500">Siswa tercatat hadir, tetapi di mapel tertentu
-                            statusnya Alpa/Izin/Sakit ({{ $catatanUrut->count() }} kejadian). Bisa jadi siswa keluar di
-                            tengah jam pelajaran.</p>
+                            statusnya Alpa/Izin/Sakit ({{ $catatanUrut->count() }} kejadian). Bisa jadi siswa terlambat
+                            atau keluar di tengah jam pelajaran.</p>
                     </div>
                 </div>
 
@@ -507,7 +592,10 @@
                             </div>
                             <ul class="flex-1 space-y-1">
                                 @foreach ($c['entries'] as $e)
+                                    @php [$lj, $ljKls] = $labelJenis[$e['jenis'] ?? 'lainnya'] ?? $labelJenis['lainnya']; @endphp
                                     <li class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[11px] font-semibold {{ $ljKls }}">{{ $lj }}</span>
                                         <span
                                             class="px-2 py-0.5 rounded text-[11px] font-bold {{ $statusBadge[$e['status']] ?? 'bg-slate-100 text-slate-700' }}">{{ $e['status'] }}</span>
                                         <span class="font-medium text-slate-800">{{ $e['mapel'] }}</span>
@@ -524,7 +612,54 @@
                 </div>
 
                 <p class="text-[11px] text-slate-400">Jam yang tampil adalah waktu presensi tersebut dicatat di sistem
-                    (bukan jadwal jam pelajaran), jadi bisa berbeda dari jam siswa benar-benar keluar kelas.</p>
+                    (bukan jadwal jam pelajaran), jadi bisa berbeda dari jam siswa benar-benar keluar kelas. Jenis
+                    "terlambat" dan "keluar" ditentukan dari urutan waktu pencatatan tersebut.</p>
+            </section>
+        @endif
+
+        {{-- ================= RIWAYAT KOREKSI WALI KELAS ================= --}}
+        @if (!empty($koreksiBulan))
+            <section class="bg-white border border-blue-200 rounded-xl shadow-sm p-4 sm:p-5 space-y-3">
+                <h2 class="font-bold text-slate-900 text-base sm:text-lg">
+                    Koreksi Wali Kelas — {{ $bulanDipilih ? $bulanPanjang($bulanDipilih) : '-' }}
+                    <span class="text-xs font-normal text-slate-500">({{ count($koreksiBulan) }} koreksi)</span>
+                </h2>
+                <div class="space-y-2">
+                    @foreach ($koreksiBulan as $k)
+                        @php $sw = $siswaMap[$k['siswa_id']] ?? null; @endphp
+                        <div
+                            class="rounded-xl border border-slate-200 p-3 flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+                            <div class="sm:w-56 shrink-0">
+                                <div class="font-semibold text-sm text-slate-900">
+                                    {{ $sw ? $namaSiswa($sw) : 'Siswa #' . $k['siswa_id'] }}</div>
+                                <div class="text-[11px] text-slate-500">
+                                    {{ $C::parse($k['tanggal'])->translatedFormat('l, d F Y') }}</div>
+                            </div>
+                            <div class="flex-1 text-xs sm:text-sm space-y-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-semibold">Sistem:
+                                        {{ $k['status_sistem'] }}</span>
+                                    <i class="bi bi-arrow-right text-slate-400"></i>
+                                    <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-semibold">Koreksi:
+                                        {{ $k['status_koreksi'] }}</span>
+                                </div>
+                                <div class="text-slate-700">Alasan: {{ $k['alasan'] }}</div>
+                                <div class="text-[11px] text-slate-400">oleh {{ $k['oleh'] }} • {{ $k['waktu'] }}
+                                </div>
+                            </div>
+                            @if ($bolehKoreksi && $batasKoreksi && $k['tanggal'] >= $batasKoreksi)
+                                <form method="POST"
+                                    action="{{ route('lms.guru.wali-kelas.absensi.koreksi.destroy', $k['id']) }}"
+                                    onsubmit="return confirm('Batalkan koreksi ini? Status kembali ke hitungan sistem.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button
+                                        class="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100">Batalkan</button>
+                                </form>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
             </section>
         @endif
 
@@ -854,12 +989,57 @@
             <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
                 <span class="font-semibold text-slate-900">Catatan perhitungan:</span>
                 persentase per siswa = <span class="font-mono text-slate-800">hari hadir ÷ hari masuk</span> (hari masuk =
-                tanggal unik yang punya presensi di mapel mana pun; hari dihitung hadir jika hadir di salah satu mapel).
+                tanggal unik yang punya presensi di mapel mana pun; hari dihitung hadir jika hadir di salah satu mapel,
+                atau sesuai koreksi wali kelas bila ada).
                 Persentase kelas = <span class="font-mono text-slate-800">total kejadian status ÷ (hari masuk × jumlah
                     siswa)</span>.
                 Data diambil dari presensi seluruh mapel di kelas ini pada periode terpilih.
             </p>
         </section>
+
+        {{-- ================= MODAL KOREKSI (hanya wali kelas) ================= --}}
+        @if ($bolehKoreksi)
+            <dialog id="modalKoreksi" class="rounded-xl p-0 w-full max-w-md">
+                <form method="POST" action="{{ route('lms.guru.wali-kelas.absensi.koreksi.store') }}"
+                    class="p-5 space-y-4">
+                    @csrf
+                    <input type="hidden" name="kelas_id" value="{{ $kelas->id }}">
+                    <input type="hidden" name="tahun_ajaran" value="{{ $tahunAjaran }}">
+                    <input type="hidden" name="semester" value="{{ $semester }}">
+                    <input type="hidden" name="siswa_id" id="kSiswa">
+                    <input type="hidden" name="tanggal" id="kTanggal">
+
+                    <div>
+                        <h3 class="font-bold text-slate-900">Koreksi Absensi Harian</h3>
+                        <p class="text-sm text-slate-600" id="kInfo"></p>
+                        <p class="text-xs text-slate-400 mt-1">Data presensi guru mapel tidak diubah. Koreksi ini hanya
+                            berlaku di rekap harian wali kelas dan tercatat di riwayat.</p>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-600" for="kStatus">Status harian</label>
+                        <select name="status_koreksi" id="kStatus"
+                            class="w-full h-11 px-3 rounded-lg bg-slate-100 text-base sm:text-sm">
+                            @foreach (['Hadir', 'Izin', 'Sakit', 'Alpa'] as $s)
+                                <option value="{{ $s }}">{{ $s }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-semibold text-slate-600" for="kAlasan">Alasan (wajib, min. 10
+                            karakter)</label>
+                        <textarea name="alasan" id="kAlasan" rows="3" required minlength="10" maxlength="500"
+                            class="w-full px-3 py-2 rounded-lg bg-slate-100 text-base sm:text-sm"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="document.getElementById('modalKoreksi').close()"
+                            class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 text-sm font-semibold">Batal</button>
+                        <button
+                            class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold">Simpan
+                            Koreksi</button>
+                    </div>
+                </form>
+            </dialog>
+        @endif
     @endif
 @endsection
 
@@ -881,6 +1061,31 @@
                 form.submit();
             }));
             f('fBulan')?.addEventListener('change', () => form.submit());
+        })();
+
+        // Klik sel status → buka modal koreksi (hanya ada jika wali kelas)
+        (function() {
+            const modal = document.getElementById('modalKoreksi');
+            if (!modal) return;
+            const open = (el) => {
+                const d = el.dataset;
+                document.getElementById('kSiswa').value = d.siswa;
+                document.getElementById('kTanggal').value = d.tanggal;
+                document.getElementById('kStatus').value = d.status;
+                document.getElementById('kAlasan').value = d.alasan || '';
+                document.getElementById('kInfo').textContent =
+                    d.nama + ' • ' + d.tanggal + ' • status sistem: ' + d.sistem;
+                modal.showModal();
+            };
+            document.addEventListener('click', (e) => {
+                const el = e.target.closest('[data-koreksi]');
+                if (el) open(el);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter') return;
+                const el = e.target.closest && e.target.closest('[data-koreksi]');
+                if (el) open(el);
+            });
         })();
     </script>
 @endpush

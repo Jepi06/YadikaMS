@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\DB;
 class KoreksiAbsensiController extends Controller
 {
     /** Wali kelas hanya boleh mengoreksi tanggal dalam N hari terakhir. */
-    public const BATAS_HARI = 7;
 
     public function store(Request $request)
     {
