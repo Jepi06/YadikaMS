@@ -16,23 +16,16 @@ use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
 // LMS Guru
 use App\Http\Controllers\Lms\Guru\DashboardController as LmsGuruDashboardController;
 use App\Http\Controllers\Lms\Guru\KelasController as LmsGuruKelasController;
+use App\Http\Controllers\Lms\Guru\KoreksiAbsensiController;
 use App\Http\Controllers\Lms\Guru\MateriController as LmsGuruMateriController;
 use App\Http\Controllers\Lms\Guru\ModulAjarController as LmsGuruModulAjarController;
 use App\Http\Controllers\Lms\Guru\NilaiController as LmsGuruNilaiController;
-<<<<<<< HEAD
+use App\Http\Controllers\Lms\Guru\PelanggaranController as LmsGuruPelanggaranController;
+use App\Http\Controllers\Lms\Guru\PiketMonitoringController as LmsPiketMonitoringController;
 use App\Http\Controllers\Lms\Guru\PraktikController as LmsGuruPraktikController;
 use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
 use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
 use App\Http\Controllers\Lms\Guru\WaliKelasController as LmsGuruWaliKelasController;
-use App\Http\Controllers\Lms\ProfileController as LmsProfileController;
-use App\Http\Controllers\Lms\Guru\KoreksiAbsensiController;
-=======
-use App\Http\Controllers\Lms\Guru\PelanggaranController as LmsGuruPelanggaranController;
-use App\Http\Controllers\Lms\Guru\PiketMonitoringController as LmsPiketMonitoringController;
-use App\Http\Controllers\Lms\Guru\PresensiController as LmsGuruPresensiController;
-use App\Http\Controllers\Lms\Guru\TugasController as LmsGuruTugasController;
-use App\Http\Controllers\Lms\Guru\WaliKelasController as LmsGuruWaliKelasController;
->>>>>>> 1ddf234 (commit)
 // LMS Siswa
 use App\Http\Controllers\Lms\Siswa\DashboardController as LmsSiswaDashboardController;
 use App\Http\Controllers\Lms\Siswa\KelasController as LmsSiswaKelasController;
@@ -373,15 +366,10 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('presensi.manual');
         Route::get('/kelas/{pengampuMapel}/presensi/rekap', [LmsGuruPresensiController::class, 'rekap'])
             ->name('presensi.rekap');
-<<<<<<< HEAD
-        Route::put('/materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
-            ->name('materi.link');
-=======
         Route::get('/kelas/{pengampuMapel}/presensi/qr', [LmsGuruPresensiController::class, 'qr'])
             ->name('presensi.qr');
 
         // Materi
->>>>>>> 1ddf234 (commit)
         Route::get('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'index'])
             ->name('materi.index');
         Route::post('/kelas/{pengampuMapel}/materi', [LmsGuruMateriController::class, 'store'])
@@ -392,18 +380,14 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('materi.toggle');
         Route::put('/materi/{materi}/akses', [LmsGuruMateriController::class, 'updateAkses'])
             ->name('materi.akses');
-<<<<<<< HEAD
+        Route::put('/materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
+            ->name('materi.link');
         Route::put('/materi/{materi}/pengantar', [LmsGuruMateriController::class, 'updatePengantar'])
             ->name('materi.pengantar');
         Route::put('/materi/{materi}/cakupan', [LmsGuruMateriController::class, 'updateCakupan'])
             ->name('materi.cakupan');
-=======
-        // Nama sebelumnya 'lms.guru.materi.link' → jadi 'lms.guru.lms.guru.materi.link' (dobel prefix)
-        Route::put('/materi/{materi}/link', [LmsGuruMateriController::class, 'updateLink'])
-            ->name('materi.link');
 
         // Tugas
->>>>>>> 1ddf234 (commit)
         Route::get('/kelas/{pengampuMapel}/tugas', [LmsGuruTugasController::class, 'index'])
             ->name('tugas.index');
         Route::post('/tugas/{tugas}/nilai-massal', [LmsGuruTugasController::class, 'simpanNilaiMassal'])
@@ -433,7 +417,6 @@ Route::prefix('lms/guru')->name('lms.guru.')
         Route::get('/kelas/{pengampuMapel}/nilai/export', [LmsGuruNilaiController::class, 'exportExcel'])
             ->name('nilai.export');
 
-<<<<<<< HEAD
         // Nilai praktik
         Route::get('/kelas/{pengampuMapel}/nilai/praktik', [LmsGuruPraktikController::class, 'index'])
             ->name('nilai.praktik.index');
@@ -444,8 +427,6 @@ Route::prefix('lms/guru')->name('lms.guru.')
         Route::delete('/kelas/{pengampuMapel}/nilai/praktik/{praktik}', [LmsGuruPraktikController::class, 'destroy'])
             ->name('nilai.praktik.destroy');
 
-=======
->>>>>>> 1ddf234 (commit)
         // Modul ajar
         Route::get('/kelas/{pengampuMapel}/modul-ajar', [LmsGuruModulAjarController::class, 'index'])
             ->name('modul-ajar.index');
@@ -459,16 +440,12 @@ Route::prefix('lms/guru')->name('lms.guru.')
             ->name('wali-kelas.index');
         Route::get('/wali-kelas/absensi', [LmsGuruWaliKelasController::class, 'absensi'])
             ->name('wali-kelas.absensi');
-<<<<<<< HEAD
-        Route::get('/kelas/{pengampuMapel}/presensi/qr', [LmsGuruPresensiController::class, 'qr'])
-            ->name('presensi.qr');
 
         Route::post('wali-kelas/absensi/koreksi', [KoreksiAbsensiController::class, 'store'])
             ->name('wali-kelas.absensi.koreksi.store');
 
         Route::delete('wali-kelas/absensi/koreksi/{id}', [KoreksiAbsensiController::class, 'destroy'])
             ->name('wali-kelas.absensi.koreksi.destroy');
-=======
 
         // Poin pelanggaran (Wali Kelas, BK, Kesiswaan, Guru Piket — dicek di controller)
         Route::prefix('pelanggaran')->name('pelanggaran.')->group(function () {
@@ -484,7 +461,6 @@ Route::prefix('lms/guru')->name('lms.guru.')
             Route::get('/monitoring', [LmsPiketMonitoringController::class, 'index'])->name('monitoring');
             Route::get('/monitoring/{pengampuMapel}', [LmsPiketMonitoringController::class, 'detail'])->name('monitoring.detail');
         });
->>>>>>> 1ddf234 (commit)
     });
 
 /*
