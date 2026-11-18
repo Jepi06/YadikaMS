@@ -1,0 +1,14 @@
+<?php
+
+namespace App\Models\Lms;
+
+use Illuminate\Database\Eloquent\Model;
+
+class JawabanQuiz extends Model
+{
+    protected $table = 'jawaban_quiz_lms';
+
+    protected $fillable = ['percobaan_id', 'soal_id', 'jawaban', 'benar'];
+
+    protected $casts = ['benar' => 'boolean'];
+}

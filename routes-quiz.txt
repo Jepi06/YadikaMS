@@ -1,0 +1,11 @@
+// routes/web.php
+
+// 1) use:
+
+
+// 2) di DALAM group Route::prefix('lms/guru')->name('lms.guru.') ... :
+        // Quiz
+       
+// 3) di DALAM group Route::prefix('lms/siswa')->name('lms.siswa.') ... :
+        // Quiz
+        

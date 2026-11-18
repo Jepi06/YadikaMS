@@ -37,7 +37,7 @@
                     </span>
                 @endisset
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">Akses cepat ke materi, tugas, penilaian, dan presensi per rombel.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Akses cepat ke materi, tugas, praktik, quiz, penilaian, dan presensi per rombel.</p>
         </div>
     </div>
 
@@ -66,12 +66,18 @@
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-slate-100 grid grid-cols-3 gap-1.5">
+                <div class="pt-4 border-t border-slate-100 grid grid-cols-4 gap-1.5">
                     <a href="{{ $link('lms.guru.materi.index', $pm) }}" class="{{ $btnMenu }}">
                         <i class="bi bi-journal-text text-slate-400"></i> Materi
                     </a>
                     <a href="{{ $link('lms.guru.tugas.index', $pm) }}" class="{{ $btnMenu }}">
                         <i class="bi bi-clipboard-check text-slate-400"></i> Tugas
+                    </a>
+                    <a href="{{ $link('lms.guru.praktik.index', $pm) }}" class="{{ $btnMenu }}">
+                        <i class="bi bi-tools text-slate-400"></i> Praktik
+                    </a>
+                    <a href="{{ $link('lms.guru.quiz.index', $pm) }}" class="{{ $btnMenu }}">
+                        <i class="bi bi-patch-question text-slate-400"></i> Quiz
                     </a>
                     <a href="{{ $link('lms.guru.nilai.index', $pm) }}" class="{{ $btnMenu }}">
                         <i class="bi bi-clipboard-data text-slate-400"></i> Nilai
@@ -80,15 +86,9 @@
                         class="px-2 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 transition-all flex items-center justify-center gap-1">
                         <i class="bi bi-archive text-slate-500"></i> Modul
                     </a>
-                    <a href="{{ $link('lms.guru.nilai.praktik.index', $pm) }}"
-                        style="grid-column: span 2 / span 2;"
-                        class="{{ $btnMenu }}">
-                        <i class="bi bi-tools text-slate-400"></i> Nilai Praktik
-                    </a>
                     <a href="{{ $link('lms.guru.presensi.index', $pm) }}"
-                        style="grid-column: 1 / -1;"
-                        class="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/30 transition-all flex items-center justify-center gap-1.5">
-                        <i class="bi bi-qr-code-scan"></i> Buka Presensi
+                        class="col-span-2 px-2 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-500/30 transition-all flex items-center justify-center gap-1">
+                        <i class="bi bi-qr-code-scan"></i> Presensi
                     </a>
                 </div>
             </div>

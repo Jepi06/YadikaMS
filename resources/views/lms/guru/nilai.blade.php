@@ -13,34 +13,37 @@
 
     <link href="/css/nilaiGuruLms.css" rel="stylesheet">
 
+    {{-- Gaya tambahan untuk opsi penilaian (tidak bergantung pada nilaiGuruLms.css) --}}
     <style>
-        /* Tambahan untuk fitur Nilai Praktik, mode Sikap & Sikap custom */
-        .mode-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 18px; }
-        .mode-box { border: 1px solid var(--slate-200, #e2e8f0); border-radius: 12px; padding: 12px 14px; background: var(--slate-50, #f8fafc); }
-        .mode-box-title { font-size: .8rem; font-weight: 700; color: var(--slate-900, #0f172a); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .mode-option { display: flex; align-items: flex-start; gap: 8px; font-size: .82rem; color: var(--slate-700, #334155); padding: 5px 0; cursor: pointer; }
-        .mode-option input { margin-top: 3px; }
-        .mode-option small { display: block; color: var(--slate-400, #94a3b8); font-size: .72rem; }
-        .mode-extra { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--slate-200, #e2e8f0); font-size: .8rem; }
-        .mode-extra input { width: 80px; margin: 0 6px; }
-        .btn-praktik { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: .85rem; text-decoration: none; background: #fff; color: var(--ocean-blue, #0d47a1); border: 1px solid var(--ocean-blue, #0d47a1); }
-        .btn-praktik:hover { background: var(--ocean-blue, #0d47a1); color: #fff; }
-        .sikap-cell { display: flex; align-items: center; gap: 8px; }
-        .custom-check { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; font-weight: 600; color: var(--slate-700, #334155); white-space: nowrap; cursor: pointer; }
-        .js-sikap-select.is-dimmed { opacity: .45; }
-        .js-sikap-nilai { margin-top: 6px; }
-        .sub-gabungan { color: var(--ocean-blue, #0d47a1); font-weight: 600; }
-        .bonus-note { font-size: .7rem; color: var(--slate-400, #94a3b8); margin-top: 3px; }
-        [hidden] { display: none !important; }
+        .opsi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 18px; }
+        .opsi-box { border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; background: #fff; }
+        .opsi-box h4 { margin: 0 0 8px; font-size: .9rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+        .opsi-radio { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; }
+        .opsi-radio:hover { background: #f8fafc; }
+        .opsi-radio input { margin-top: 4px; accent-color: #1d4ed8; }
+        .opsi-radio strong { display: block; font-size: .85rem; color: #0f172a; }
+        .opsi-radio small { display: block; font-size: .75rem; color: #64748b; line-height: 1.4; margin-top: 2px; }
+        .opsi-radio:has(input:checked) { background: #eff6ff; border-color: #bfdbfe; }
+        .opsi-bonus { border: 1px dashed #93c5fd; background: #f0f7ff; border-radius: 14px; padding: 14px 16px; margin-top: 16px; }
+        .opsi-bonus-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 10px 0; }
+        .opsi-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .opsi-preview span { font-size: .75rem; background: #fff; border: 1px solid #dbeafe; border-radius: 999px; padding: 3px 10px; color: #1e3a8a; }
+        .opsi-warn { margin-top: 12px; font-size: .8rem; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 8px 12px; }
+        .is-hidden { display: none !important; }
+        .bonus-pill { display: inline-block; font-family: monospace; font-weight: 700; font-size: .85rem; color: #047857; background: #ecfdf5; border-radius: 8px; padding: 3px 9px; }
+        .btn-praktik { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 10px; background: #fff; color: #1e293b; border: 1px solid #cbd5e1; font-weight: 600; font-size: .85rem; text-decoration: none; }
+        .btn-praktik:hover { background: #f1f5f9; }
     </style>
 </head>
 <body>
-    @php
-        $gabung = (bool) ($pengaturan->praktik_gabung_tugas ?? true);
-        $sikapTambahan = ($pengaturan->sikap_mode ?? 'utama') === 'tambahan';
-        $praktikMode = old('praktik_mode', $gabung ? 'gabung' : 'terpisah');
-        $sikapMode = old('sikap_mode', $sikapTambahan ? 'tambahan' : 'utama');
-    @endphp
+@php
+    $terpisah = $bw['praktik_terpisah'];
+    $include  = $bw['sikap_include'];
+    $quizMode  = $bw['quiz_mode'];
+    $quizAktif = $quizMode !== 'nonaktif';
+    $quizTam   = $quizMode === 'tambahan';
+    $jumlahKolom = 7 + ($terpisah ? 1 : 0) + ($include ? 0 : 1) + ($quizAktif ? 1 : 0) + ($quizTam ? 1 : 0);
+@endphp
 
     <!-- TOP NAVIGATION BAR -->
     <header class="site-header">
@@ -86,13 +89,17 @@
                 </div>
 
                 <div class="banner-actions">
-                    <a href="{{ route('lms.guru.dashboard') }}" class="btn-back">
+                    <a href="{{ route('lms.guru.kelas.index') }}" class="btn-back">
                         <i class="bi bi-arrow-left"></i>
-                        <span>Kembali ke Dasbor</span>
+                        <span>Kembali ke Kelas</span>
                     </a>
-                    <a href="{{ route('lms.guru.nilai.praktik.index', $pengampuMapel) }}" class="btn-praktik">
+                    <a href="{{ route('lms.guru.praktik.index', $pengampuMapel) }}" class="btn-praktik">
                         <i class="bi bi-tools"></i>
-                        <span>Nilai Praktik ({{ $jumlahPraktik }})</span>
+                        <span>Kelola Praktik</span>
+                    </a>
+                    <a href="{{ route('lms.guru.quiz.index', $pengampuMapel) }}" class="btn-praktik">
+                        <i class="bi bi-patch-question"></i>
+                        <span>Kelola Quiz</span>
                     </a>
                     <a href="{{ route('lms.guru.nilai.export', $pengampuMapel) }}" class="btn-export-excel">
                         <i class="bi bi-file-earmark-excel-fill"></i>
@@ -122,7 +129,7 @@
                 </div>
             @endif
 
-            <!-- CARD 1: PENGATURAN & BOBOT PENILAIAN -->
+            <!-- CARD 1: BOBOT PENILAIAN -->
             <div class="card-bobot">
                 <div class="card-header-styled">
                     <div class="header-title-flex">
@@ -138,79 +145,80 @@
                     <form method="POST" action="{{ route('lms.guru.nilai.bobot', $pengampuMapel) }}" id="formBobot">
                         @csrf
 
-                        <!-- Pilihan mode: Praktik & Sikap -->
-                        <div class="mode-row">
-                            <div class="mode-box">
-                                <div class="mode-box-title"><i class="bi bi-tools"></i> Nilai Praktik</div>
-                                <label class="mode-option">
-                                    <input type="radio" name="praktik_mode" value="gabung" @checked($praktikMode === 'gabung')>
-                                    <span>Gabung ke Nilai Tugas
-                                        <small>Persentase praktik ikut persentase Tugas (rata-rata = total nilai tugas+praktik ÷ jumlah item).</small>
+                        {{-- PILIHAN CARA PENILAIAN --}}
+                        <div class="opsi-grid">
+                            <div class="opsi-box">
+                                <h4><i class="bi bi-tools" style="color: var(--ocean-blue, #1d4ed8);"></i> Nilai Praktik</h4>
+                                <label class="opsi-radio">
+                                    <input type="radio" name="praktik_mode" value="gabung" @checked(old('praktik_mode', $terpisah ? 'terpisah' : 'gabung') === 'gabung')>
+                                    <span>
+                                        <strong>Digabung dengan nilai tugas</strong>
+                                        <small>Semua tugas dan praktik dirata-rata bersama dalam satu komponen "Tugas".</small>
                                     </span>
                                 </label>
-                                <label class="mode-option">
-                                    <input type="radio" name="praktik_mode" value="terpisah" @checked($praktikMode === 'terpisah')>
-                                    <span>Persentase sendiri
-                                        <small>Jadi 5 komponen: Tugas, Praktik, STS, SAS, Sikap.</small>
+                                <label class="opsi-radio">
+                                    <input type="radio" name="praktik_mode" value="terpisah" @checked(old('praktik_mode', $terpisah ? 'terpisah' : 'gabung') === 'terpisah')>
+                                    <span>
+                                        <strong>Dipisah (bobot sendiri)</strong>
+                                        <small>Praktik punya persentase sendiri: Tugas, Praktik, STS, SAS, dan Sikap.</small>
                                     </span>
                                 </label>
                             </div>
 
-                            <div class="mode-box">
-                                <div class="mode-box-title"><i class="bi bi-emoji-smile"></i> Sikap &amp; Keaktifan</div>
-                                <label class="mode-option">
-                                    <input type="radio" name="sikap_mode" value="utama" @checked($sikapMode === 'utama')>
-                                    <span>Bagian dari total 100%
-                                        <small>Sikap punya bobot persen seperti komponen lain.</small>
+                            <div class="opsi-box">
+                                <h4><i class="bi bi-emoji-smile" style="color: var(--ocean-blue, #1d4ed8);"></i> Sikap &amp; Keaktifan</h4>
+                                <label class="opsi-radio">
+                                    <input type="radio" name="sikap_mode" value="include" @checked(old('sikap_mode', $include ? 'include' : 'tambahan') === 'include')>
+                                    <span>
+                                        <strong>Termasuk dalam 100%</strong>
+                                        <small>Sikap/keaktifan punya persentase sendiri bersama komponen lainnya.</small>
                                     </span>
                                 </label>
-                                <label class="mode-option">
-                                    <input type="radio" name="sikap_mode" value="tambahan" @checked($sikapMode === 'tambahan')>
-                                    <span>Nilai tambahan (bonus)
-                                        <small>Komponen lain = 100%, sikap menambah poin. Nilai akhir maksimal tetap 100.</small>
+                                <label class="opsi-radio">
+                                    <input type="radio" name="sikap_mode" value="tambahan" @checked(old('sikap_mode', $include ? 'include' : 'tambahan') === 'tambahan')>
+                                    <span>
+                                        <strong>Nilai tambahan (di luar 100%)</strong>
+                                        <small>Komponen lain berjumlah 100%; keaktifan menambah poin ke nilai akhir (maks. 100).</small>
                                     </span>
                                 </label>
-                                <div class="mode-extra" data-sikap="tambahan">
-                                    Tambahan maksimal
-                                    <input type="number" name="sikap_maks_tambahan" id="inputMaksTambahan"
-                                           class="field-input-number" min="1" max="100"
-                                           value="{{ old('sikap_maks_tambahan', $pengaturan->sikap_maks_tambahan ?? 10) }}">
-                                    poin
-                                    <small style="display:block; color: var(--slate-400, #94a3b8); margin-top:4px;">
-                                        Contoh: 10 → sikap bernilai 100 menambah 10 poin, bernilai 80 menambah 8 poin.
-                                    </small>
-                                </div>
+                            </div>
+
+                            <div class="opsi-box">
+                                <h4><i class="bi bi-patch-question" style="color: var(--ocean-blue, #1d4ed8);"></i> Nilai Quiz</h4>
+                                <label class="opsi-radio">
+                                    <input type="radio" name="quiz_mode" value="nonaktif" @checked(old('quiz_mode', $quizMode) === 'nonaktif')>
+                                    <span><strong>Tidak dihitung</strong><small>Quiz hanya untuk latihan; tidak masuk nilai akhir.</small></span>
+                                </label>
+                                <label class="opsi-radio">
+                                    <input type="radio" name="quiz_mode" value="include" @checked(old('quiz_mode', $quizMode) === 'include')>
+                                    <span><strong>Termasuk dalam 100%</strong><small>Rata-rata nilai quiz punya persentase sendiri bersama komponen lain.</small></span>
+                                </label>
+                                <label class="opsi-radio">
+                                    <input type="radio" name="quiz_mode" value="tambahan" @checked(old('quiz_mode', $quizMode) === 'tambahan')>
+                                    <span><strong>Nilai tambahan (di luar 100%)</strong><small>Rata-rata quiz menambah poin ke nilai akhir, dengan persen &amp; batas poin yang Anda atur.</small></span>
+                                </label>
                             </div>
                         </div>
 
-                        <div class="bobot-grid">
+                        <div class="bobot-grid" id="bobotGrid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
                             <!-- Input Bobot Tugas -->
                             <div class="input-control-box">
                                 <label class="label-custom">
                                     <span id="labelTugas">Tugas Harian</span>
                                     <span style="color: var(--ocean-blue);">(%)</span>
                                 </label>
-                                <input type="number"
-                                       name="bobot_tugas"
-                                       class="field-input-number bobot-input"
-                                       value="{{ old('bobot_tugas', $bobot->bobot_tugas ?? 30) }}"
-                                       min="0"
-                                       max="100"
-                                       required>
+                                <input type="number" name="bobot_tugas" class="field-input-number bobot-input"
+                                       value="{{ old('bobot_tugas', $bobot->bobot_tugas ?? 30) }}" min="0" max="100" required>
                             </div>
 
                             <!-- Input Bobot Praktik (hanya mode terpisah) -->
-                            <div class="input-control-box" data-praktik="terpisah">
+                            <div class="input-control-box" id="cellPraktik">
                                 <label class="label-custom">
-                                    <span>Nilai Praktik</span>
+                                    <span>Praktik</span>
                                     <span style="color: var(--ocean-blue);">(%)</span>
                                 </label>
-                                <input type="number"
-                                       name="bobot_praktik"
-                                       class="field-input-number bobot-input"
-                                       value="{{ old('bobot_praktik', $pengaturan->bobot_praktik ?? 0) }}"
-                                       min="0"
-                                       max="100">
+                                <input type="number" name="bobot_praktik" class="field-input-number bobot-input" id="inpPraktik"
+                                       value="{{ old('bobot_praktik', $bobot->bobot_praktik ?? 0) }}" min="0" max="100">
                             </div>
 
                             <!-- Input Bobot STS -->
@@ -219,13 +227,8 @@
                                     <span>STS (Tengah Sem.)</span>
                                     <span style="color: var(--ocean-blue);">(%)</span>
                                 </label>
-                                <input type="number"
-                                       name="bobot_sts"
-                                       class="field-input-number bobot-input"
-                                       value="{{ old('bobot_sts', $bobot->bobot_sts ?? 25) }}"
-                                       min="0"
-                                       max="100"
-                                       required>
+                                <input type="number" name="bobot_sts" class="field-input-number bobot-input"
+                                       value="{{ old('bobot_sts', $bobot->bobot_sts ?? 25) }}" min="0" max="100" required>
                             </div>
 
                             <!-- Input Bobot SAS -->
@@ -234,27 +237,28 @@
                                     <span>SAS (Akhir Sem.)</span>
                                     <span style="color: var(--ocean-blue);">(%)</span>
                                 </label>
-                                <input type="number"
-                                       name="bobot_sas"
-                                       class="field-input-number bobot-input"
-                                       value="{{ old('bobot_sas', $bobot->bobot_sas ?? 30) }}"
-                                       min="0"
-                                       max="100"
-                                       required>
+                                <input type="number" name="bobot_sas" class="field-input-number bobot-input"
+                                       value="{{ old('bobot_sas', $bobot->bobot_sas ?? 30) }}" min="0" max="100" required>
                             </div>
 
-                            <!-- Input Bobot Sikap (hanya mode utama) -->
-                            <div class="input-control-box" data-sikap="utama">
+                            <!-- Input Bobot Sikap (hanya mode include) -->
+                            <div class="input-control-box" id="cellSikap">
                                 <label class="label-custom">
                                     <span>Sikap & Keaktifan</span>
                                     <span style="color: var(--ocean-blue);">(%)</span>
                                 </label>
-                                <input type="number"
-                                       name="bobot_sikap"
-                                       class="field-input-number bobot-input"
-                                       value="{{ old('bobot_sikap', $bobot->bobot_sikap ?? 15) }}"
-                                       min="0"
-                                       max="100">
+                                <input type="number" name="bobot_sikap" class="field-input-number bobot-input" id="inpSikap"
+                                       value="{{ old('bobot_sikap', $bobot->bobot_sikap ?? 15) }}" min="0" max="100">
+                            </div>
+
+                            <!-- Input Bobot Quiz (hanya mode include) -->
+                            <div class="input-control-box" id="cellQuiz">
+                                <label class="label-custom">
+                                    <span>Quiz</span>
+                                    <span style="color: var(--ocean-blue);">(%)</span>
+                                </label>
+                                <input type="number" name="bobot_quiz" class="field-input-number bobot-input" id="inpQuiz"
+                                       value="{{ old('bobot_quiz', $bobot->bobot_quiz ?? 0) }}" min="0" max="100">
                             </div>
 
                             <!-- Indikator Total Bobot -->
@@ -274,10 +278,72 @@
                             </div>
                         </div>
 
+                        {{-- PENGATURAN POIN TAMBAHAN (hanya mode tambahan) --}}
+                        <div class="opsi-bonus" id="panelBonus">
+                            <strong style="font-size:.9rem;color:#0f172a;"><i class="bi bi-plus-circle-fill" style="color:#1d4ed8;"></i> Pengaturan Poin Tambahan Keaktifan</strong>
+                            <div class="opsi-bonus-grid">
+                                <div class="input-control-box">
+                                    <label class="label-custom">
+                                        <span>Kontribusi nilai keaktifan</span>
+                                        <span style="color: var(--ocean-blue);">(%)</span>
+                                    </label>
+                                    <input type="number" name="sikap_bonus_persen" id="inpBonusPersen" class="field-input-number"
+                                           value="{{ old('sikap_bonus_persen', $bw['bonus_persen']) }}" min="0" max="100">
+                                </div>
+                                <div class="input-control-box">
+                                    <label class="label-custom">
+                                        <span>Maksimal poin tambahan</span>
+                                        <span style="color: var(--ocean-blue);">(poin)</span>
+                                    </label>
+                                    <input type="number" name="sikap_bonus_maks" id="inpBonusMaks" class="field-input-number"
+                                           value="{{ old('sikap_bonus_maks', $bw['bonus_maks']) }}" min="0" max="30">
+                                </div>
+                            </div>
+                            <div style="font-size:.78rem;color:#475569;">
+                                Rumus: <strong>poin tambahan = nilai keaktifan × kontribusi %</strong>, dibatasi maksimal poin di atas.
+                                Nilai keaktifan dari predikat: Sangat Baik 90, Baik 80, Cukup 70, Kurang 60.
+                            </div>
+                            <div class="opsi-preview" id="previewBonus"></div>
+                        </div>
+
+                        {{-- PENGATURAN POIN TAMBAHAN QUIZ (hanya mode tambahan) --}}
+                        <div class="opsi-bonus" id="panelBonusQuiz">
+                            <strong style="font-size:.9rem;color:#0f172a;"><i class="bi bi-plus-circle-fill" style="color:#1d4ed8;"></i> Pengaturan Poin Tambahan Quiz</strong>
+                            <div class="opsi-bonus-grid">
+                                <div class="input-control-box">
+                                    <label class="label-custom"><span>Kontribusi rata-rata quiz</span><span style="color: var(--ocean-blue);">(%)</span></label>
+                                    <input type="number" name="quiz_bonus_persen" id="inpQBonusPersen" class="field-input-number"
+                                           value="{{ old('quiz_bonus_persen', $bw['quiz_bonus_persen']) }}" min="0" max="100">
+                                </div>
+                                <div class="input-control-box">
+                                    <label class="label-custom"><span>Maksimal poin tambahan</span><span style="color: var(--ocean-blue);">(poin)</span></label>
+                                    <input type="number" name="quiz_bonus_maks" id="inpQBonusMaks" class="field-input-number"
+                                           value="{{ old('quiz_bonus_maks', $bw['quiz_bonus_maks']) }}" min="0" max="30">
+                                </div>
+                            </div>
+                            <div style="font-size:.78rem;color:#475569;">Rumus: <strong>poin tambahan = rata-rata nilai quiz × kontribusi %</strong>, dibatasi maksimal poin di atas. Nilai akhir maksimal 100.</div>
+                            <div class="opsi-preview" id="previewBonusQuiz"></div>
+                        </div>
+
                         <div class="rule-note">
                             <i class="bi bi-info-circle-fill" style="color: var(--ocean-blue);"></i>
-                            <span id="ruleNote">Ketentuan: Akumulasi total persentase bobot komponen aktif harus <strong>persis 100%</strong>.</span>
+                            <span>Ketentuan: total persentase <strong>komponen yang aktif</strong> harus <strong>persis 100%</strong>.</span>
                         </div>
+
+                        @if ($terpisah && $adaPraktik === 0)
+                            <div class="opsi-warn">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Mode praktik terpisah aktif, tetapi belum ada data praktik. Semua siswa mendapat 0 untuk komponen praktik —
+                                <a href="{{ route('lms.guru.praktik.index', $pengampuMapel) }}">isi nilai praktik</a> terlebih dulu.
+                            </div>
+                        @endif
+                        @if ($quizAktif && $adaQuiz === 0)
+                            <div class="opsi-warn">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Nilai quiz diaktifkan, tetapi belum ada quiz yang terbit untuk kelas ini.
+                                <a href="{{ route('lms.guru.quiz.index', $pengampuMapel) }}">Buat quiz</a> dulu.
+                            </div>
+                        @endif
                     </form>
                 </div>
             </div>
@@ -304,21 +370,28 @@
                             <thead>
                                 <tr>
                                     <th style="min-width: 220px;">Siswa</th>
-                                    <th style="width: 120px;">Rata-rata Tugas</th>
-                                    <th style="width: 120px;">Rata-rata Praktik</th>
+                                    <th style="width: 130px;">{{ $terpisah ? 'Rata Tugas' : ($adaPraktik > 0 ? 'Tugas + Praktik' : 'Rata-rata') }}</th>
+                                    @if ($terpisah)
+                                        <th style="width: 120px;">Rata Praktik</th>
+                                    @endif
                                     <th style="width: 110px;">STS</th>
                                     <th style="width: 110px;">SAS</th>
-                                    <th style="min-width: 250px;">Predikat Sikap</th>
+                                    @if ($quizAktif)
+                                        <th style="width: 120px;">Rata Quiz</th>
+                                    @endif
+                                    <th style="width: 160px;">Predikat Sikap</th>
                                     <th style="min-width: 200px;">Catatan Perkembangan Sikap</th>
+                                    @unless ($include)
+                                        <th style="width: 110px; text-align: center;">+ Sikap</th>
+                                    @endunless
+                                    @if ($quizTam)
+                                        <th style="width: 110px; text-align: center;">+ Quiz</th>
+                                    @endif
                                     <th style="width: 120px; text-align: center;">Nilai Akhir</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($rekapSiswa as $siswaId => $r)
-                                    @php
-                                        $isCustom = (bool) old("sikap.$siswaId.custom", $r->sikap_custom);
-                                        $angkaCustom = old("sikap.$siswaId.nilai_custom", $r->sikap_custom ? $r->sikap_nilai : '');
-                                    @endphp
                                     <tr>
                                         <td>
                                             <div class="student-cell">
@@ -334,95 +407,94 @@
                                             </div>
                                         </td>
                                         <td>
-                                            @if ($r->rata_tugas !== null)
+                                            @if ($r->rata_komponen_tugas !== null)
                                                 <div class="badge-tugas">
-                                                    <span>{{ number_format($r->rata_tugas, 1) }}</span>
+                                                    <span>{{ number_format($r->rata_komponen_tugas, 1) }}</span>
                                                 </div>
-                                                <div class="tugas-count-sub">{{ $r->jumlah_tugas_dinilai }} tugas dinilai</div>
-                                            @else
-                                                <span style="color: var(--slate-400); font-size: 0.85rem;">-</span>
-                                            @endif
-                                            @if ($gabung && $r->rata_gabungan !== null)
-                                                <div class="tugas-count-sub sub-gabungan">Gabungan: {{ number_format($r->rata_gabungan, 1) }}</div>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if ($r->rata_praktik !== null)
-                                                <div class="badge-tugas">
-                                                    <span>{{ number_format($r->rata_praktik, 1) }}</span>
+                                                <div class="tugas-count-sub">
+                                                    @if ($terpisah)
+                                                        {{ $r->jumlah_tugas_dinilai }} tugas dinilai
+                                                    @else
+                                                        {{ $r->jumlah_tugas_dinilai + $r->jumlah_praktik_dinilai }} penilaian
+                                                        @if ($r->jumlah_praktik_dinilai > 0)
+                                                            ({{ $r->jumlah_praktik_dinilai }} praktik)
+                                                        @endif
+                                                    @endif
                                                 </div>
-                                                <div class="tugas-count-sub">{{ $r->jumlah_praktik_dinilai }} dari {{ $jumlahPraktik }} praktik</div>
                                             @else
                                                 <span style="color: var(--slate-400); font-size: 0.85rem;">-</span>
                                             @endif
                                         </td>
+                                        @if ($terpisah)
+                                            <td>
+                                                @if ($r->rata_praktik !== null)
+                                                    <div class="badge-tugas">
+                                                        <span>{{ number_format($r->rata_praktik, 1) }}</span>
+                                                    </div>
+                                                    <div class="tugas-count-sub">{{ $r->jumlah_praktik_dinilai }} praktik</div>
+                                                @else
+                                                    <span style="color: var(--slate-400); font-size: 0.85rem;">-</span>
+                                                @endif
+                                            </td>
+                                        @endif
                                         <td>
-                                            <input type="number"
-                                                   name="ujian[{{ $siswaId }}][sts]"
-                                                   class="table-input-number"
-                                                   value="{{ $r->nilai_sts }}"
-                                                   min="0"
-                                                   max="100"
-                                                   step="0.1"
-                                                   placeholder="0.0">
+                                            <input type="number" name="ujian[{{ $siswaId }}][sts]" class="table-input-number"
+                                                   value="{{ $r->nilai_sts }}" min="0" max="100" step="0.1" placeholder="0.0">
                                         </td>
                                         <td>
-                                            <input type="number"
-                                                   name="ujian[{{ $siswaId }}][sas]"
-                                                   class="table-input-number"
-                                                   value="{{ $r->nilai_sas }}"
-                                                   min="0"
-                                                   max="100"
-                                                   step="0.1"
-                                                   placeholder="0.0">
+                                            <input type="number" name="ujian[{{ $siswaId }}][sas]" class="table-input-number"
+                                                   value="{{ $r->nilai_sas }}" min="0" max="100" step="0.1" placeholder="0.0">
+                                        </td>
+                                        @if ($quizAktif)
+                                            <td>
+                                                @if ($r->rata_quiz !== null)
+                                                    <div class="badge-tugas"><span>{{ number_format($r->rata_quiz, 1) }}</span></div>
+                                                    <div class="tugas-count-sub">{{ $r->jumlah_quiz }} quiz</div>
+                                                @else
+                                                    <span style="color: var(--slate-400); font-size: 0.85rem;">-</span>
+                                                @endif
+                                            </td>
+                                        @endif
+                                        <td>
+                                            <select name="sikap[{{ $siswaId }}][predikat]" class="table-select-custom">
+                                                @foreach (['Sangat Baik', 'Baik', 'Cukup', 'Kurang'] as $predikat)
+                                                    <option value="{{ $predikat }}" @selected(($r->sikap_predikat ?? 'Baik') === $predikat)>
+                                                        {{ $predikat }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </td>
                                         <td>
-                                            <div class="sikap-cell">
-                                                <select name="sikap[{{ $siswaId }}][predikat]" class="table-select-custom js-sikap-select {{ $isCustom ? 'is-dimmed' : '' }}">
-                                                    @foreach (['Sangat Baik', 'Baik', 'Cukup', 'Kurang'] as $predikat)
-                                                        <option value="{{ $predikat }}" @selected(old("sikap.$siswaId.predikat", $r->sikap_predikat ?? 'Baik') === $predikat)>
-                                                            {{ $predikat }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                <label class="custom-check" title="Centang untuk mengisi nilai sikap secara manual (angka)">
-                                                    <input type="checkbox"
-                                                           class="js-sikap-custom"
-                                                           name="sikap[{{ $siswaId }}][custom]"
-                                                           value="1"
-                                                           @checked($isCustom)>
-                                                    Custom
-                                                </label>
-                                            </div>
-                                            <input type="number"
-                                                   name="sikap[{{ $siswaId }}][nilai_custom]"
-                                                   class="table-input-number js-sikap-nilai"
-                                                   value="{{ $angkaCustom }}"
-                                                   min="0"
-                                                   max="100"
-                                                   step="0.1"
-                                                   placeholder="Nilai 0–100"
-                                                   @unless ($isCustom) hidden @endunless>
+                                            <input type="text" name="sikap[{{ $siswaId }}][catatan]" value="{{ $r->sikap_catatan }}"
+                                                   class="table-input-text" placeholder="Catatan guru (opsional)...">
                                         </td>
-                                        <td>
-                                            <input type="text"
-                                                   name="sikap[{{ $siswaId }}][catatan]"
-                                                   value="{{ $r->sikap_catatan }}"
-                                                   class="table-input-text"
-                                                   placeholder="Catatan guru (opsional)...">
-                                        </td>
+                                        @unless ($include)
+                                            <td style="text-align: center;">
+                                                @if ($r->sikap_numerik !== null)
+                                                    <span class="bonus-pill">+{{ number_format($r->bonus_sikap, 1) }}</span>
+                                                @else
+                                                    <span style="color: var(--slate-400); font-size: 0.85rem;">-</span>
+                                                @endif
+                                            </td>
+                                        @endunless
+                                        @if ($quizTam)
+                                            <td style="text-align: center;">
+                                                @if ($r->rata_quiz !== null)
+                                                    <span class="bonus-pill">+{{ number_format($r->bonus_quiz, 1) }}</span>
+                                                @else
+                                                    <span style="color: var(--slate-400); font-size: 0.85rem;">-</span>
+                                                @endif
+                                            </td>
+                                        @endif
                                         <td style="text-align: center;">
                                             <span class="score-pill-final {{ ($r->nilai_akhir ?? 0) >= 85 ? 'score-high' : 'score-mid' }}">
                                                 {{ $r->nilai_akhir ?? '-' }}
                                             </span>
-                                            @if ($sikapTambahan)
-                                                <div class="bonus-note">termasuk +{{ number_format($r->bonus_sikap, 1) }} poin sikap</div>
-                                            @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="empty-state-row">
+                                        <td colspan="{{ $jumlahKolom }}" class="empty-state-row">
                                             <i class="bi bi-people" style="font-size: 2rem; display: block; margin-bottom: 8px; color: var(--slate-300);"></i>
                                             Belum ada data siswa di kelas ini.
                                         </td>
@@ -472,80 +544,66 @@
         </div>
     </footer>
 
+    <!-- SCRIPT: opsi penilaian + total bobot -->
     <script>
         (function () {
-            const form = document.getElementById('formBobot');
-            const displayEl = document.getElementById('totalBobot');
-            const btnSubmit = document.getElementById('btnSimpanBobot');
-            const labelTugas = document.getElementById('labelTugas');
-            const ruleNote = document.getElementById('ruleNote');
+            const PREDIKAT = @json(\App\Services\Lms\NilaiAkhirService::PREDIKAT_NUMERIK);
+            const $ = id => document.getElementById(id);
+            const mode = name => document.querySelector('input[name="' + name + '"]:checked').value;
 
-            function modeAktif(name) {
-                const el = form.querySelector('input[name="' + name + '"]:checked');
-                return el ? el.value : null;
-            }
+            function atur() {
+                const terpisah = mode('praktik_mode') === 'terpisah';
+                const include = mode('sikap_mode') === 'include';
 
-            // Tampilkan/sembunyikan kolom bobot sesuai mode. Input yang disembunyikan di-disable
-            // supaya tidak ikut dihitung & tidak ikut terkirim.
-            function sinkronMode() {
-                const praktik = modeAktif('praktik_mode');
-                const sikap = modeAktif('sikap_mode');
+                // tampil/sembunyi komponen; input yang disembunyikan tidak dihitung & tidak dikirim
+                $('cellPraktik').classList.toggle('is-hidden', !terpisah);
+                $('inpPraktik').disabled = !terpisah;
+                $('cellSikap').classList.toggle('is-hidden', !include);
+                $('inpSikap').disabled = !include;
+                $('panelBonus').classList.toggle('is-hidden', include);
+                $('inpBonusPersen').disabled = include;
+                $('inpBonusMaks').disabled = include;
+                $('labelTugas').textContent = terpisah ? 'Tugas Harian' : 'Tugas + Praktik';
 
-                form.querySelectorAll('[data-praktik]').forEach(function (el) {
-                    const tampil = el.dataset.praktik === praktik;
-                    el.hidden = !tampil;
-                    el.querySelectorAll('input').forEach(function (i) { i.disabled = !tampil; });
-                });
-                form.querySelectorAll('[data-sikap]').forEach(function (el) {
-                    const tampil = el.dataset.sikap === sikap;
-                    el.hidden = !tampil;
-                    el.querySelectorAll('input').forEach(function (i) { i.disabled = !tampil; });
-                });
+                const qm = mode('quiz_mode');
+                $('cellQuiz').classList.toggle('is-hidden', qm !== 'include');
+                $('inpQuiz').disabled = qm !== 'include';
+                $('panelBonusQuiz').classList.toggle('is-hidden', qm !== 'tambahan');
+                $('inpQBonusPersen').disabled = qm !== 'tambahan';
+                $('inpQBonusMaks').disabled = qm !== 'tambahan';
 
-                labelTugas.textContent = praktik === 'gabung' ? 'Tugas + Praktik' : 'Tugas Harian';
-
-                let note = 'Ketentuan: total persentase komponen aktif harus <strong>persis 100%</strong>';
-                note += sikap === 'tambahan'
-                    ? ' (Sikap tidak dihitung di sini, karena menjadi poin tambahan).'
-                    : '.';
-                ruleNote.innerHTML = note;
-
-                hitungTotalBobot();
-            }
-
-            function hitungTotalBobot() {
+                // total bobot komponen aktif
                 let total = 0;
-                form.querySelectorAll('.bobot-input').forEach(function (el) {
-                    if (!el.disabled) total += Number(el.value || 0);
-                });
+                document.querySelectorAll('.bobot-input').forEach(el => { if (!el.disabled) total += Number(el.value || 0); });
 
-                displayEl.textContent = total + '%';
+                const tampil = $('totalBobot'), btn = $('btnSimpanBobot');
+                tampil.textContent = total + '%';
                 const valid = total === 100;
-                displayEl.className = 'total-display-value ' + (valid ? 'total-valid' : 'total-invalid');
-                btnSubmit.disabled = !valid;
-                btnSubmit.style.opacity = valid ? '1' : '0.6';
+                tampil.className = 'total-display-value ' + (valid ? 'total-valid' : 'total-invalid');
+                btn.disabled = !valid;
+                btn.style.opacity = valid ? '1' : '0.6';
+
+                // contoh poin tambahan quiz
+                if (qm === 'tambahan') {
+                    const qp = Number($('inpQBonusPersen').value || 0), qk = Number($('inpQBonusMaks').value || 0);
+                    $('previewBonusQuiz').innerHTML = [100, 80, 60].map(n =>
+                        '<span>rata-rata quiz ' + n + ' → +' + (Math.round(Math.min(qk, n * qp / 100) * 10) / 10) + ' poin</span>').join('');
+                }
+
+                // contoh poin tambahan
+                if (!include) {
+                    const persen = Number($('inpBonusPersen').value || 0);
+                    const maks = Number($('inpBonusMaks').value || 0);
+                    $('previewBonus').innerHTML = Object.entries(PREDIKAT).map(([nama, nilai]) => {
+                        const poin = Math.min(maks, nilai * persen / 100);
+                        return '<span>' + nama + ' (' + nilai + ') → +' + (Math.round(poin * 10) / 10) + ' poin</span>';
+                    }).join('');
+                }
             }
 
-            form.querySelectorAll('.bobot-input').forEach(function (el) {
-                el.addEventListener('input', hitungTotalBobot);
-            });
-            form.querySelectorAll('input[type="radio"]').forEach(function (el) {
-                el.addEventListener('change', sinkronMode);
-            });
-
-            sinkronMode();
-
-            // Sikap custom: centang -> tampilkan input angka, dropdown diredupkan
-            document.querySelectorAll('.js-sikap-custom').forEach(function (cb) {
-                cb.addEventListener('change', function () {
-                    const cell = cb.closest('td');
-                    const select = cell.querySelector('.js-sikap-select');
-                    const angka = cell.querySelector('.js-sikap-nilai');
-                    select.classList.toggle('is-dimmed', cb.checked);
-                    angka.hidden = !cb.checked;
-                    if (cb.checked) angka.focus();
-                });
-            });
+            document.querySelectorAll('input[name="praktik_mode"], input[name="sikap_mode"], input[name="quiz_mode"]').forEach(el => el.addEventListener('change', atur));
+            document.querySelectorAll('.bobot-input, #inpBonusPersen, #inpBonusMaks, #inpQBonusPersen, #inpQBonusMaks').forEach(el => el.addEventListener('input', atur));
+            atur();
         })();
     </script>
 </body>

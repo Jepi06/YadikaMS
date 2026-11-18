@@ -2,7 +2,8 @@
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Lms\Guru\QuizController as LmsGuruQuizController;
+use App\Http\Controllers\Lms\Siswa\QuizController as LmsSiswaQuizController;
 /*
 |--------------------------------------------------------------------------
 | LMS – Controllers
@@ -455,6 +456,18 @@ Route::prefix('lms/guru')->name('lms.guru.')
             Route::get('/kelas/{kelas}/siswa', [LmsGuruPelanggaranController::class, 'siswaByKelas'])->name('siswa');
             Route::delete('/{pelanggaran}', [LmsGuruPelanggaranController::class, 'destroy'])->name('destroy');
         });
+        //Quiz
+
+         Route::get('/quiz/template/{format}', [LmsGuruQuizController::class, 'template'])
+            ->whereIn('format', ['xlsx', 'docx'])->name('quiz.template');
+        Route::get('/kelas/{pengampuMapel}/quiz', [LmsGuruQuizController::class, 'index'])->name('quiz.index');
+        Route::post('/kelas/{pengampuMapel}/quiz', [LmsGuruQuizController::class, 'store'])->name('quiz.store');
+        Route::get('/quiz/{quiz}', [LmsGuruQuizController::class, 'show'])->name('quiz.show');
+        Route::put('/quiz/{quiz}', [LmsGuruQuizController::class, 'update'])->name('quiz.update');
+        Route::post('/quiz/{quiz}/soal', [LmsGuruQuizController::class, 'gantiSoal'])->name('quiz.soal');
+        Route::post('/quiz/{quiz}/status', [LmsGuruQuizController::class, 'status'])->name('quiz.status');
+        Route::post('/quiz/{quiz}/reset/{siswa}', [LmsGuruQuizController::class, 'reset'])->name('quiz.reset');
+        Route::delete('/quiz/{quiz}', [LmsGuruQuizController::class, 'destroy'])->name('quiz.destroy');
 
         // Guru piket
         Route::prefix('piket')->name('piket.')->group(function () {
@@ -495,6 +508,13 @@ Route::prefix('lms/siswa')->name('lms.siswa.')
             ->name('tugas.kumpul');
         Route::post('/tugas/{tugas}/kelompok', [LmsSiswaTugasController::class, 'buatKelompok'])
             ->name('tugas.kelompok.buat');
+            //quizz
+Route::get('/quiz', [LmsSiswaQuizController::class, 'index'])->name('quiz.index');
+        Route::post('/quiz/{quiz}/mulai', [LmsSiswaQuizController::class, 'mulai'])->name('quiz.mulai');
+        Route::get('/quiz/percobaan/{percobaan}', [LmsSiswaQuizController::class, 'kerjakan'])->name('quiz.kerjakan');
+        Route::post('/quiz/percobaan/{percobaan}/jawab', [LmsSiswaQuizController::class, 'jawab'])->name('quiz.jawab');
+        Route::post('/quiz/percobaan/{percobaan}/selesai', [LmsSiswaQuizController::class, 'selesai'])->name('quiz.selesai');
+        Route::get('/quiz/percobaan/{percobaan}/hasil', [LmsSiswaQuizController::class, 'hasil'])->name('quiz.hasil');
 
         // Laporan
         Route::get('/laporan', [LmsSiswaLaporanController::class, 'index'])->name('laporan.index');

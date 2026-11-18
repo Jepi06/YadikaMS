@@ -169,6 +169,13 @@
                                 <i class="bi bi-file-earmark-pdf text-base"></i>
                                 <span>Laporan & Poin</span>
                             </a>
+
+                            {{-- Quiz --}}
+                            <a href="{{ $r('lms.siswa.quiz.index') }}"
+                                class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ request()->routeIs('lms.siswa.quiz.*') ? $menuAktif : $menuBiasa }}">
+                                <i class="bi bi-patch-question text-base"></i>
+                                <span>Quiz</span>
+                            </a>
                         </nav>
                     </div>
                 @else
@@ -186,7 +193,7 @@
 
                             {{-- Kelas Saya (aktif juga di halaman presensi/materi/tugas/nilai/modul per kelas) --}}
                             <a href="{{ $r('lms.guru.kelas.index') }}"
-                                class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ request()->routeIs('lms.guru.kelas.*', 'lms.guru.presensi.*', 'lms.guru.materi.*', 'lms.guru.tugas.*', 'lms.guru.nilai.*') ? $menuAktif : $menuBiasa }}">
+                                class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm transition-all {{ request()->routeIs('lms.guru.kelas.*', 'lms.guru.presensi.*', 'lms.guru.materi.*', 'lms.guru.tugas.*', 'lms.guru.nilai.*', 'lms.guru.praktik.*', 'lms.guru.quiz.*') ? $menuAktif : $menuBiasa }}">
                                 <i class="bi bi-door-open text-base"></i>
                                 <span>Kelas Saya</span>
                                 @isset($totalKelas)
