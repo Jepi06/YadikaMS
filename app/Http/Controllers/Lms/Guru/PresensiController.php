@@ -9,6 +9,7 @@ use App\Models\Lms\SesiPresensi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PresensiController extends Controller
 {
@@ -48,7 +49,7 @@ class PresensiController extends Controller
             : null;
 
         $presensiSiswa = PresensiLms::where('pengampu_mapel_id', $pengampuMapel->id)
-            ->where('tanggal', $tanggal)
+            ->whereDate('tanggal', $tanggal)
             ->get()
             ->keyBy('siswa_id');
 
@@ -119,29 +120,86 @@ class PresensiController extends Controller
         return back()->with('status', 'Sesi presensi ditutup.');
     }
 
+    /**
+     * Simpan presensi manual.
+     *
+     * Aturan penting:
+     *  - Record yang sudah ada (mis. hasil scan QR) TIDAK ditimpa kecuali guru
+     *    benar-benar mengubah dropdown-nya (status != status_awal).
+     *  - Jika hanya keterangan yang berubah, status & sumber dibiarkan.
+     *  - Siswa tanpa record dan tidak diubah guru dicatat sebagai Alpa (manual).
+     */
     public function simpanManual(Request $request, PengampuMapel $pengampuMapel)
     {
         $this->authorizePengampu($pengampuMapel);
 
         $data = $request->validate([
-            'tanggal' => ['required', 'date'],
-            'status' => ['required', 'array'],
-            'status.*' => ['required', 'in:Hadir,Izin,Sakit,Alpa'],
+            'tanggal'      => ['required', 'date_format:Y-m-d'],
+            'status'       => ['required', 'array'],
+            'status.*'     => ['required', 'in:Hadir,Izin,Sakit,Alpa'],
+            'status_awal'  => ['nullable', 'array'],
+            'status_awal.*'=> ['nullable', 'in:Hadir,Izin,Sakit,Alpa'],
+            'keterangan'   => ['nullable', 'array'],
+            'keterangan.*' => ['nullable', 'string', 'max:255'],
         ]);
 
-        foreach ($data['status'] as $siswaId => $status) {
-            PresensiLms::updateOrCreate(
-                [
-                    'pengampu_mapel_id' => $pengampuMapel->id,
-                    'siswa_id' => $siswaId,
-                    'tanggal' => $data['tanggal'],
-                ],
-                [
-                    'status' => $status,
-                    'dicatat_manual_oleh' => Auth::guard('lms')->id(),
-                ]
-            );
-        }
+        $pengampuMapel->load('kelas.siswa');
+
+        // Hanya siswa yang memang terdaftar di kelas ini
+        $validIds = $pengampuMapel->kelas->siswa
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+
+        DB::transaction(function () use ($data, $pengampuMapel, $validIds) {
+            // Ambil record terbaru dari DB (termasuk yang baru masuk via scan)
+            $existing = PresensiLms::where('pengampu_mapel_id', $pengampuMapel->id)
+                ->whereDate('tanggal', $data['tanggal'])
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('siswa_id');
+
+            foreach ($data['status'] as $siswaId => $status) {
+                $siswaId = (int) $siswaId;
+
+                if (! in_array($siswaId, $validIds, true)) {
+                    continue;
+                }
+
+                $row     = $existing->get($siswaId);
+                $awal    = $data['status_awal'][$siswaId] ?? null;
+                $ket     = $data['keterangan'][$siswaId] ?? null;
+                $ket     = ($ket === '') ? null : $ket;
+                $berubah = $awal === null || $status !== $awal;
+
+                if ($row) {
+                    $ketBerubah = ($row->keterangan ?? null) !== $ket;
+
+                    // Tidak ada perubahan dari guru: jangan sentuh (lindungi hasil scan)
+                    if (! $berubah && ! $ketBerubah) {
+                        continue;
+                    }
+
+                    $row->keterangan = $ket;
+
+                    if ($berubah) {
+                        $row->status = $status;
+                        $row->sumber = 'manual';
+                    }
+
+                    $row->save();
+                } else {
+                    PresensiLms::create([
+                        'pengampu_mapel_id' => $pengampuMapel->id,
+                        'siswa_id'          => $siswaId,
+                        'tanggal'           => $data['tanggal'],
+                        'status'            => $status,
+                        'sumber'            => 'manual',
+                        'keterangan'        => $ket,
+                    ]);
+                }
+            }
+        });
 
         return back()->with('status', 'Presensi manual berhasil disimpan.');
     }

@@ -23,6 +23,7 @@ class PresensiLms extends Model
         'status',
         'sumber',
         'keterangan',
+        // 'dicatat_manual_oleh', // aktifkan HANYA jika kolomnya ada di tabel
     ];
 
     protected $casts = [
