@@ -93,7 +93,8 @@
                         <i class="bi bi-arrow-left"></i>
                         <span>Kembali ke Kelas</span>
                     </a>
-                    <a href="{{ route('lms.guru.praktik.index', $pengampuMapel) }}" class="btn-praktik">
+                    {{-- FIX #1: nama route sesuai web.php --}}
+                    <a href="{{ route('lms.guru.nilai.praktik.index', $pengampuMapel) }}" class="btn-praktik">
                         <i class="bi bi-tools"></i>
                         <span>Kelola Praktik</span>
                     </a>
@@ -334,7 +335,8 @@
                             <div class="opsi-warn">
                                 <i class="bi bi-exclamation-triangle-fill"></i>
                                 Mode praktik terpisah aktif, tetapi belum ada data praktik. Semua siswa mendapat 0 untuk komponen praktik —
-                                <a href="{{ route('lms.guru.praktik.index', $pengampuMapel) }}">isi nilai praktik</a> terlebih dulu.
+                                {{-- FIX #2: nama route sesuai web.php --}}
+                                <a href="{{ route('lms.guru.nilai.praktik.index', $pengampuMapel) }}">isi nilai praktik</a> terlebih dulu.
                             </div>
                         @endif
                         @if ($quizAktif && $adaQuiz === 0)

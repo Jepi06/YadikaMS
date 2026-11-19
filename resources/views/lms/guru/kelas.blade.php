@@ -73,7 +73,8 @@
                     <a href="{{ $link('lms.guru.tugas.index', $pm) }}" class="{{ $btnMenu }}">
                         <i class="bi bi-clipboard-check text-slate-400"></i> Tugas
                     </a>
-                    <a href="{{ $link('lms.guru.praktik.index', $pm) }}" class="{{ $btnMenu }}">
+                    {{-- FIX: nama route sesuai web.php → lms.guru.nilai.praktik.index --}}
+                    <a href="{{ $link('lms.guru.nilai.praktik.index', $pm) }}" class="{{ $btnMenu }}">
                         <i class="bi bi-tools text-slate-400"></i> Praktik
                     </a>
                     <a href="{{ $link('lms.guru.quiz.index', $pm) }}" class="{{ $btnMenu }}">
